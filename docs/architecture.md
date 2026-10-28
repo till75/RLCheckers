@@ -1,11 +1,13 @@
 # Architecture
 
-**Status:** target shape for the first milestone. Implementation starts at S1.
+**Status:** S1 implements the immutable board, initial position, ASCII renderer,
+and canonical 40-bit state key. Move generation, state transitions, agents, and
+evaluation are still to come.
 
 ## Components
 
-- **Game rules:** immutable board, legal move generation, state transitions,
-  terminal and draw detection.
+- **Game rules:** immutable board (S1), legal move generation (S2), state
+  transitions and terminal/draw detection (S3).
 - **Agents:** random baseline, depth-1 greedy baseline, and tabular Q-agent.
 - **Training:** self-play loop with periodic snapshots.
 - **Evaluation:** arena for pairing agents over openings and colours, plus the
@@ -29,6 +31,16 @@ flowchart LR
     METRICS --> ART[CSV + plots]
     ART --> GATE[Three-seed gate]
 ```
+
+## Board module (S1)
+
+`src/rlcheckers/game/board.py` owns the immutable 25-cell position and its
+40-bit canonical key. It exposes `Board.initial()`, `Board.from_state_key()`,
+`Board.piece_at()`, `Board.state_key`, and `Board.render()`.
+
+The board validates encoding only: exactly 25 cells, `None` on light squares, a
+piece code on every dark square, and a valid side to move. It does not generate
+moves or judge reachability; those checks belong to later slices.
 
 ## Data flow
 

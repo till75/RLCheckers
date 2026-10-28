@@ -3,7 +3,9 @@
 An AI learning project: applying reinforcement learning to a checkers AI, while
 learning to co-author a program with opencode.
 
-**Status:** scaffolding. No application code yet.
+**Status:** S1: the immutable 5x5 board, initial position, ASCII renderer, and
+canonical 40-bit state key are implemented. Move generation and learning are
+next.
 
 ## Development
 
