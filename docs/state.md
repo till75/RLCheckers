@@ -1,8 +1,8 @@
 # State — 2026-10-29
 
 ## Where we are
-S2 (legal move generation) is complete in the working tree. The full suite is
-84 passed and `ruff check .` is clean. Nothing has been pushed.
+S2 (legal move generation) is complete and pushed at `3cce9f4`. The full suite
+is 84 passed and `ruff check .` is clean. The working tree is clean.
 
 ## Done since last handoff
 - Implemented `Move`, `generate_moves`, and `apply_move` in
