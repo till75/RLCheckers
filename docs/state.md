@@ -1,24 +1,26 @@
-# State — 2026-10-28
+# State — 2026-10-29
 
 ## Where we are
 S1 (5x5 board and initial position) is complete and pushed at c37bff0.
-S2 (legal move generation) has not started. main tracks origin/main.
+S2 (legal move generation) has an approved spec but no code or tests yet.
 
 ## Done since last handoff
-First handoff; no previous state file.
-- f663fd8 scaffolded the project.
-- e075b9e added the brainstorm and first-milestone brief.
-- 0a7838c added the first-milestone plan.
-- 6229844 added ADRs 0001/0002 and the architecture note.
-- c37bff0 added the S1 board, spec, project tooling, and 29 tests.
+- Wrote and approved `docs/specs/0002-legal-move-generation.md` (untracked):
+  public interface, move rules, action key, six perft fixtures, acceptance
+  criteria A1–A14, and the TDD order.
+- Cross-checked the perft tables with a scratch enumerator outside the repo.
+- Confirmed the suite is still 29 passed and `ruff check .` is clean.
 
 ## Next
-1. Run /spec for docs/specs/0002-legal-move-generation.md.
-2. TDD quiet moves first, then mandatory captures, multiple captures, promotion, kings, edges, and perft/known positions.
-3. Update docs, run pytest and ruff, commit S2; do not push unless asked.
+1. Run `/tdd` in a fresh session and start with `test_initial_black_quiet_moves`
+   in `tests/game/test_moves.py`.
+2. Follow spec 0002's TDD order: bootstrap `moves.py` and the `game` exports,
+   then A1, A2/A8/quiet A10–A11, A3–A4, A5–A7, A9/A12, A13, docs.
+3. Commit the spec with the coherent S2 change, or split at the quiet-move and
+   capture boundaries as the spec allows. Do not push unless asked.
 
 ## Open questions
-None blocking.
+None blocking. All seven spec decisions were approved on 2026-10-29.
 
 ## Gotchas
 - Windows/PowerShell; use .\.venv\Scripts\python.exe (Python 3.14).
@@ -26,11 +28,11 @@ None blocking.
 - ruff format also reformats Python code fences in Markdown.
 - Board validates encoding only; it does not check reachability or piece counts.
 - Initial key is 0x36DB001249; white-to-move key is 0xB6DB001249.
+- P6 is the four-capture loop with two capture orders and a path that returns
+  to its origin; perft counts paths, not distinct resulting boards.
+- Geometry search found at most four captures and five path squares on 5x5, so
+  the six-square action-key limit is never reached by generated moves.
 
 ## Not in an ADR
-- Piece and Side are IntEnums normalized in Board.cells.
-- ASCII render uses . # b B w W, exact snapshots, no trailing newline.
-- Board.from_state_key is included in S1 to satisfy ADR 0002's decoder requirement.
-- ValueError for invalid values; TypeError for non-integer keys/coordinates.
-- Tooling: setuptools, dev extra, pytest pythonpath=src, ruff E/F/I, line length 88.
-- pyproject requires Python >=3.14.
+- `apply_move` validates by membership in `generate_moves` (approved).
+- Action key puts path length in bits 0..2 and squares from bit 3 upward.
