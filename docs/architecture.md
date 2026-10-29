@@ -1,8 +1,9 @@
 # Architecture
 
-**Status:** S1 implements the immutable board, initial position, ASCII renderer,
-and canonical 40-bit state key. Move generation, state transitions, agents, and
-evaluation are still to come.
+**Status:** S2 implements the immutable board, initial position, ASCII renderer,
+canonical 40-bit state key, and legal move generation with pure move
+application. Game state, counters, terminal detection, agents, and evaluation
+are still to come.
 
 ## Components
 
@@ -41,6 +42,26 @@ flowchart LR
 The board validates encoding only: exactly 25 cells, `None` on light squares, a
 piece code on every dark square, and a valid side to move. It does not generate
 moves or judge reachability; those checks belong to later slices.
+
+## Moves module (S2)
+
+`src/rlcheckers/game/moves.py` owns the immutable `Move` value object,
+`generate_moves()`, and `apply_move()`. `Move` stores the origin, every landing
+square, and the captured squares in order. Its `action_key` is the 33-bit ADR
+0002 encoding of the path.
+
+`generate_moves()` returns every legal move for `Board.side_to_move`, sorted by
+`(path, captures)`. Captures are mandatory; a man captures forward only while a
+king captures in any direction; a capture chain continues while a jump remains.
+A man that reaches the opponent's back rank is promoted and the move ends, even
+if the new king could capture again. There is no maximum-capture rule, so every
+complete capture path is returned.
+
+`apply_move()` accepts exactly the moves that `generate_moves()` returns, removes
+the captured pieces, promotes a man on the opponent's back rank, switches the
+side, and returns a new `Board` without mutating the input. It deliberately
+validates by membership in the generated move list. Counters, game state,
+terminal detection, and draw rules remain S3 work.
 
 ## Data flow
 

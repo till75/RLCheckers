@@ -3,9 +3,10 @@
 An AI learning project: applying reinforcement learning to a checkers AI, while
 learning to co-author a program with opencode.
 
-**Status:** S1: the immutable 5x5 board, initial position, ASCII renderer, and
-canonical 40-bit state key are implemented. Move generation and learning are
-next.
+**Status:** S2: the immutable 5x5 board, initial position, ASCII renderer,
+canonical 40-bit state key, and legal move generation (quiet moves, mandatory
+captures, multiple captures, promotion, action keys, and move application) are
+implemented. Game state and learning are next.
 
 ## Development
 

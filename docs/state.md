@@ -1,26 +1,29 @@
 # State — 2026-10-29
 
 ## Where we are
-S1 (5x5 board and initial position) is complete and pushed at c37bff0.
-S2 (legal move generation) has an approved spec but no code or tests yet.
+S2 (legal move generation) is complete in the working tree. The full suite is
+84 passed and `ruff check .` is clean. Nothing has been pushed.
 
 ## Done since last handoff
-- Wrote and approved `docs/specs/0002-legal-move-generation.md` (untracked):
-  public interface, move rules, action key, six perft fixtures, acceptance
-  criteria A1–A14, and the TDD order.
-- Cross-checked the perft tables with a scratch enumerator outside the repo.
-- Confirmed the suite is still 29 passed and `ruff check .` is clean.
+- Implemented `Move`, `generate_moves`, and `apply_move` in
+  `src/rlcheckers/game/moves.py` and re-exported them from
+  `src/rlcheckers/game/__init__.py`.
+- Added `tests/game/test_moves.py` and `tests/game/test_perft.py`, covering
+  mandatory captures, capture branches, promotion, action keys, move
+  application, determinism, a seeded playout, and all six perft fixtures at
+  depths 1–3.
+- Updated `README.md`, `docs/architecture.md`, and the `moves.py` module
+  docstring.
 
 ## Next
-1. Run `/tdd` in a fresh session and start with `test_initial_black_quiet_moves`
-   in `tests/game/test_moves.py`.
-2. Follow spec 0002's TDD order: bootstrap `moves.py` and the `game` exports,
-   then A1, A2/A8/quiet A10–A11, A3–A4, A5–A7, A9/A12, A13, docs.
-3. Commit the spec with the coherent S2 change, or split at the quiet-move and
-   capture boundaries as the spec allows. Do not push unless asked.
+1. Run `/spec` for S3 (`docs/specs/0003-game-application-and-random-play.md`),
+   then `/tdd` for its first behaviour.
+2. S3 owns game counters, repetition and no-progress draws, terminal win/loss,
+   and seeded random play. It wraps the pure `apply_move` from S2.
+3. Do not push unless asked.
 
 ## Open questions
-None blocking. All seven spec decisions were approved on 2026-10-29.
+None blocking.
 
 ## Gotchas
 - Windows/PowerShell; use .\.venv\Scripts\python.exe (Python 3.14).
