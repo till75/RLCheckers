@@ -68,3 +68,9 @@ def test_play_random_game_terminates_for_seeds() -> None:
 
         assert record.final_state.is_terminal
         assert 0 < record.plies <= MAX_GAME_PLIES
+
+
+def test_play_random_game_rejects_bad_seed() -> None:
+    for seed in (None, "7"):
+        with pytest.raises(TypeError, match="seed"):
+            play_random_game(seed)  # type: ignore[arg-type]

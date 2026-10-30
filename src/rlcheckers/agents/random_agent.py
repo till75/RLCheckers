@@ -37,6 +37,9 @@ class RandomAgent:
 
 def play_random_game(seed: int) -> GameRecord:
     """Play one seeded random game from the initial position."""
+    if not isinstance(seed, int):
+        raise TypeError(f"seed must be an int, got {type(seed).__name__}")
+
     agent = RandomAgent(seed=seed)
     state = GameState.from_board(Board.initial())
     moves: list[Move] = []
