@@ -156,7 +156,7 @@ one session.
 
 ## S3 — Game application, terminal states, and random play
 
-**Status:** complete (2026-10-30), awaiting approval and push.
+**Status:** complete and pushed (2026-10-30).
 
 **Outcome:** A game can be played from the initial position to a win or draw
 using random legal moves, and a seeded game is reproducible.

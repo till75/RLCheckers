@@ -1,9 +1,9 @@
 # State — 2026-10-30
 
 ## Where we are
-S3 (game application and random play) is implemented and awaiting approval. The
-full suite is 130 passed and `ruff check .` is clean. The working tree is clean.
-Nothing has been pushed; `origin/main` is still at `3483f1c`.
+S3 (game application and random play) is complete and pushed at `22e0808`. The
+full suite is 130 passed and `ruff check .` is clean. The working tree is clean,
+and `origin/main` is at `22e0808`.
 
 ## Done since last handoff
 - Added `GameState`, `GameRecord`, `Outcome`, and `DrawReason` in
@@ -21,10 +21,9 @@ Nothing has been pushed; `origin/main` is still at `3483f1c`.
 - Committed S3 as green, behaviour-sized commits.
 
 ## Next
-1. Review and approve S3, then push the S3 commits.
-2. Run `/adr` 0003 for the evaluation protocol (S4).
-3. Run `/spec` for `0004-evaluation-arena.md` (S4).
-4. Run `/tdd` for the first behaviour in S4.
+1. Run `/adr` 0003 for the evaluation protocol (S4).
+2. Run `/spec` for `0004-evaluation-arena.md` (S4).
+3. Run `/tdd` for the first behaviour in S4.
 
 ## Open questions
 None blocking.
