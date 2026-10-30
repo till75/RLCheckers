@@ -30,16 +30,63 @@ class DrawReason(Enum):
 
 @dataclass(frozen=True)
 class GameState:
-    """An immutable board plus repetition and no-progress history."""
+    """An immutable board plus repetition and no-progress history.
+
+    ``position_keys`` ends with ``board.state_key`` and ``no_progress_plies``
+    stays within ``0..NO_PROGRESS_PLY_LIMIT``. Both are validated on
+    construction, as is the requirement that the board has at least one piece.
+    """
 
     board: Board
     position_keys: tuple[int, ...] = ()
     no_progress_plies: int = 0
 
     def __post_init__(self) -> None:
-        keys = tuple(self.position_keys)
+        if not isinstance(self.board, Board):
+            raise TypeError(
+                f"board must be a Board, got {type(self.board).__name__}"
+            )
+
+        try:
+            keys = tuple(self.position_keys)
+        except TypeError:
+            raise TypeError("position_keys must be a sequence of ints") from None
+
+        for index, key in enumerate(keys):
+            if not isinstance(key, int):
+                raise TypeError(
+                    f"position_keys[{index}] must be an int, "
+                    f"got {type(key).__name__}"
+                )
+            if not 0 <= key < (1 << 40):
+                raise ValueError(
+                    f"position_keys[{index}] must be in 0..2**40-1, got {key}"
+                )
+
         if not keys:
             keys = (self.board.state_key,)
+        elif keys[-1] != self.board.state_key:
+            raise ValueError(
+                "position_keys must end with the current board key, "
+                f"got {keys[-1]} but board key is {self.board.state_key}"
+            )
+
+        if not isinstance(self.no_progress_plies, int):
+            raise TypeError(
+                "no_progress_plies must be an int, "
+                f"got {type(self.no_progress_plies).__name__}"
+            )
+        if not 0 <= self.no_progress_plies <= NO_PROGRESS_PLY_LIMIT:
+            raise ValueError(
+                "no_progress_plies must be in "
+                f"0..{NO_PROGRESS_PLY_LIMIT}, got {self.no_progress_plies}"
+            )
+
+        if not any(
+            cell not in (None, Piece.EMPTY) for cell in self.board.cells
+        ):
+            raise ValueError("board must contain at least one piece")
+
         object.__setattr__(self, "position_keys", keys)
 
     @classmethod
@@ -64,11 +111,21 @@ class GameState:
             if self.board.side_to_move is Side.BLACK:
                 return Outcome.WHITE_WIN
             return Outcome.BLACK_WIN
+        if self.position_keys.count(self.board.state_key) >= REPETITION_LIMIT:
+            return Outcome.DRAW
+        if self.no_progress_plies >= NO_PROGRESS_PLY_LIMIT:
+            return Outcome.DRAW
         return Outcome.ONGOING
 
     @property
     def draw_reason(self) -> DrawReason | None:
-        """Return why the game was drawn, if it was."""
+        """Return the draw reason, preferring repetition over no-progress."""
+        if self.outcome is not Outcome.DRAW:
+            return None
+        if self.position_keys.count(self.board.state_key) >= REPETITION_LIMIT:
+            return DrawReason.THREEFOLD_REPETITION
+        if self.no_progress_plies >= NO_PROGRESS_PLY_LIMIT:
+            return DrawReason.NO_PROGRESS
         return None
 
     @property
