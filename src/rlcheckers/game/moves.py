@@ -4,7 +4,9 @@ Captures are mandatory, a man captures forward only while a king captures in
 any direction, and a capture chain continues until no further jump exists or a
 man promotes. A promoting capture ends the move. Moves are returned in sorted
 ``(path, captures)`` order, and every legal capture path is returned rather
-than only a maximum-length one.
+than only a maximum-length one. ``format_move`` renders a path for display using
+``-`` for quiet moves and ``x`` for captures; it is display-only and has no
+inverse parser.
 """
 
 from __future__ import annotations
@@ -153,6 +155,12 @@ def apply_move(board: Board, move: Move) -> Board:
 
     next_side = Side.WHITE if board.side_to_move is Side.BLACK else Side.BLACK
     return Board(tuple(cells), next_side)
+
+
+def format_move(move: Move) -> str:
+    """Return the square path with ``-`` for quiet moves and ``x`` for captures."""
+    separator = "x" if move.is_capture else "-"
+    return separator.join(str(square) for square in move.path)
 
 
 def _quiet_moves(board: Board) -> list[Move]:

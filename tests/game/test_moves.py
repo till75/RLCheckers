@@ -5,7 +5,7 @@ import random
 import pytest
 
 from rlcheckers.game.board import PLAYABLE_SQUARES, SQUARE_COUNT, Board, Piece, Side
-from rlcheckers.game.moves import Move, apply_move, generate_moves
+from rlcheckers.game.moves import Move, apply_move, format_move, generate_moves
 
 
 def board_with(pieces: dict[int, Piece], side: Side = Side.BLACK) -> Board:
@@ -371,6 +371,22 @@ def test_generated_moves_are_unique() -> None:
         )
     )
     assert len(moves) == len(set(moves))
+
+
+def test_format_move_quiet() -> None:
+    assert format_move(Move((6, 10))) == "6-10"
+
+
+def test_format_move_single_capture() -> None:
+    assert format_move(Move((18, 6), (12,))) == "18x6"
+
+
+def test_format_move_multi_capture() -> None:
+    assert format_move(Move((2, 14, 22), (8, 18))) == "2x14x22"
+    assert (
+        format_move(Move((14, 2, 10, 22, 14), (8, 6, 16, 18)))
+        == "14x2x10x22x14"
+    )
 
 
 def test_seeded_playout_preserves_invariants() -> None:
