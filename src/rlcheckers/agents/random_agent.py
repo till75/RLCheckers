@@ -48,5 +48,9 @@ def play_random_game(seed: int) -> GameRecord:
         move = agent.choose_move(state)
         moves.append(move)
         state = state.apply(move)
+        if len(moves) > MAX_GAME_PLIES:
+            raise RuntimeError(
+                f"game did not terminate within {MAX_GAME_PLIES} plies"
+            )
 
     return GameRecord(tuple(moves), state)

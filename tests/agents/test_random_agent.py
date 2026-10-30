@@ -74,3 +74,12 @@ def test_play_random_game_rejects_bad_seed() -> None:
     for seed in (None, "7"):
         with pytest.raises(TypeError, match="seed"):
             play_random_game(seed)  # type: ignore[arg-type]
+
+
+def test_play_random_game_stops_runaway_game(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr("rlcheckers.agents.random_agent.MAX_GAME_PLIES", 0)
+
+    with pytest.raises(RuntimeError, match="did not terminate"):
+        play_random_game(7)
