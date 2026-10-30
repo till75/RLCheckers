@@ -3,10 +3,9 @@
 An AI learning project: applying reinforcement learning to a checkers AI, while
 learning to co-author a program with opencode.
 
-**Status:** S2: the immutable 5x5 board, initial position, ASCII renderer,
-canonical 40-bit state key, and legal move generation (quiet moves, mandatory
-captures, multiple captures, promotion, action keys, and move application) are
-implemented. Game state and learning are next.
+**Status:** S3: the immutable 5x5 board, legal move generation, game state and
+draw detection, seeded random play, and the `play-random` CLI command are
+implemented. Evaluation and learning are next.
 
 ## Development
 
@@ -16,5 +15,16 @@ Windows and PowerShell, using the virtual environment in `.venv`:
 .\.venv\Scripts\python.exe -m pytest
 .\.venv\Scripts\python.exe -m ruff check .
 ```
+
+## Play a random game
+
+```powershell
+.\.venv\Scripts\python.exe -m rlcheckers play-random --seed 7
+```
+
+The command prints the seed, each move as a numbered square path, the final
+result, and the ply count. Replaying the same seed reproduces the game. See
+[docs/specs/0003-game-application-and-random-play.md](docs/specs/0003-game-application-and-random-play.md)
+for the exact output contract.
 
 See [AGENTS.md](AGENTS.md) for the working agreement and definition of done.

@@ -4,7 +4,8 @@ Each ``RandomAgent`` owns a private ``random.Random``. It rejects terminal
 states and otherwise chooses uniformly from the state's legal moves; agents
 with the same seed make the same choice from the same state. ``play_random_game``
 uses one agent and one RNG stream for both colours, so a seed reproduces the
-whole game.
+whole game, and raises ``RuntimeError`` after ``MAX_GAME_PLIES`` moves without a
+terminal state.
 """
 
 from __future__ import annotations

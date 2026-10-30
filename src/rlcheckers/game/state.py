@@ -1,4 +1,10 @@
-"""Game state, counters, and terminal detection for the 5x5 board."""
+"""Game state, counters, and terminal detection for the 5x5 board.
+
+``GameState`` wraps an immutable board with the position-key history and the
+no-progress counter. It reports wins, losses, threefold-repetition draws, and
+80-ply no-progress draws, and applies legal moves without mutating the source.
+``GameRecord`` stores the moves and terminal state of one finished game.
+"""
 
 from __future__ import annotations
 

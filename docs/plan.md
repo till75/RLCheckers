@@ -1,19 +1,22 @@
 # Plan — RLCheckers, first milestone
 
 **Date:** 2026-10-27
-**Status:** proposed
+**Status:** S0–S3 complete; S4 next
 **Source:** `docs/00-brief.md`
 
 ## How this plan works
 
-- A slice is one testable behaviour, with its test, code, docs, and one
-  Conventional Commit.
+- A slice is one testable outcome, with its tests, code, docs, and one or more
+  green Conventional Commits.
 - Every slice starts with `/spec`, then `/tdd` for one behaviour at a time. The
   failing test is shown before implementation.
 - Every slice follows the definition of done in `AGENTS.md`: test first, full
-  suite green, `ruff` clean, docs updated, one coherent commit, nothing pushed.
+  suite green, `ruff` clean, docs updated, and no push before approval.
+- Commit each successful TDD cycle. A slice may span several self-contained,
+  green commits; never commit a red or partially green tree.
 - If a slice does not fit one session, split it at a testable boundary and
   update this plan. Never carry a half-finished slice across turns.
+- Push only at the end of a slice, after explicit approval.
 - Non-obvious decisions get an ADR before implementation.
 
 ## Why this order
@@ -152,6 +155,8 @@ one session.
 **Risk:** High. A rules bug invalidates every later result.
 
 ## S3 — Game application, terminal states, and random play
+
+**Status:** complete (2026-10-30), awaiting approval and push.
 
 **Outcome:** A game can be played from the initial position to a win or draw
 using random legal moves, and a seeded game is reproducible.
@@ -362,10 +367,9 @@ unless they change the evaluation contract.
 
 ## Next step
 
-1. Approve this plan, or correct the slice boundaries.
-2. Run `/adr` for 0001 and 0002 (S0).
-3. Run `/spec` for `0001-board-and-initial-position.md` (S1).
-4. Run `/tdd` for the first behaviour in S1.
+1. Review and approve S3, then push the completed S3 commits.
+2. Run `/adr` 0003 for the evaluation protocol (S4).
+3. Run `/spec` for `0004-evaluation-arena.md` (S4).
+4. Run `/tdd` for the first behaviour in S4.
 
-The first code to be written is the board and initial position. No training code
-starts until the evaluation harness in S4 is green.
+No training code starts until the evaluation harness in S4 is green.
