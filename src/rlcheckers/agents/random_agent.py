@@ -2,13 +2,16 @@
 
 Each ``RandomAgent`` owns a private ``random.Random``. It rejects terminal
 states and otherwise chooses uniformly from the state's legal moves; agents
-with the same seed make the same choice from the same state.
+with the same seed make the same choice from the same state. ``play_random_game``
+uses one agent and one RNG stream for both colours, so a seed reproduces the
+whole game.
 """
 
 from __future__ import annotations
 
 import random
 
+from rlcheckers.game.board import Board
 from rlcheckers.game.moves import Move
 from rlcheckers.game.state import GameRecord, GameState
 
@@ -34,4 +37,13 @@ class RandomAgent:
 
 def play_random_game(seed: int) -> GameRecord:
     """Play one seeded random game from the initial position."""
-    raise NotImplementedError
+    agent = RandomAgent(seed=seed)
+    state = GameState.from_board(Board.initial())
+    moves: list[Move] = []
+
+    while not state.is_terminal:
+        move = agent.choose_move(state)
+        moves.append(move)
+        state = state.apply(move)
+
+    return GameRecord(tuple(moves), state)

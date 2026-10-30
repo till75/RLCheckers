@@ -170,9 +170,9 @@ class GameRecord:
     @property
     def outcome(self) -> Outcome:
         """Return the final outcome."""
-        raise NotImplementedError
+        return self.final_state.outcome
 
     @property
     def plies(self) -> int:
         """Return the number of plies played."""
-        raise NotImplementedError
+        return len(self.moves)
