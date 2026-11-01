@@ -303,9 +303,9 @@ def derive_side_seed(game_seed: int, side: Side) -> int:
 
 The arena calls each factory with the side-specific seed:
 `agent_factory(derive_side_seed(game_seed, agent_colour))` and
-`opponent_factory(derive_side_seed(game_seed, opponent_colour))`. Both sides
-therefore get independent streams, and the pair index makes reordering or
-parallelising games harmless.
+`opponent_factory(derive_side_seed(game_seed, opponent_colour))`, where
+`opponent_colour` is the other `Side`. Both sides therefore get independent
+streams, and the pair index makes reordering or parallelising games harmless.
 
 The derivation uses SHA-256 rather than `hash()` because Python's string hash
 is salted per process. The recorded `game_seed` is the base seed, not either
@@ -1347,15 +1347,21 @@ settle them:
    colours. Ten and 1,000 pass. Arbitrary counts would need a documented
    remainder rule and would leave some groups with one game.
 4. **S4 has one master seed, not three training seeds.** ADR 0003's gate
-   aggregates three training seeds across two opponents. S4 evaluates one
-   agent per run; the three-seed aggregation and gate report are S7.
+   aggregates three training seeds across two opponents and reports per-seed
+   estimates plus a seed-to-seed range. S4 evaluates one agent per run; the
+   metrics CSV records that run's seed, but the three-seed aggregation, range,
+   and gate report are S7.
 5. **Added modules.** The plan lists `greedy_agent.py`, `arena.py`,
    `metrics.py`, and `config.py`. This spec adds `protocol.py`,
    `artifacts.py`, `evaluation/__init__.py`, and `tests/test_config.py` to keep
    the protocol shared and the CLI thin. If the file list is binding, fold
    these into the listed modules.
-6. **No plots.** The brief lists plots as artifacts; the plan's S4 acceptance
-   criteria only require CSV. This spec defers plots to S5 and S7.
+6. **No plots, despite ADR 0003 §11.** The brief lists plots, and ADR 0003 says
+   the plot contents are fixed in spec 0004; the plan's S4 acceptance criteria
+   only require CSV, and S5/S7 own the plots. This spec writes no plots and does
+   not fix their contents. If ADR 0003's sentence is binding for S4, this needs
+   either a plot contract here (implemented in S5/S7) or a superseding ADR that
+   moves plot contents to those slices.
 7. **Greedy terminal bonus.** The plan says "material evaluation"; this spec
    adds `TERMINAL_SCORE` so the baseline does not ignore an immediate win or
    draw. Pure material-only scoring is the alternative, at the cost of weaker
