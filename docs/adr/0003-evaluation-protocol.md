@@ -1,6 +1,6 @@
 # ADR 0003 — Evaluation protocol and gate
 
-- **Status:** accepted
+- **Status:** proposed
 - **Date:** 2026-10-31
 - **Deciders:** author, opencode
 - **Related:** ADR 0001, ADR 0002, `docs/00-brief.md`, `docs/plan.md`,
@@ -198,6 +198,17 @@ fixed in spec 0004.
 
 ## Approval
 
-Accepted by the author on 2026-10-31, after confirming the gate rule
-(mean + 0.50 floor), greedy evaluation, 95% confidence intervals, and the
-`choose_move(state)` protocol.
+Proposed for review on 2026-10-31. The author confirmed four policy choices
+through direct questions: the mean-plus-floor gate rule, greedy evaluation,
+95% confidence intervals, and the `choose_move(state)` protocol. That input
+does not accept the rest of this ADR. The document needs explicit author
+acceptance before spec 0004 starts.
+
+Pending acceptance:
+
+- The score and colour-pairing contract.
+- The fixed-suite and game-budget policy.
+- The determinism and per-game seed-reset contract.
+- The frozen-evaluation and failure-handling rules.
+- The artifact and reproducibility requirements.
+- The deferred list handed to spec 0004.

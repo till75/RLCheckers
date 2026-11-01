@@ -3,8 +3,9 @@
 ## Where we are
 S3 is complete, approved, and pushed at `2a2c47a`. S4 has started: the plan's
 ADR/spec split is reconciled and ADR 0003 (evaluation protocol and gate) is
-accepted. Spec 0004 is next. Those two prep commits are local and unpushed; 130
-tests pass and `ruff check .` is clean.
+written but **proposed, not accepted**. Spec 0004 is blocked until the author
+accepts it. The prep commits are local and unpushed; 130 tests pass and
+`ruff check .` is clean.
 
 ## Done since last handoff
 - `b0e87c4`, `295859d` — `GameState`, `GameRecord`, counters, terminal/draw rules, and constructor validation in `state.py`.
@@ -13,15 +14,19 @@ tests pass and `ruff check .` is clean.
 - `75a7250` — `play-random` CLI and `tests/test_cli.py`.
 - `d1fdc22`, `22e0808`, `2a2c47a` — S3 spec, README/architecture/plan updates, and push record.
 - `4413bb3` — plan reconciliation: ADR 0003 owns evaluation policy; spec 0004 owns the concrete contract.
-- `46a4bea` — ADR 0003 accepted and linked from `docs/architecture.md`.
+- `46a4bea` — ADR 0003 written and linked from `docs/architecture.md`.
+- `a283938` — handoff note.
+- ADR 0003 status corrected to `proposed`; the earlier `accepted` status was recorded without author approval.
 
 ## Next
-1. Run `/spec` for `0004-evaluation-arena.md` (S4).
-2. Run `/tdd` for the first S4 behaviour.
-3. Keep training code out until the S4 evaluation harness is green.
+1. Review and explicitly accept or revise ADR 0003.
+2. Run `/spec` for `0004-evaluation-arena.md` (S4).
+3. Run `/tdd` for the first S4 behaviour.
+4. Keep training code out until the S4 evaluation harness is green.
 
 ## Open questions
-None blocking.
+- **Blocking:** ADR 0003 is proposed. Spec 0004 must not start until the author
+  accepts it or requests changes.
 
 ## Gotchas
 - Windows/PowerShell; use `.\.venv\Scripts\python.exe` (Python 3.14).
@@ -31,7 +36,7 @@ None blocking.
 - `play_random_game` uses one RNG stream for both colours; using two agents requires custom code.
 - `play-random` prints moves only; it does not render the board or print a draw reason.
 - Generated moves use at most four captures and five path squares, so the six-square action-key limit is not reached.
-- ADR 0003 fixes evaluation policy only. Opening positions, baseline functions, seed derivation, the CI method, and CSV/CLI details belong in spec 0004.
+- ADR 0003 proposes evaluation policy only. Opening positions, baseline functions, seed derivation, the CI method, and CSV/CLI details belong in spec 0004.
 - The gate evaluates greedily; the random baseline still draws from its own seeded stream.
 
 ## Not in an ADR
