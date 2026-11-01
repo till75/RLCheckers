@@ -122,6 +122,7 @@ or non-integer seeds as usage errors with exit code 2.
 
 - [ADR 0001 — 5x5 English draughts rules](adr/0001-5x5-rules.md)
 - [ADR 0002 — Board, move, and state encoding](adr/0002-board-and-state-encoding.md)
+- [ADR 0003 — Evaluation protocol and gate](adr/0003-evaluation-protocol.md)
 
 ## Current milestone boundaries
 

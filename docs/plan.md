@@ -366,19 +366,17 @@ into ADR 0003 only if it would change the evaluation contract.
 - **Spec 0003:** state transition contract, repetition and no-progress counters,
   draw and win contracts, CLI output.
 - **Spec 0004:** opening-suite contents, baseline definitions, arena pairing,
-  metric schema, CSV columns, config schema, CLI syntax, seed handling.
+  metric schema including the confidence interval, CSV columns, config schema,
+  CLI syntax, seed handling.
 - **Spec 0005:** state key, action key, update equation, epsilon schedule,
   hyperparameter defaults, save format, memory cap.
 - **Spec 0006:** snapshot cadence, opponent selection, training/evaluation
   interleaving, artifact layout.
-- **Spec 0007:** gate calculation, confidence reporting, report format, runtime
-  budget, failure handling.
+- **Spec 0007:** gate aggregation and report format, runtime budget, and failure
+  handling; it reuses the spec 0004 interval rather than defining a second one.
 
 ## Next step
 
-1. Review and approve S3, then push the completed S3 commits.
-2. Run `/adr` 0003 for the evaluation protocol (S4).
-3. Run `/spec` for `0004-evaluation-arena.md` (S4).
-4. Run `/tdd` for the first behaviour in S4.
-
-No training code starts until the evaluation harness in S4 is green.
+1. Run `/spec` for `0004-evaluation-arena.md` (S4).
+2. Run `/tdd` for the first behaviour in S4.
+3. Keep training code out until the evaluation harness in S4 is green.
