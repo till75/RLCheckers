@@ -17,7 +17,12 @@
 - If a slice does not fit one session, split it at a testable boundary and
   update this plan. Never carry a half-finished slice across turns.
 - Push only at the end of a slice, after explicit approval.
-- Non-obvious decisions get an ADR before implementation.
+- Non-obvious decisions get an ADR before implementation. An ADR records
+  policy and trade-offs: choices that change what a result means or whether two
+  runs are comparable. A spec records the observable contract: interfaces,
+  formats, examples, and acceptance tests. A concrete detail belongs in the
+  spec unless it would change the evaluation contract, in which case it moves
+  up into the ADR.
 
 ## Why this order
 
@@ -314,12 +319,16 @@ small-N integration.
 |---|---|---|
 | 0001 | 5x5 rules, starting position, orientation, first player, draw rule | S0/S1 |
 | 0002 | Board, move, and canonical-state encoding; Q-table memory cap | S0/S1 |
-| 0003 | Evaluation protocol, opening suite, baseline definitions, gate statistics | S4 |
+| 0003 | Evaluation protocol: score definition, colour pairing, fixed-opening policy, gate statistics, determinism, agent interface | S4 |
 | 0004 | Q-learning state/action representation and initial hyperparameters | S5 |
 | 0005 | Self-play snapshot cadence and opponent selection | S6 |
 
-The exact opening suite and config schema are spec-level details, not ADRs,
-unless they change the evaluation contract.
+ADR 0003 settles evaluation policy: the score definition, colour pairing,
+fixed-opening policy, gate statistics, determinism guarantees, and the agent
+interface the arena depends on. Spec 0004 settles the concrete contract: the
+opening positions, baseline definitions, arena pairing mechanics, metric
+schema, CSV columns, config schema, and CLI syntax. A concrete choice moves up
+into ADR 0003 only if it would change the evaluation contract.
 
 ## Deliberately deferred
 
@@ -356,8 +365,8 @@ unless they change the evaluation contract.
   perft positions and expected counts.
 - **Spec 0003:** state transition contract, repetition and no-progress counters,
   draw and win contracts, CLI output.
-- **Spec 0004:** opening suite, baseline definitions, arena pairing, metric
-  schema, CSV columns, seed handling.
+- **Spec 0004:** opening-suite contents, baseline definitions, arena pairing,
+  metric schema, CSV columns, config schema, CLI syntax, seed handling.
 - **Spec 0005:** state key, action key, update equation, epsilon schedule,
   hyperparameter defaults, save format, memory cap.
 - **Spec 0006:** snapshot cadence, opponent selection, training/evaluation

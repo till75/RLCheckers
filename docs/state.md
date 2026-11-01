@@ -12,7 +12,7 @@ S3 (game application and random play) is complete, approved, and pushed at
 - `d1fdc22`, `22e0808`, `2a2c47a` — S3 spec, README/architecture/plan updates, and push record.
 
 ## Next
-1. Create ADR 0003 for the evaluation protocol (S4).
+1. Create ADR 0003 for the evaluation protocol policy (S4).
 2. Run `/spec` for `0004-evaluation-arena.md` (S4).
 3. Run `/tdd` for the first S4 behaviour.
 4. Keep training code out until the S4 evaluation harness is green.
