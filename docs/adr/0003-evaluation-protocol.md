@@ -1,6 +1,6 @@
 # ADR 0003 — Evaluation protocol and gate
 
-- **Status:** proposed
+- **Status:** accepted
 - **Date:** 2026-10-31
 - **Deciders:** author, opencode
 - **Related:** ADR 0001, ADR 0002, `docs/00-brief.md`, `docs/plan.md`,
@@ -198,17 +198,19 @@ fixed in spec 0004.
 
 ## Approval
 
-Proposed for review on 2026-10-31. The author confirmed four policy choices
-through direct questions: the mean-plus-floor gate rule, greedy evaluation,
-95% confidence intervals, and the `choose_move(state)` protocol. That input
-does not accept the rest of this ADR. The document needs explicit author
-acceptance before spec 0004 starts.
+Accepted by the author on 2026-11-01. The author also confirmed four policy
+choices directly: the mean-plus-floor gate rule, greedy evaluation, 95%
+confidence intervals, and the `choose_move(state)` protocol. Acceptance covers
+the full document, including the deferred list handed to spec 0004.
 
-Pending acceptance:
+Accepted decisions:
 
-- The score and colour-pairing contract.
-- The fixed-suite and game-budget policy.
-- The determinism and per-game seed-reset contract.
-- The frozen-evaluation and failure-handling rules.
-- The artifact and reproducibility requirements.
-- The deferred list handed to spec 0004.
+1. Score and perspective, both-colour pairing, and the fixed opening suite.
+2. The 1,000-game budget per seed per opponent and the 3 × 2 × 1,000 gate.
+3. Master-seed determinism with per-game streams and reset agents.
+4. Greedy evaluation and the minimal `choose_move(state)` protocol.
+5. The mean-plus-floor gate and the provisional thresholds.
+6. 95% confidence intervals, per-seed estimates, and the seed range.
+7. Frozen evaluation, shared rules, and loud failure handling.
+8. Artifact and reproducibility requirements.
+9. The concrete details deferred to spec 0004.
