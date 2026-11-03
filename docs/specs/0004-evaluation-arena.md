@@ -25,21 +25,21 @@ explanatory rather than a second contract; the sections below define each box.
 ```mermaid
 flowchart LR
   subgraph Input["1. Input"]
-    TOML["eval.toml<br/>seed · games · agent · opponent · output_dir"]
-    CFG["EvalConfig<br/>validated · resolved paths"]
+    TOML["<span style='color:#000000;font-weight:bold'>eval.toml</span><br/><span style='color:#000000'>seed · games · agent · opponent · output_dir</span>"]
+    CFG["<span style='color:#000000;font-weight:bold'>EvalConfig</span><br/><span style='color:#000000'>validated · resolved paths</span>"]
     TOML -->|"load_eval_config"| CFG
   end
 
   subgraph Composition["2. Composition"]
-    CLI["cli.main('evaluate')<br/>load · compose · run · report"]
+    CLI["<span style='color:#000000;font-weight:bold'>cli.main('evaluate')</span><br/><span style='color:#000000'>load · compose · run · report</span>"]
     CFG -->|"configures"| CLI
   end
 
   subgraph Matchup["3. Matchup"]
-    ARENA["play_matchup<br/>validate · schedule · play · collect"]
-    AGENTS["AgentFactory<br/>random or greedy + side seed"]
-    RULES["GameState<br/>legal moves · apply · outcome"]
-    RESULT["ArenaResult<br/>metadata + GameResult per game"]
+    ARENA["<span style='color:#000000;font-weight:bold'>play_matchup</span><br/><span style='color:#000000'>validate · schedule · play · collect</span>"]
+    AGENTS["<span style='color:#000000;font-weight:bold'>AgentFactory</span><br/><span style='color:#000000'>random or greedy + side seed</span>"]
+    RULES["<span style='color:#000000;font-weight:bold'>GameState</span><br/><span style='color:#000000'>legal moves · apply · outcome</span>"]
+    RESULT["<span style='color:#000000;font-weight:bold'>ArenaResult</span><br/><span style='color:#000000'>metadata + GameResult per game</span>"]
     CLI -->|"starts"| ARENA
     ARENA -->|"asks for moves"| AGENTS
     AGENTS -->|"Move"| ARENA
@@ -49,25 +49,25 @@ flowchart LR
   end
 
   subgraph Results["4. Results"]
-    METRICS["summary_rows / summarize<br/>W/D/L · score · 95% CI"]
-    WRITE["write_artifacts<br/>validate · write · return path"]
+    METRICS["<span style='color:#000000;font-weight:bold'>summary_rows / summarize</span><br/><span style='color:#000000'>W/D/L · score · 95% CI</span>"]
+    WRITE["<span style='color:#000000;font-weight:bold'>write_artifacts</span><br/><span style='color:#000000'>validate · write · return path</span>"]
     RESULT -->|"games"| METRICS
     RESULT -->|"games"| WRITE
     METRICS -->|"rows"| WRITE
   end
 
   subgraph Outputs["5. Outputs"]
-    M["metrics.csv<br/>summary + CI"]
-    G["games.csv<br/>per-game audit trail"]
-    J["run.json<br/>config · versions · command"]
-    OUT["stdout<br/>ten-line summary"]
+    M["<span style='color:#000000;font-weight:bold'>metrics.csv</span><br/><span style='color:#000000'>summary + CI</span>"]
+    G["<span style='color:#000000;font-weight:bold'>games.csv</span><br/><span style='color:#000000'>per-game audit trail</span>"]
+    J["<span style='color:#000000;font-weight:bold'>run.json</span><br/><span style='color:#000000'>config · versions · command</span>"]
+    OUT["<span style='color:#000000;font-weight:bold'>stdout</span><br/><span style='color:#000000'>ten-line summary</span>"]
     WRITE -->|"writes"| M
     WRITE -->|"writes"| G
     WRITE -->|"writes"| J
     METRICS -->|"score + CI"| OUT
   end
 
-  FAIL["Failure<br/>no artifacts written"]
+  FAIL["<span style='color:#000000;font-weight:bold'>Failure</span><br/><span style='color:#000000'>no artifacts written</span>"]
   ARENA -.->|"illegal move / non-termination"| FAIL
   WRITE -.->|"config mismatch / I/O error"| FAIL
 
@@ -93,9 +93,10 @@ all five contracts. The arena returns an `ArenaResult`; only then does
 `write_artifacts` create files, so a failed game or an invalid config cannot
 leave partial metrics. Blue is input, indigo is composition, green is
 rules/agents, orange is the matchup, purple is results, grey is output, and red
-is the loud-failure path. Each box keeps the hue in its fill and stroke and uses
-black text. Related decisions: 2 (artifact count), 5 (modules), and 11 (registry
-scope).
+is the loud-failure path. Each box carries an explicit black label, with the
+title in bold, so the viewer's theme cannot turn the text grey; the stage hue
+stays in the fill and stroke. Related decisions: 2 (artifact count), 5
+(modules), and 11 (registry scope).
 
 ### Modules and imports
 
