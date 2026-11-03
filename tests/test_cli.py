@@ -2,11 +2,13 @@ from __future__ import annotations
 
 import subprocess
 import sys
+from pathlib import Path
 
 import pytest
 
 from rlcheckers.agents.random_agent import play_random_game
 from rlcheckers.cli import main
+from rlcheckers.config import load_eval_config
 from rlcheckers.game.moves import format_move
 
 
@@ -74,4 +76,118 @@ def test_module_entry_point_runs_play_random() -> None:
 
     assert completed.returncode == 0
     assert completed.stdout.startswith("seed: 7\n")
+    assert completed.stderr == ""
+
+
+@pytest.fixture
+def eval_config_path(tmp_path: Path) -> Path:
+    path = tmp_path / "eval.toml"
+    path.write_text(
+        'seed = 7\n'
+        'games = 10\n'
+        'agent = "random"\n'
+        'opponent = "greedy"\n'
+        'output_dir = "out"\n',
+        encoding="utf-8",
+    )
+    return path
+
+
+def test_cli_evaluate_writes_artifacts(
+    eval_config_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    assert main(["evaluate", "--config", str(eval_config_path)]) == 0
+    capsys.readouterr()
+
+    out = eval_config_path.parent / "out"
+    assert (out / "metrics.csv").exists()
+    assert (out / "games.csv").exists()
+    assert (out / "run.json").exists()
+
+
+def test_cli_evaluate_stdout(
+    eval_config_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    config = load_eval_config(eval_config_path)
+
+    assert main(["evaluate", "--config", str(eval_config_path)]) == 0
+    captured = capsys.readouterr()
+    lines = captured.out.splitlines()
+
+    assert lines[0] == "agent: random"
+    assert lines[1] == "opponent: greedy"
+    assert lines[2] == "seed: 7"
+    assert lines[3] == "games: 10"
+    assert lines[4].startswith("wins: ")
+    assert lines[5].startswith("draws: ")
+    assert lines[6].startswith("losses: ")
+    assert lines[7].startswith("score: ")
+    assert lines[8].startswith("ci95: ")
+    assert lines[9] == f"artifacts: {config.output_dir}"
+    assert captured.err == ""
+
+    wins = int(lines[4].split(": ")[1])
+    draws = int(lines[5].split(": ")[1])
+    losses = int(lines[6].split(": ")[1])
+    assert wins + draws + losses == 10
+
+
+def test_cli_evaluate_is_reproducible(
+    eval_config_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    out = eval_config_path.parent / "out"
+
+    assert main(["evaluate", "--config", str(eval_config_path)]) == 0
+    capsys.readouterr()
+    first = {
+        name: (out / name).read_bytes()
+        for name in ("metrics.csv", "games.csv")
+    }
+
+    assert main(["evaluate", "--config", str(eval_config_path)]) == 0
+    capsys.readouterr()
+    second = {name: (out / name).read_bytes() for name in first}
+
+    assert first == second
+
+
+def test_cli_evaluate_requires_config(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    with pytest.raises(SystemExit) as excinfo:
+        main(["evaluate"])
+
+    assert excinfo.value.code == 2
+    assert "--config" in capsys.readouterr().err
+
+
+def test_cli_evaluate_reports_config_error(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    bad = tmp_path / "bad.toml"
+    bad.write_text("seed = 1\n", encoding="utf-8")
+
+    assert main(["evaluate", "--config", str(bad)]) == 1
+    captured = capsys.readouterr()
+    assert captured.err.startswith("error:")
+    assert captured.out == ""
+
+
+def test_module_entry_point_runs_evaluate(eval_config_path: Path) -> None:
+    completed = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "rlcheckers",
+            "evaluate",
+            "--config",
+            str(eval_config_path),
+        ],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert completed.returncode == 0
+    assert completed.stdout.startswith("agent: random\n")
     assert completed.stderr == ""
