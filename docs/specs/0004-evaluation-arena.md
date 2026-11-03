@@ -655,13 +655,25 @@ class ConfigError(ValueError): ...
 def load_eval_config(path: str | Path) -> EvalConfig: ...
 ```
 
-An example config:
+A commented example config:
 
 ```toml
+# Exactly these five top-level keys; unknown keys are rejected.
+# One master seed for this run. Must be an integer, not a boolean.
 seed = 7
+
+# Positive integer, not a boolean, and a multiple of 10:
+# five fixed openings x both colours.
 games = 10
+
+# Agent under test. Must be "random" or "greedy".
 agent = "random"
+
+# Opponent. Must be "random" or "greedy"; it may equal agent.
 opponent = "greedy"
+
+# Required non-empty string. A relative path resolves from this file's
+# directory. Loading the config does not create the directory.
 output_dir = "results/smoke"
 ```
 
