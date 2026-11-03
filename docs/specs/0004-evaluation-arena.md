@@ -71,13 +71,13 @@ flowchart LR
   ARENA -.->|"illegal move / non-termination"| FAIL
   WRITE -.->|"config mismatch / I/O error"| FAIL
 
-  classDef input fill:#e3f2fd,stroke:#1565c0,color:#0d47a1
-  classDef compose fill:#e8eaf6,stroke:#283593,color:#1a237e
-  classDef arena fill:#fff3e0,stroke:#ef6c00,color:#e65100
-  classDef rules fill:#e8f5e9,stroke:#2e7d32,color:#1b5e20
-  classDef result fill:#f3e5f5,stroke:#6a1b9a,color:#4a148c
-  classDef output fill:#eceff1,stroke:#455a64,color:#263238
-  classDef fail fill:#ffebee,stroke:#c62828,color:#b71c1c
+  classDef input fill:#dbeafe,stroke:#1d4ed8,color:#172554
+  classDef compose fill:#e0e7ff,stroke:#3730a3,color:#1e1b4b
+  classDef arena fill:#ffedd5,stroke:#c2410c,color:#431407
+  classDef rules fill:#dcfce7,stroke:#15803d,color:#052e16
+  classDef result fill:#f3e8ff,stroke:#7e22ce,color:#3b0764
+  classDef output fill:#e2e8f0,stroke:#334155,color:#0f172a
+  classDef fail fill:#fee2e2,stroke:#b91c1c,color:#450a0a
 
   class TOML,CFG input
   class CLI compose
@@ -93,7 +93,8 @@ all five contracts. The arena returns an `ArenaResult`; only then does
 `write_artifacts` create files, so a failed game or an invalid config cannot
 leave partial metrics. Blue is input, indigo is composition, green is
 rules/agents, orange is the matchup, purple is results, grey is output, and red
-is the loud-failure path. Related decisions: 2 (artifact count), 5 (modules),
+is the loud-failure path. Each box keeps the hue in its fill and stroke and uses
+near-black text for contrast. Related decisions: 2 (artifact count), 5 (modules),
 and 11 (registry scope).
 
 ### Modules and imports
