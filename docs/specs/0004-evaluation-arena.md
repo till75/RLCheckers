@@ -1587,9 +1587,9 @@ session runs out; do not carry a half-finished slice across turns.
 
 ## Contradictions, gaps, and decisions
 
-These need explicit approval because the brief, plan, or an ADR does not fully
-settle them. Decision 6 is resolved by ADR 0004; the others remain open until
-approved.
+These needed explicit approval because the brief, plan, or an ADR did not fully
+settle them. Decisions 6, 7, 11, and 13 are resolved; the others remain open
+until approved.
 
 1. **"Mirrored for colour".** The brief's assumption 4 says positions are
    "mirrored for colour"; ADR 0003 says every opening is played twice, once
@@ -1620,10 +1620,10 @@ approved.
    ADR 0004 supersedes that one sentence: S4 writes no plots and does not fix
    their contents, while S5 and S7 fix the plot contract in their own specs. The
    rest of ADR 0003 remains in force. Resolved on 2026-11-03.
-7. **Greedy terminal bonus.** The plan says "material evaluation"; this spec
-   adds `TERMINAL_SCORE` so the baseline does not ignore an immediate win or
-   draw. Pure material-only scoring is the alternative, at the cost of weaker
-   choices.
+7. **Greedy terminal bonus — accepted.** The plan says "material evaluation";
+   this spec adds `TERMINAL_SCORE` so the baseline does not ignore an immediate
+   win or draw. Pure material-only scoring is the alternative, at the cost of
+   weaker choices. Accepted on 2026-11-03: keep the terminal bonus.
 8. **Confidence-interval method.** ADR 0003 requires a 95% interval but does
    not fix the method. This spec uses the normal approximation on per-game
    scores with sample variance, clamped to `[0, 1]`. It treats games as
@@ -1638,18 +1638,20 @@ approved.
     `game_seed` only. Reproducing a side stream requires the derivation
     contract in this spec and the code. Adding `black_seed` and `white_seed`
     columns would make the log self-contained at the cost of two columns.
-11. **Registry scope.** The plan says the arena supports "any two agents"; the
-    arena API accepts any `AgentFactory`, but the config/CLI registry exposes
-    only `random` and `greedy`. The Q-agent joins in S5.
+11. **Registry scope — accepted.** The plan says the arena supports "any two
+    agents"; the arena API accepts any `AgentFactory`, but the config/CLI
+    registry exposes only `random` and `greedy`. The Q-agent joins in S5.
+    Accepted on 2026-11-03.
 12. **Fixed suite in code.** The suite is a code constant, not a config field.
     This keeps runs comparable. A configurable suite would create a new
     evaluation contract per config and is out of scope.
-13. **Greedy cost.** The baseline calls `state.apply` for each candidate move,
-    duplicating move generation. S4 accepts that for clarity; a 1,000-game run
-    should still be minutes, and optimization waits for a profile.
+13. **Greedy cost — accepted.** The baseline calls `state.apply` for each
+    candidate move, duplicating move generation. S4 accepts that for clarity; a
+    1,000-game run should still be minutes, and optimization waits for a
+    profile. Accepted on 2026-11-03.
 
 ## Approval
 
-Proposed for approval on 2026-11-01. Decision 6 was resolved by ADR 0004 on
+Proposed for approval on 2026-11-01. Decisions 6, 7, 11, and 13 were resolved on
 2026-11-03; the spec remains proposed pending the rest of the walkthrough. The
 next step after approval is `/tdd` for the first behaviour in S4.
