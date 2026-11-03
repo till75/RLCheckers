@@ -1,9 +1,29 @@
 """Agents that choose moves."""
 
+from rlcheckers.agents.greedy_agent import GreedyAgent, material_balance
+from rlcheckers.agents.protocol import Agent, AgentFactory
 from rlcheckers.agents.random_agent import (
     MAX_GAME_PLIES,
     RandomAgent,
     play_random_game,
 )
 
-__all__ = ["MAX_GAME_PLIES", "RandomAgent", "play_random_game"]
+AGENT_NAMES = ("greedy", "random")
+
+
+def make_agent(name: str, seed: int) -> Agent:
+    """Return an agent by registry name."""
+    raise NotImplementedError
+
+
+__all__ = [
+    "AGENT_NAMES",
+    "MAX_GAME_PLIES",
+    "Agent",
+    "AgentFactory",
+    "GreedyAgent",
+    "RandomAgent",
+    "make_agent",
+    "material_balance",
+    "play_random_game",
+]
