@@ -41,14 +41,20 @@ Observable criteria:
    with a Conventional Commit; docs and diagrams ship with it.
 
 ```mermaid
+%%{init: {"theme": "base", "themeVariables": {"darkMode": false, "primaryTextColor": "#000000", "secondaryTextColor": "#000000", "tertiaryTextColor": "#000000", "textColor": "#000000", "lineColor": "#334155", "edgeLabelBackground": "#ffffff", "clusterBkg": "#f8fafc", "clusterBorder": "#94a3b8"}}}%%
 flowchart LR
-    C[TOML config + seed] --> T[Self-play training]
-    T --> Q[Tabular Q-table]
-    Q --> E[Evaluate: random, then greedy]
-    E --> M[CSV metrics + plots]
-    M --> G{Thresholds met?}
-    G -->|No| T
-    G -->|Yes| D[First milestone done]
+    C["<span style='color:#000000'>TOML config + seed</span>"] --> T["<span style='color:#000000'>Self-play training</span>"]
+    T --> Q["<span style='color:#000000'>Tabular Q-table</span>"]
+    Q --> E["<span style='color:#000000'>Evaluate: random, then greedy</span>"]
+    E --> M["<span style='color:#000000'>CSV metrics + plots</span>"]
+    M --> G{"<span style='color:#000000'>Thresholds met?</span>"}
+    G -->|"<span style='background-color:#ffffff'><span style='color:#000000'>No</span></span>"| T
+    G -->|"<span style='background-color:#ffffff'><span style='color:#000000'>Yes</span></span>"| D["<span style='color:#000000'>First milestone done</span>"]
+
+    classDef stage fill:#dbeafe,stroke:#1d4ed8,color:#000000
+    classDef decision fill:#fef9c3,stroke:#a16207,color:#000000
+    class C,T,Q,E,M,D stage
+    class G decision
 ```
 
 ## In scope

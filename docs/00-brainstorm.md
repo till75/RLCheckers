@@ -145,15 +145,19 @@ neural agent.
 | E. Games ladder | Core to deep | Low to high | Optional | Minutes | Infrastructure creep |
 
 ```mermaid
+%%{init: {"theme": "base", "themeVariables": {"darkMode": false, "primaryTextColor": "#000000", "secondaryTextColor": "#000000", "tertiaryTextColor": "#000000", "textColor": "#000000", "lineColor": "#334155", "edgeLabelBackground": "#ffffff", "clusterBkg": "#f8fafc", "clusterBorder": "#94a3b8"}}}%%
 flowchart TD
-    G[Learn RL by building checkers] --> F[Foundation: rules, tests, evaluation]
-    F --> A[Tabular mini-checkers]
-    F --> E[Games ladder]
-    A --> B[DQN self-play on 8x8]
+    G["<span style='color:#000000'>Learn RL by building checkers</span>"] --> F["<span style='color:#000000'>Foundation: rules, tests, evaluation</span>"]
+    F --> A["<span style='color:#000000'>Tabular mini-checkers</span>"]
+    F --> E["<span style='color:#000000'>Games ladder</span>"]
+    A --> B["<span style='color:#000000'>DQN self-play on 8x8</span>"]
     E --> B
-    F --> D[Search + learned evaluation]
+    F --> D["<span style='color:#000000'>Search + learned evaluation</span>"]
     D --> B
-    B --> C[AlphaZero-lite]
+    B --> C["<span style='color:#000000'>AlphaZero-lite</span>"]
+
+    classDef stage fill:#dbeafe,stroke:#1d4ed8,color:#000000
+    class G,F,A,E,B,D,C stage
 ```
 
 ## Provisional recommendation — for discussion, not a decision

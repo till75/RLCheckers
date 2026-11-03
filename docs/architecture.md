@@ -21,59 +21,66 @@ The rules do not depend on agents. Agents depend on the rules. Training depends
 on both. Evaluation depends on the rules and agents. The CLI composes them.
 
 ```mermaid
+%%{init: {"theme": "base", "themeVariables": {"darkMode": false, "primaryTextColor": "#000000", "secondaryTextColor": "#000000", "tertiaryTextColor": "#000000", "textColor": "#000000", "lineColor": "#334155", "edgeLabelBackground": "#ffffff", "clusterBkg": "#f8fafc", "clusterBorder": "#94a3b8"}}}%%
 flowchart LR
-  subgraph Config["Configuration"]
-    TOML["eval.toml<br/>human-authored run settings"]
-    CFG["EvalConfig<br/>resolved seed · games · agents · output dir"]
-    TOML -->|"load_eval_config"| CFG
+  subgraph Config["<span style='background-color:#ffffff'><span style='color:#000000'>Configuration</span></span>"]
+    TOML["<span style='color:#000000'>eval.toml<br/>human-authored run settings</span>"]
+    CFG["<span style='color:#000000'>EvalConfig<br/>resolved seed · games · agents · output dir</span>"]
+    TOML -->|"<span style='background-color:#ffffff'><span style='color:#000000'>load_eval_config</span></span>"| CFG
   end
 
-  subgraph Rules["Rules engine · S1–S3"]
-    STATE["GameState<br/>board · legal moves · apply · outcome"]
+  subgraph Rules["<span style='background-color:#ffffff'><span style='color:#000000'>Rules engine · S1–S3</span></span>"]
+    STATE["<span style='color:#000000'>GameState<br/>board · legal moves · apply · outcome</span>"]
   end
 
-  subgraph Agents["Agents"]
-    BASE["Random + greedy<br/>S3/S4 baselines"]
-    Q["Q-agent<br/>S5+"]
+  subgraph Agents["<span style='background-color:#ffffff'><span style='color:#000000'>Agents</span></span>"]
+    BASE["<span style='color:#000000'>Random + greedy<br/>S3/S4 baselines</span>"]
+    Q["<span style='color:#000000'>Q-agent<br/>S5+</span>"]
   end
 
-  subgraph Evaluation["Evaluation · S4/S7"]
-    ARENA["Arena<br/>pairings · seeds · game loop"]
-    METRICS["Metrics<br/>W/D/L · score · 95% CI"]
-    GATE["Three-seed gate<br/>S7"]
+  subgraph Evaluation["<span style='background-color:#ffffff'><span style='color:#000000'>Evaluation · S4/S7</span></span>"]
+    ARENA["<span style='color:#000000'>Arena<br/>pairings · seeds · game loop</span>"]
+    METRICS["<span style='color:#000000'>Metrics<br/>W/D/L · score · 95% CI</span>"]
+    GATE["<span style='color:#000000'>Three-seed gate<br/>S7</span>"]
   end
 
-  subgraph Outputs["Artifacts"]
-    FILES["CSV + JSON<br/>metrics · games · run"]
-    PLOTS["Plots<br/>S5/S7"]
-    CONSUMER["Report / next slice<br/>reads artifacts"]
+  subgraph Outputs["<span style='background-color:#ffffff'><span style='color:#000000'>Artifacts</span></span>"]
+    FILES["<span style='color:#000000'>CSV + JSON<br/>metrics · games · run</span>"]
+    PLOTS["<span style='color:#000000'>Plots<br/>S5/S7</span>"]
+    CONSUMER["<span style='color:#000000'>Report / next slice<br/>reads artifacts</span>"]
   end
 
-  CLI["CLI<br/>play-random · evaluate"]
-  TRAIN["Training loop<br/>S5/S6"]
+  CLI["<span style='color:#000000'>CLI<br/>play-random · evaluate</span>"]
+  TRAIN["<span style='color:#000000'>Training loop<br/>S5/S6</span>"]
 
-  CFG -->|"configures"| CLI
-  CLI -->|"starts matchup"| ARENA
-  STATE -->|"state + legal moves"| ARENA
-  ARENA -->|"apply move"| STATE
-  BASE -->|"Move"| ARENA
-  Q -.->|"Move (S5+)"| ARENA
-  TRAIN -.->|"updates"| Q
-  ARENA -->|"ArenaResult"| METRICS
-  METRICS -->|"summary rows"| FILES
-  METRICS -.->|"per-seed scores (S7)"| GATE
-  GATE -.->|"gate report (S7)"| PLOTS
-  FILES -.->|"plot input (S5/S7)"| PLOTS
-  FILES -->|"CSV/JSON"| CONSUMER
+  CFG -->|"<span style='background-color:#ffffff'><span style='color:#000000'>configures</span></span>"| CLI
+  CLI -->|"<span style='background-color:#ffffff'><span style='color:#000000'>starts matchup</span></span>"| ARENA
+  STATE -->|"<span style='background-color:#ffffff'><span style='color:#000000'>state + legal moves</span></span>"| ARENA
+  ARENA -->|"<span style='background-color:#ffffff'><span style='color:#000000'>apply move</span></span>"| STATE
+  BASE -->|"<span style='background-color:#ffffff'><span style='color:#000000'>Move</span></span>"| ARENA
+  Q -.->|"<span style='background-color:#ffffff'><span style='color:#000000'>Move (S5+)</span></span>"| ARENA
+  TRAIN -.->|"<span style='background-color:#ffffff'><span style='color:#000000'>updates</span></span>"| Q
+  ARENA -->|"<span style='background-color:#ffffff'><span style='color:#000000'>ArenaResult</span></span>"| METRICS
+  METRICS -->|"<span style='background-color:#ffffff'><span style='color:#000000'>summary rows</span></span>"| FILES
+  METRICS -.->|"<span style='background-color:#ffffff'><span style='color:#000000'>per-seed scores (S7)</span></span>"| GATE
+  GATE -.->|"<span style='background-color:#ffffff'><span style='color:#000000'>gate report (S7)</span></span>"| PLOTS
+  FILES -.->|"<span style='background-color:#ffffff'><span style='color:#000000'>plot input (S5/S7)</span></span>"| PLOTS
+  FILES -->|"<span style='background-color:#ffffff'><span style='color:#000000'>CSV/JSON</span></span>"| CONSUMER
 
-  classDef config fill:#e3f2fd,stroke:#1565c0,color:#0d47a1
-  classDef cli fill:#e8eaf6,stroke:#283593,color:#1a237e
-  classDef rules fill:#e8f5e9,stroke:#2e7d32,color:#1b5e20
-  classDef agents fill:#f1f8e9,stroke:#558b2f,color:#33691e
-  classDef eval fill:#fff3e0,stroke:#ef6c00,color:#e65100
-  classDef metrics fill:#f3e5f5,stroke:#6a1b9a,color:#4a148c
-  classDef output fill:#eceff1,stroke:#455a64,color:#263238
-  classDef future fill:#f5f5f5,stroke:#9e9e9e,color:#616161,stroke-dasharray: 5 5
+  style Config fill:#eff6ff,stroke:#1565c0
+  style Rules fill:#f0fdf4,stroke:#2e7d32
+  style Agents fill:#f7fee7,stroke:#558b2f
+  style Evaluation fill:#fff7ed,stroke:#ef6c00
+  style Outputs fill:#f8fafc,stroke:#455a64
+
+  classDef config fill:#e3f2fd,stroke:#1565c0,color:#000000
+  classDef cli fill:#e8eaf6,stroke:#283593,color:#000000
+  classDef rules fill:#e8f5e9,stroke:#2e7d32,color:#000000
+  classDef agents fill:#f1f8e9,stroke:#558b2f,color:#000000
+  classDef eval fill:#fff3e0,stroke:#ef6c00,color:#000000
+  classDef metrics fill:#f3e5f5,stroke:#6a1b9a,color:#000000
+  classDef output fill:#eceff1,stroke:#455a64,color:#000000
+  classDef future fill:#f5f5f5,stroke:#9e9e9e,color:#000000,stroke-dasharray: 5 5
 
   class TOML,CFG config
   class CLI cli

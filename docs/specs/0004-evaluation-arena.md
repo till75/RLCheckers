@@ -23,53 +23,60 @@ Figure 1 is the runtime path from a TOML file to the three artifacts. It is
 explanatory rather than a second contract; the sections below define each box.
 
 ```mermaid
+%%{init: {"theme": "base", "themeVariables": {"darkMode": false, "primaryTextColor": "#000000", "secondaryTextColor": "#000000", "tertiaryTextColor": "#000000", "textColor": "#000000", "lineColor": "#334155", "edgeLabelBackground": "#ffffff", "clusterBkg": "#f8fafc", "clusterBorder": "#94a3b8"}}}%%
 flowchart LR
-  subgraph Input["1. Input"]
+  subgraph Input["<span style='background-color:#ffffff'><span style='color:#000000'>1. Input</span></span>"]
     TOML["<span style='color:#000000;font-weight:bold'>eval.toml</span><br/><span style='color:#000000'>seed · games · agent · opponent · output_dir</span>"]
     CFG["<span style='color:#000000;font-weight:bold'>EvalConfig</span><br/><span style='color:#000000'>validated · resolved paths</span>"]
-    TOML -->|"load_eval_config"| CFG
+    TOML -->|"<span style='background-color:#ffffff'><span style='color:#000000'>load_eval_config</span></span>"| CFG
   end
 
-  subgraph Composition["2. Composition"]
+  subgraph Composition["<span style='background-color:#ffffff'><span style='color:#000000'>2. Composition</span></span>"]
     CLI["<span style='color:#000000;font-weight:bold'>cli.main('evaluate')</span><br/><span style='color:#000000'>load · compose · run · report</span>"]
-    CFG -->|"configures"| CLI
+    CFG -->|"<span style='background-color:#ffffff'><span style='color:#000000'>configures</span></span>"| CLI
   end
 
-  subgraph Matchup["3. Matchup"]
+  subgraph Matchup["<span style='background-color:#ffffff'><span style='color:#000000'>3. Matchup</span></span>"]
     ARENA["<span style='color:#000000;font-weight:bold'>play_matchup</span><br/><span style='color:#000000'>validate · schedule · play · collect</span>"]
     AGENTS["<span style='color:#000000;font-weight:bold'>AgentFactory</span><br/><span style='color:#000000'>random or greedy + side seed</span>"]
     RULES["<span style='color:#000000;font-weight:bold'>GameState</span><br/><span style='color:#000000'>legal moves · apply · outcome</span>"]
     RESULT["<span style='color:#000000;font-weight:bold'>ArenaResult</span><br/><span style='color:#000000'>metadata + GameResult per game</span>"]
-    CLI -->|"starts"| ARENA
-    ARENA -->|"asks for moves"| AGENTS
-    AGENTS -->|"Move"| ARENA
-    ARENA -->|"applies"| RULES
-    RULES -->|"next state"| ARENA
-    ARENA -->|"returns"| RESULT
+    CLI -->|"<span style='background-color:#ffffff'><span style='color:#000000'>starts</span></span>"| ARENA
+    ARENA -->|"<span style='background-color:#ffffff'><span style='color:#000000'>asks for moves</span></span>"| AGENTS
+    AGENTS -->|"<span style='background-color:#ffffff'><span style='color:#000000'>Move</span></span>"| ARENA
+    ARENA -->|"<span style='background-color:#ffffff'><span style='color:#000000'>applies</span></span>"| RULES
+    RULES -->|"<span style='background-color:#ffffff'><span style='color:#000000'>next state</span></span>"| ARENA
+    ARENA -->|"<span style='background-color:#ffffff'><span style='color:#000000'>returns</span></span>"| RESULT
   end
 
-  subgraph Results["4. Results"]
+  subgraph Results["<span style='background-color:#ffffff'><span style='color:#000000'>4. Results</span></span>"]
     METRICS["<span style='color:#000000;font-weight:bold'>summary_rows / summarize</span><br/><span style='color:#000000'>W/D/L · score · 95% CI</span>"]
     WRITE["<span style='color:#000000;font-weight:bold'>write_artifacts</span><br/><span style='color:#000000'>validate · write · return path</span>"]
-    RESULT -->|"games"| METRICS
-    RESULT -->|"games"| WRITE
-    METRICS -->|"rows"| WRITE
+    RESULT -->|"<span style='background-color:#ffffff'><span style='color:#000000'>games</span></span>"| METRICS
+    RESULT -->|"<span style='background-color:#ffffff'><span style='color:#000000'>games</span></span>"| WRITE
+    METRICS -->|"<span style='background-color:#ffffff'><span style='color:#000000'>rows</span></span>"| WRITE
   end
 
-  subgraph Outputs["5. Outputs"]
+  subgraph Outputs["<span style='background-color:#ffffff'><span style='color:#000000'>5. Outputs</span></span>"]
     M["<span style='color:#000000;font-weight:bold'>metrics.csv</span><br/><span style='color:#000000'>summary + CI</span>"]
     G["<span style='color:#000000;font-weight:bold'>games.csv</span><br/><span style='color:#000000'>per-game audit trail</span>"]
     J["<span style='color:#000000;font-weight:bold'>run.json</span><br/><span style='color:#000000'>config · versions · command</span>"]
     OUT["<span style='color:#000000;font-weight:bold'>stdout</span><br/><span style='color:#000000'>ten-line summary</span>"]
-    WRITE -->|"writes"| M
-    WRITE -->|"writes"| G
-    WRITE -->|"writes"| J
-    METRICS -->|"score + CI"| OUT
+    WRITE -->|"<span style='background-color:#ffffff'><span style='color:#000000'>writes</span></span>"| M
+    WRITE -->|"<span style='background-color:#ffffff'><span style='color:#000000'>writes</span></span>"| G
+    WRITE -->|"<span style='background-color:#ffffff'><span style='color:#000000'>writes</span></span>"| J
+    METRICS -->|"<span style='background-color:#ffffff'><span style='color:#000000'>score + CI</span></span>"| OUT
   end
 
   FAIL["<span style='color:#000000;font-weight:bold'>Failure</span><br/><span style='color:#000000'>no artifacts written</span>"]
-  ARENA -.->|"illegal move / non-termination"| FAIL
-  WRITE -.->|"config mismatch / I/O error"| FAIL
+  ARENA -.->|"<span style='background-color:#ffffff'><span style='color:#000000'>illegal move / non-termination</span></span>"| FAIL
+  WRITE -.->|"<span style='background-color:#ffffff'><span style='color:#000000'>config mismatch / I/O error</span></span>"| FAIL
+
+  style Input fill:#eff6ff,stroke:#1d4ed8
+  style Composition fill:#eef2ff,stroke:#3730a3
+  style Matchup fill:#fff7ed,stroke:#c2410c
+  style Results fill:#faf5ff,stroke:#7e22ce
+  style Outputs fill:#f8fafc,stroke:#334155
 
   classDef input fill:#dbeafe,stroke:#1d4ed8,color:#000000
   classDef compose fill:#e0e7ff,stroke:#3730a3,color:#000000
@@ -264,26 +271,29 @@ function does not look at side to move.
 6. Return the chosen move.
 
 ```mermaid
+%%{init: {"theme": "base", "themeVariables": {"darkMode": false, "primaryTextColor": "#000000", "secondaryTextColor": "#000000", "tertiaryTextColor": "#000000", "textColor": "#000000", "lineColor": "#334155", "edgeLabelBackground": "#ffffff", "clusterBkg": "#f8fafc", "clusterBorder": "#94a3b8"}}}%%
 flowchart TD
-  S["GameState<br/>current board + side to move"] -->|"inspect"| T{"terminal?"}
-  T -->|"yes"| E["ValueError<br/>finished"]
-  T -->|"no"| L["legal_moves()<br/>engine already enforces captures"]
-  L -->|"enumerate"| C["for each legal Move<br/>apply → next_state"]
-  C -->|"score each"| D{"next_state terminal?"}
-  D -->|"yes"| W["terminal score<br/>win +1000 · draw 0 · loss -1000"]
-  D -->|"no"| M["material_balance<br/>man 1 · king 3"]
-  W -->|"candidate score"| P["rank by score<br/>then smallest (path, captures)"]
-  M -->|"candidate score"| P
-  P -->|"best"| R["return Move<br/>deterministic · no RNG"]
+  S["<span style='color:#000000'>GameState<br/>current board + side to move</span>"] -->|"<span style='background-color:#ffffff'><span style='color:#000000'>inspect</span></span>"| T{"<span style='color:#000000'>terminal?</span>"}
+  T -->|"<span style='background-color:#ffffff'><span style='color:#000000'>yes</span></span>"| E["<span style='color:#000000'>ValueError<br/>finished</span>"]
+  T -->|"<span style='background-color:#ffffff'><span style='color:#000000'>no</span></span>"| L["<span style='color:#000000'>legal_moves()<br/>engine already enforces captures</span>"]
+  L -->|"<span style='background-color:#ffffff'><span style='color:#000000'>enumerate</span></span>"| C["<span style='color:#000000'>for each legal Move<br/>apply → next_state</span>"]
+  C -->|"<span style='background-color:#ffffff'><span style='color:#000000'>score each</span></span>"| D{"<span style='color:#000000'>next_state terminal?</span>"}
+  D -->|"<span style='background-color:#ffffff'><span style='color:#000000'>yes</span></span>"| W["<span style='color:#000000'>terminal score<br/>win +1000 · draw 0 · loss -1000</span>"]
+  D -->|"<span style='background-color:#ffffff'><span style='color:#000000'>no</span></span>"| M["<span style='color:#000000'>material_balance<br/>man 1 · king 3</span>"]
+  W -->|"<span style='background-color:#ffffff'><span style='color:#000000'>candidate score</span></span>"| P["<span style='color:#000000'>rank by score<br/>then smallest (path, captures)</span>"]
+  M -->|"<span style='background-color:#ffffff'><span style='color:#000000'>candidate score</span></span>"| P
+  P -->|"<span style='background-color:#ffffff'><span style='color:#000000'>best</span></span>"| R["<span style='color:#000000'>return Move<br/>deterministic · no RNG</span>"]
 
-  classDef state fill:#e3f2fd,stroke:#1565c0,color:#0d47a1
-  classDef agent fill:#e8f5e9,stroke:#2e7d32,color:#1b5e20
-  classDef score fill:#fff3e0,stroke:#ef6c00,color:#e65100
-  classDef choice fill:#f3e5f5,stroke:#6a1b9a,color:#4a148c
-  classDef fail fill:#ffebee,stroke:#c62828,color:#b71c1c
+  classDef state fill:#e3f2fd,stroke:#1565c0,color:#000000
+  classDef agent fill:#e8f5e9,stroke:#2e7d32,color:#000000
+  classDef decision fill:#fff7ed,stroke:#ef6c00,color:#000000
+  classDef score fill:#fff3e0,stroke:#ef6c00,color:#000000
+  classDef choice fill:#f3e5f5,stroke:#6a1b9a,color:#000000
+  classDef fail fill:#ffebee,stroke:#c62828,color:#000000
 
   class S state
   class L,C agent
+  class T,D decision
   class W,M score
   class P,R choice
   class E fail
@@ -426,20 +436,21 @@ is salted per process. The recorded `game_seed` is the base seed, not either
 side seed.
 
 ```mermaid
+%%{init: {"theme": "base", "themeVariables": {"darkMode": false, "primaryTextColor": "#000000", "secondaryTextColor": "#000000", "tertiaryTextColor": "#000000", "textColor": "#000000", "lineColor": "#334155", "edgeLabelBackground": "#ffffff", "clusterBkg": "#f8fafc", "clusterBorder": "#94a3b8"}}}%%
 flowchart LR
-  M["Master seed<br/>one per run"] -->|"seeds"| G["Game seed<br/>SHA-256 of master + pair + opening + colour"]
-  P["Pair index<br/>repetition number"] -->|"repetition"| G
-  O["Opening index<br/>0..4"] -->|"position"| G
-  C["Agent colour<br/>Black or White"] -->|"perspective"| G
-  G -->|"derive"| AS["Agent side seed<br/>SHA-256 of game seed + agent colour"]
-  G -->|"derive"| OS["Opponent side seed<br/>SHA-256 of game seed + opponent colour"]
-  AS -->|"initialise"| AR["Agent stream<br/>random or deterministic"]
-  OS -->|"initialise"| OR["Opponent stream<br/>random or deterministic"]
+  M["<span style='color:#000000'>Master seed<br/>one per run</span>"] -->|"<span style='background-color:#ffffff'><span style='color:#000000'>seeds</span></span>"| G["<span style='color:#000000'>Game seed<br/>SHA-256 of master + pair + opening + colour</span>"]
+  P["<span style='color:#000000'>Pair index<br/>repetition number</span>"] -->|"<span style='background-color:#ffffff'><span style='color:#000000'>repetition</span></span>"| G
+  O["<span style='color:#000000'>Opening index<br/>0..4</span>"] -->|"<span style='background-color:#ffffff'><span style='color:#000000'>position</span></span>"| G
+  C["<span style='color:#000000'>Agent colour<br/>Black or White</span>"] -->|"<span style='background-color:#ffffff'><span style='color:#000000'>perspective</span></span>"| G
+  G -->|"<span style='background-color:#ffffff'><span style='color:#000000'>derive</span></span>"| AS["<span style='color:#000000'>Agent side seed<br/>SHA-256 of game seed + agent colour</span>"]
+  G -->|"<span style='background-color:#ffffff'><span style='color:#000000'>derive</span></span>"| OS["<span style='color:#000000'>Opponent side seed<br/>SHA-256 of game seed + opponent colour</span>"]
+  AS -->|"<span style='background-color:#ffffff'><span style='color:#000000'>initialise</span></span>"| AR["<span style='color:#000000'>Agent stream<br/>random or deterministic</span>"]
+  OS -->|"<span style='background-color:#ffffff'><span style='color:#000000'>initialise</span></span>"| OR["<span style='color:#000000'>Opponent stream<br/>random or deterministic</span>"]
 
-  classDef master fill:#e3f2fd,stroke:#1565c0,color:#0d47a1
-  classDef identity fill:#fff3e0,stroke:#ef6c00,color:#e65100
-  classDef side fill:#e8f5e9,stroke:#2e7d32,color:#1b5e20
-  classDef stream fill:#f3e5f5,stroke:#6a1b9a,color:#4a148c
+  classDef master fill:#e3f2fd,stroke:#1565c0,color:#000000
+  classDef identity fill:#fff3e0,stroke:#ef6c00,color:#000000
+  classDef side fill:#e8f5e9,stroke:#2e7d32,color:#000000
+  classDef stream fill:#f3e5f5,stroke:#6a1b9a,color:#000000
 
   class M master
   class P,O,C,G identity
@@ -474,6 +485,7 @@ For each scheduled game:
 5. Record the `GameResult`.
 
 ```mermaid
+%%{init: {"theme": "base", "themeVariables": {"darkMode": false, "primaryTextColor": "#000000", "secondaryTextColor": "#000000", "tertiaryTextColor": "#000000", "textColor": "#000000", "lineColor": "#334155", "actorBkg": "#f1f5f9", "actorBorder": "#334155", "actorTextColor": "#000000", "noteBkgColor": "#fef9c3", "noteTextColor": "#000000", "noteBorderColor": "#a16207", "signalColor": "#334155", "signalTextColor": "#000000"}}}%%
 sequenceDiagram
   participant CLI as CLI<br/>compose + report
   participant Arena as Arena<br/>schedule + validate
@@ -708,24 +720,25 @@ postponed annotations and reads `config.seed`, `config.games`, `config.agent`,
 would create a cycle.
 
 ```mermaid
+%%{init: {"theme": "base", "themeVariables": {"darkMode": false, "primaryTextColor": "#000000", "secondaryTextColor": "#000000", "tertiaryTextColor": "#000000", "textColor": "#000000", "lineColor": "#334155", "edgeLabelBackground": "#ffffff", "clusterBkg": "#f8fafc", "clusterBorder": "#94a3b8"}}}%%
 flowchart LR
-  R["ArenaResult<br/>metadata + games"] -->|"pool games"| S["summary_rows<br/>overall · colour · opening"]
-  R -->|"one row per game"| G["games.csv rows<br/>one per GameResult"]
-  C["EvalConfig<br/>seed · games · output dir"] -->|"expected seed + count"| V{"result.seed matches config.seed<br/>and game count matches?"}
-  R -->|"actual seed + count"| V
-  V -->|"yes"| W["write_artifacts<br/>mkdir · write · return path"]
-  V -->|"no"| E["ValueError<br/>config mismatch"]
-  S -->|"rows"| W
-  G -->|"rows"| W
-  W -->|"writes"| M["metrics.csv<br/>summary + CI"]
-  W -->|"writes"| GF["games.csv<br/>audit trail"]
-  W -->|"writes"| J["run.json<br/>config · versions · command"]
-  S -->|"score + CI"| O["stdout<br/>ten-line summary"]
+  R["<span style='color:#000000'>ArenaResult<br/>metadata + games</span>"] -->|"<span style='background-color:#ffffff'><span style='color:#000000'>pool games</span></span>"| S["<span style='color:#000000'>summary_rows<br/>overall · colour · opening</span>"]
+  R -->|"<span style='background-color:#ffffff'><span style='color:#000000'>one row per game</span></span>"| G["<span style='color:#000000'>games.csv rows<br/>one per GameResult</span>"]
+  C["<span style='color:#000000'>EvalConfig<br/>seed · games · output dir</span>"] -->|"<span style='background-color:#ffffff'><span style='color:#000000'>expected seed + count</span></span>"| V{"<span style='color:#000000'>result.seed matches config.seed<br/>and game count matches?</span>"}
+  R -->|"<span style='background-color:#ffffff'><span style='color:#000000'>actual seed + count</span></span>"| V
+  V -->|"<span style='background-color:#ffffff'><span style='color:#000000'>yes</span></span>"| W["<span style='color:#000000'>write_artifacts<br/>mkdir · write · return path</span>"]
+  V -->|"<span style='background-color:#ffffff'><span style='color:#000000'>no</span></span>"| E["<span style='color:#000000'>ValueError<br/>config mismatch</span>"]
+  S -->|"<span style='background-color:#ffffff'><span style='color:#000000'>rows</span></span>"| W
+  G -->|"<span style='background-color:#ffffff'><span style='color:#000000'>rows</span></span>"| W
+  W -->|"<span style='background-color:#ffffff'><span style='color:#000000'>writes</span></span>"| M["<span style='color:#000000'>metrics.csv<br/>summary + CI</span>"]
+  W -->|"<span style='background-color:#ffffff'><span style='color:#000000'>writes</span></span>"| GF["<span style='color:#000000'>games.csv<br/>audit trail</span>"]
+  W -->|"<span style='background-color:#ffffff'><span style='color:#000000'>writes</span></span>"| J["<span style='color:#000000'>run.json<br/>config · versions · command</span>"]
+  S -->|"<span style='background-color:#ffffff'><span style='color:#000000'>score + CI</span></span>"| O["<span style='color:#000000'>stdout<br/>ten-line summary</span>"]
 
-  classDef result fill:#f3e5f5,stroke:#6a1b9a,color:#4a148c
-  classDef config fill:#e3f2fd,stroke:#1565c0,color:#0d47a1
-  classDef output fill:#eceff1,stroke:#455a64,color:#263238
-  classDef fail fill:#ffebee,stroke:#c62828,color:#b71c1c
+  classDef result fill:#f3e5f5,stroke:#6a1b9a,color:#000000
+  classDef config fill:#e3f2fd,stroke:#1565c0,color:#000000
+  classDef output fill:#eceff1,stroke:#455a64,color:#000000
+  classDef fail fill:#ffebee,stroke:#c62828,color:#000000
 
   class R,S,G result
   class C,V config

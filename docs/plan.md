@@ -46,14 +46,18 @@ S5 is a diagnostic stepping stone. The milestone gate is the self-play agent in
 S6/S7; S5 does not replace the brief's self-play decision.
 
 ```mermaid
+%%{init: {"theme": "base", "themeVariables": {"darkMode": false, "primaryTextColor": "#000000", "secondaryTextColor": "#000000", "tertiaryTextColor": "#000000", "textColor": "#000000", "lineColor": "#334155", "edgeLabelBackground": "#ffffff", "clusterBkg": "#f8fafc", "clusterBorder": "#94a3b8"}}}%%
 flowchart LR
-    S0[S0 Feasibility + rules] --> S1[S1 Board]
-    S1 --> S2[S2 Legal moves]
-    S2 --> S3[S3 Game loop]
-    S3 --> S4[S4 Evaluation]
-    S4 --> S5[S5 Q-learning vs random]
-    S5 --> S6[S6 Self-play]
-    S6 --> S7[S7 Gate + report]
+    S0["<span style='color:#000000'>S0 Feasibility + rules</span>"] --> S1["<span style='color:#000000'>S1 Board</span>"]
+    S1 --> S2["<span style='color:#000000'>S2 Legal moves</span>"]
+    S2 --> S3["<span style='color:#000000'>S3 Game loop</span>"]
+    S3 --> S4["<span style='color:#000000'>S4 Evaluation</span>"]
+    S4 --> S5["<span style='color:#000000'>S5 Q-learning vs random</span>"]
+    S5 --> S6["<span style='color:#000000'>S6 Self-play</span>"]
+    S6 --> S7["<span style='color:#000000'>S7 Gate + report</span>"]
+
+    classDef stage fill:#dbeafe,stroke:#1d4ed8,color:#000000
+    class S0,S1,S2,S3,S4,S5,S6,S7 stage
 ```
 
 ## Slice overview
