@@ -6,9 +6,10 @@ ADR/spec split is reconciled, ADR 0003 (evaluation protocol and gate) is
 accepted, and ADR 0004 (plot ownership) resolves the last spec-level conflict.
 Spec 0004 is written and approved, with explanatory diagrams in the spec and
 `docs/architecture.md`; all thirteen walkthrough decisions are resolved. S4
-implementation is underway: the bootstrap, greedy baseline, opening suite,
-seeded matchup arena, metrics, config, and artifacts are committed. The prep
-commits are local and unpushed; 185 tests pass and `ruff check .` is clean.
+implementation is complete: the bootstrap, baselines, arena, metrics, config,
+artifacts, and `evaluate` CLI are committed. The prep commits are local and
+unpushed; 191 tests pass and `ruff check .` is clean. A10 documentation is the
+remaining task.
 
 ## Done since last handoff
 - `b0e87c4`, `295859d` — `GameState`, `GameRecord`, counters, terminal/draw rules, and constructor validation in `state.py`.
@@ -55,12 +56,14 @@ commits are local and unpushed; 185 tests pass and `ruff check .` is clean.
 - `a1aa1f9` — evaluation artifacts: `metrics.csv`, `games.csv`, `run.json`,
   the config-mismatch guard, overwrite safety, and byte reproducibility; A8
   covered by seven tests.
+- `6a24680` — `evaluate` CLI: config loading, matchup, artifacts, the ten-line
+  summary, error handling, and the module entry point; A9 covered by six tests.
 
 ## Next
-1. Write the red tests for A9: the `evaluate` subcommand, stdout,
-   reproducibility, config errors, and the module entry point.
-2. Then finish A10 (architecture, README, plan, and module docstrings).
-3. Keep training code out until the S4 evaluation harness is green.
+1. Finish A10: update `docs/architecture.md`, `README.md`, and `docs/plan.md`,
+   and review the module docstrings.
+2. Run the full suite and `ruff check .`, then commit the slice for approval.
+3. Do not start S5 until S4 is approved.
 
 ## Open questions
 - None. Spec 0004 is approved; implementation questions go to the TDD cycle.
@@ -75,7 +78,7 @@ commits are local and unpushed; 185 tests pass and `ruff check .` is clean.
 - Generated moves use at most four captures and five path squares, so the six-square action-key limit is not reached.
 - ADR 0003 fixes evaluation policy only. Opening positions, baseline functions, seed derivation, the CI method, and CSV/CLI details belong in spec 0004.
 - ADR 0004 fixes plot ownership only: S4 writes CSV/JSON, S5/S7 own plot contents. The planned Q-learning and self-play ADRs are now 0005 and 0006.
-- The evaluation pipeline is implemented; the `evaluate` CLI handler is the only remaining stub.
+- All S4 behaviour is implemented; A10 documentation is the remaining task.
 - Diagrams in spec 0004 are explanatory; the tables and prose are the contract.
 - Mermaid diagrams force a light base theme and explicit black labels. Sequence diagrams must use theme variables, not inline HTML spans. See the diagram conventions in `AGENTS.md`.
 - The gate evaluates greedily; the random baseline still draws from its own seeded stream.
