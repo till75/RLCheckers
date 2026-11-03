@@ -13,7 +13,11 @@ AGENT_NAMES = ("greedy", "random")
 
 def make_agent(name: str, seed: int) -> Agent:
     """Return an agent by registry name."""
-    raise NotImplementedError
+    if name == "random":
+        return RandomAgent(seed=seed)
+    if name == "greedy":
+        return GreedyAgent()
+    raise ValueError(f"unknown agent: {name!r}")
 
 
 __all__ = [
