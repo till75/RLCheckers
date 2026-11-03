@@ -31,7 +31,11 @@ class GameOutcome(Enum):
     @property
     def score(self) -> float:
         """Return the per-game score for this outcome."""
-        raise NotImplementedError
+        if self is GameOutcome.WIN:
+            return 1.0
+        if self is GameOutcome.DRAW:
+            return 0.5
+        return 0.0
 
 
 @dataclass(frozen=True)
