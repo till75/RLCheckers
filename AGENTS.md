@@ -35,6 +35,31 @@ steps over large speculative changes.
 Add dependencies to the virtual environment only when the current slice needs
 them, and record them in the project metadata.
 
+## Diagram conventions
+
+These are author preferences, not optional styling:
+
+- Use Mermaid. Do not switch to PlantUML or another diagram tool without
+  explicit approval.
+- Never rely on the viewer's theme for text colour. Grey text is a defect.
+- Start every Mermaid block with the canonical light base theme:
+
+  ```text
+  %%{init: {"theme": "base", "themeVariables": {"darkMode": false, "primaryTextColor": "#000000", "secondaryTextColor": "#000000", "tertiaryTextColor": "#000000", "textColor": "#000000", "lineColor": "#334155", "edgeLabelBackground": "#ffffff", "clusterBkg": "#f8fafc", "clusterBorder": "#94a3b8"}}}%%
+  ```
+
+- In flowcharts, give each node an explicit black label. Use a bold title and a
+  normal-weight summary where the box needs both. Give edge and cluster labels a
+  white backing plus black text.
+- In sequence diagrams, use theme variables for text colour. Mermaid sequence
+  diagrams do not render inline HTML spans; do not put spans in participant,
+  message, note, or loop text.
+- Use colour to carry meaning, label arrows, and give each box a title and a
+  short summary. Keep the prose or table as the contract; the diagram explains.
+- Check every diagram against a dark preview as well as a light one. All text
+  must be black on a light surface, including edge labels, cluster titles,
+  participants, and notes.
+
 ## Working agreement
 
 - **One vertical slice per turn.** A slice includes its tests, implementation,

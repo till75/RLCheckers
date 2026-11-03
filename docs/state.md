@@ -19,6 +19,8 @@ prep commits are local and unpushed; 130 tests pass and `ruff check .` is clean.
 - ADR 0003 status corrected to `proposed`, then accepted by the author on 2026-11-01.
 - `5240c7c`, `e8f7080` — spec 0004 written, clarified, and proposed.
 - Added explanatory, colour-coded diagrams to spec 0004 and `docs/architecture.md`.
+- `fcfaf33`, `a4dbe96` — all Mermaid diagrams forced to black text on light
+  surfaces, including edge, cluster, participant, and note labels.
 
 ## Next
 1. Approve spec 0004, resolving the ADR 0003 plot-contract gap first.
@@ -42,6 +44,7 @@ prep commits are local and unpushed; 130 tests pass and `ruff check .` is clean.
 - Generated moves use at most four captures and five path squares, so the six-square action-key limit is not reached.
 - ADR 0003 fixes evaluation policy only. Opening positions, baseline functions, seed derivation, the CI method, and CSV/CLI details belong in spec 0004.
 - Diagrams in spec 0004 are explanatory; the tables and prose are the contract.
+- Mermaid diagrams force a light base theme and explicit black labels. Sequence diagrams must use theme variables, not inline HTML spans. See the diagram conventions in `AGENTS.md`.
 - The gate evaluates greedily; the random baseline still draws from its own seeded stream.
 
 ## Not in an ADR
