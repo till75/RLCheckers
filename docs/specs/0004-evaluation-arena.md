@@ -71,13 +71,13 @@ flowchart LR
   ARENA -.->|"illegal move / non-termination"| FAIL
   WRITE -.->|"config mismatch / I/O error"| FAIL
 
-  classDef input fill:#dbeafe,stroke:#1d4ed8,color:#172554
-  classDef compose fill:#e0e7ff,stroke:#3730a3,color:#1e1b4b
-  classDef arena fill:#ffedd5,stroke:#c2410c,color:#431407
-  classDef rules fill:#dcfce7,stroke:#15803d,color:#052e16
-  classDef result fill:#f3e8ff,stroke:#7e22ce,color:#3b0764
-  classDef output fill:#e2e8f0,stroke:#334155,color:#0f172a
-  classDef fail fill:#fee2e2,stroke:#b91c1c,color:#450a0a
+  classDef input fill:#dbeafe,stroke:#1d4ed8,color:#000000
+  classDef compose fill:#e0e7ff,stroke:#3730a3,color:#000000
+  classDef arena fill:#ffedd5,stroke:#c2410c,color:#000000
+  classDef rules fill:#dcfce7,stroke:#15803d,color:#000000
+  classDef result fill:#f3e8ff,stroke:#7e22ce,color:#000000
+  classDef output fill:#e2e8f0,stroke:#334155,color:#000000
+  classDef fail fill:#fee2e2,stroke:#b91c1c,color:#000000
 
   class TOML,CFG input
   class CLI compose
@@ -94,8 +94,8 @@ all five contracts. The arena returns an `ArenaResult`; only then does
 leave partial metrics. Blue is input, indigo is composition, green is
 rules/agents, orange is the matchup, purple is results, grey is output, and red
 is the loud-failure path. Each box keeps the hue in its fill and stroke and uses
-near-black text for contrast. Related decisions: 2 (artifact count), 5 (modules),
-and 11 (registry scope).
+black text. Related decisions: 2 (artifact count), 5 (modules), and 11 (registry
+scope).
 
 ### Modules and imports
 
