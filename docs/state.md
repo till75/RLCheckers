@@ -6,8 +6,9 @@ ADR/spec split is reconciled, ADR 0003 (evaluation protocol and gate) is
 accepted, and ADR 0004 (plot ownership) resolves the last spec-level conflict.
 Spec 0004 is written and approved, with explanatory diagrams in the spec and
 `docs/architecture.md`; all thirteen walkthrough decisions are resolved. S4
-implementation is underway: the bootstrap and greedy baseline are committed. The
-prep commits are local and unpushed; 140 tests pass and `ruff check .` is clean.
+implementation is underway: the bootstrap, greedy baseline, and opening suite are
+committed. The prep commits are local and unpushed; 145 tests pass and
+`ruff check .` is clean.
 
 ## Done since last handoff
 - `b0e87c4`, `295859d` — `GameState`, `GameRecord`, counters, terminal/draw rules, and constructor validation in `state.py`.
@@ -41,11 +42,14 @@ prep commits are local and unpushed; 140 tests pass and `ruff check .` is clean.
   help verified.
 - `869e0b4` — greedy baseline: material balance, terminal override, and
   deterministic tie-break; A2/A3 covered by ten tests.
+- `ea3d0d8` — standard opening suite: five prefixes applied through
+  `GameState.apply`, with the recorded keys, counters, and history; A1 covered
+  by five tests.
 
 ## Next
-1. Write the first red test for A2 and A3: material balance and greedy choice.
-2. Then follow the TDD order in spec 0004: openings, arena, metrics, config,
-   artifacts, CLI.
+1. Write the red tests for A4 and A5: schedule, colour pairing, seed
+   derivation, reproducibility, perspective, and arena errors.
+2. Then follow the TDD order in spec 0004: metrics, config, artifacts, CLI.
 3. Keep training code out until the S4 evaluation harness is green.
 
 ## Open questions
@@ -61,7 +65,7 @@ prep commits are local and unpushed; 140 tests pass and `ruff check .` is clean.
 - Generated moves use at most four captures and five path squares, so the six-square action-key limit is not reached.
 - ADR 0003 fixes evaluation policy only. Opening positions, baseline functions, seed derivation, the CI method, and CSV/CLI details belong in spec 0004.
 - ADR 0004 fixes plot ownership only: S4 writes CSV/JSON, S5/S7 own plot contents. The planned Q-learning and self-play ADRs are now 0005 and 0006.
-- The S4 bootstrap is committed; every public signature raises `NotImplementedError` until its TDD cycle.
+- The greedy baseline and opening suite are implemented; the matchup, metrics, config, and artifacts still raise `NotImplementedError`.
 - Diagrams in spec 0004 are explanatory; the tables and prose are the contract.
 - Mermaid diagrams force a light base theme and explicit black labels. Sequence diagrams must use theme variables, not inline HTML spans. See the diagram conventions in `AGENTS.md`.
 - The gate evaluates greedily; the random baseline still draws from its own seeded stream.
