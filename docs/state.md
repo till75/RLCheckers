@@ -6,8 +6,8 @@ ADR/spec split is reconciled, ADR 0003 (evaluation protocol and gate) is
 accepted, and ADR 0004 (plot ownership) resolves the last spec-level conflict.
 Spec 0004 is written and approved, with explanatory diagrams in the spec and
 `docs/architecture.md`; all thirteen walkthrough decisions are resolved. S4
-implementation has started with the bootstrap commit. The prep commits are local
-and unpushed; 130 tests pass and `ruff check .` is clean.
+implementation is underway: the bootstrap and greedy baseline are committed. The
+prep commits are local and unpushed; 140 tests pass and `ruff check .` is clean.
 
 ## Done since last handoff
 - `b0e87c4`, `295859d` — `GameState`, `GameRecord`, counters, terminal/draw rules, and constructor validation in `state.py`.
@@ -39,6 +39,8 @@ and unpushed; 130 tests pass and `ruff check .` is clean.
   and config modules with public signatures raising `NotImplementedError`; the
   package re-exports and the `evaluate` subparser are wired. Imports and CLI
   help verified.
+- `869e0b4` — greedy baseline: material balance, terminal override, and
+  deterministic tie-break; A2/A3 covered by ten tests.
 
 ## Next
 1. Write the first red test for A2 and A3: material balance and greedy choice.
