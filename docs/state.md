@@ -6,9 +6,9 @@ ADR/spec split is reconciled, ADR 0003 (evaluation protocol and gate) is
 accepted, and ADR 0004 (plot ownership) resolves the last spec-level conflict.
 Spec 0004 is written and approved, with explanatory diagrams in the spec and
 `docs/architecture.md`; all thirteen walkthrough decisions are resolved. S4 is
-complete: the bootstrap, baselines, arena, metrics, config, artifacts,
-`evaluate` CLI, and A10 documentation are committed. The slice is awaiting
-approval; 191 tests pass and `ruff check .` is clean.
+complete and approved on 2026-11-03: the bootstrap, baselines, arena, metrics,
+config, artifacts, `evaluate` CLI, and A10 documentation are committed. The
+slice is approved for push; 191 tests pass and `ruff check .` is clean.
 
 ## Done since last handoff
 - `b0e87c4`, `295859d` — `GameState`, `GameRecord`, counters, terminal/draw rules, and constructor validation in `state.py`.
@@ -62,9 +62,8 @@ approval; 191 tests pass and `ruff check .` is clean.
   module docstrings state the same contracts.
 
 ## Next
-1. Request approval for S4.
-2. After approval, push the completed slice.
-3. Do not start S5 until S4 is approved.
+1. S5 is tabular Q-learning against a fixed random opponent (spec 0005).
+2. Do not start S5 until it is approved as its own slice.
 
 ## Open questions
 - None. Spec 0004 is approved; implementation questions go to the TDD cycle.
@@ -79,7 +78,7 @@ approval; 191 tests pass and `ruff check .` is clean.
 - Generated moves use at most four captures and five path squares, so the six-square action-key limit is not reached.
 - ADR 0003 fixes evaluation policy only. Opening positions, baseline functions, seed derivation, the CI method, and CSV/CLI details belong in spec 0004.
 - ADR 0004 fixes plot ownership only: S4 writes CSV/JSON, S5/S7 own plot contents. The planned Q-learning and self-play ADRs are now 0005 and 0006.
-- S4 is complete and awaiting approval; the prep commits are unpushed.
+- S4 is complete and approved; the working tree is clean.
 - Diagrams in spec 0004 are explanatory; the tables and prose are the contract.
 - Mermaid diagrams force a light base theme and explicit black labels. Sequence diagrams must use theme variables, not inline HTML spans. See the diagram conventions in `AGENTS.md`.
 - The gate evaluates greedily; the random baseline still draws from its own seeded stream.

@@ -1,7 +1,7 @@
 # Plan — RLCheckers, first milestone
 
 **Date:** 2026-10-27
-**Status:** S0–S3 pushed; S4 complete and awaiting approval; S5 next
+**Status:** S0–S4 complete; S5 next
 **Source:** `docs/00-brief.md`
 
 ## How this plan works
@@ -195,7 +195,7 @@ repetition draw, no-progress draw, seeded reproducibility, CLI smoke test.
 
 ## S4 — Baselines and evaluation arena
 
-**Status:** complete and awaiting approval (2026-11-03).
+**Status:** complete, approved, and pushed (2026-11-03).
 
 **Outcome:** A headless evaluation command plays two agents over a fixed opening
 suite, both colours, for N games, and reports W/D/L and the derived score.
