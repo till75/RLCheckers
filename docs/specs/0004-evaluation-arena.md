@@ -1,6 +1,6 @@
 # Spec 0004 — Baselines and evaluation arena
 
-- **Status:** proposed
+- **Status:** approved
 - **Date:** 2026-11-01
 - **Slice:** S4 — Baselines and evaluation arena
 - **Related:** `docs/00-brief.md`, `docs/plan.md`, ADR 0001, ADR 0002,
@@ -1588,32 +1588,36 @@ session runs out; do not carry a half-finished slice across turns.
 ## Contradictions, gaps, and decisions
 
 These needed explicit approval because the brief, plan, or an ADR did not fully
-settle them. Decisions 6, 7, 11, and 13 are resolved; the others remain open
-until approved.
+settle them. All thirteen decisions are resolved as of 2026-11-03.
 
-1. **"Mirrored for colour".** The brief's assumption 4 says positions are
-   "mirrored for colour"; ADR 0003 says every opening is played twice, once
+1. **"Mirrored for colour" — accepted.** The brief's assumption 4 says positions
+   are "mirrored for colour"; ADR 0003 says every opening is played twice, once
    per agent colour. This spec uses the same opening position and swaps which
    agent controls Black and White. It does not build a vertically mirrored
    board. If literal board mirroring is wanted, the suite and keys change.
-2. **Artifact count.** The plan asks the command to write "a CSV"; this spec
-   writes `metrics.csv` (summary), `games.csv` (audit trail), and `run.json`
-   (metadata). One summary CSV satisfies the plan, but the extra files are a
-   deliberate choice. If only one file is wanted, `games.csv` can be dropped.
-3. **Game-count constraint.** The plan says game counts are configurable; this
-   spec requires a multiple of ten, the cycle for five openings and two
-   colours. Ten and 1,000 pass. Arbitrary counts would need a documented
-   remainder rule and would leave some groups with one game.
-4. **S4 has one master seed, not three training seeds.** ADR 0003's gate
-   aggregates three training seeds across two opponents and reports per-seed
-   estimates plus a seed-to-seed range. S4 evaluates one agent per run; the
-   metrics CSV records that run's seed, but the three-seed aggregation, range,
-   and gate report are S7.
-5. **Added modules.** The plan lists `greedy_agent.py`, `arena.py`,
+   Accepted on 2026-11-03: keep the same position and swap colours.
+2. **Artifact count — accepted.** The plan asks the command to write "a CSV";
+   this spec writes `metrics.csv` (summary), `games.csv` (audit trail), and
+   `run.json` (metadata). One summary CSV satisfies the plan, but the extra
+   files are a deliberate choice. If only one file is wanted, `games.csv` can
+   be dropped. Accepted on 2026-11-03: keep all three files.
+3. **Game-count constraint — accepted.** The plan says game counts are
+   configurable; this spec requires a multiple of ten, the cycle for five
+   openings and two colours. Ten and 1,000 pass. Arbitrary counts would need a
+   documented remainder rule and would leave some groups with one game.
+   Accepted on 2026-11-03: keep the multiple-of-ten rule.
+4. **S4 has one master seed, not three training seeds — accepted.** ADR 0003's
+   gate aggregates three training seeds across two opponents and reports
+   per-seed estimates plus a seed-to-seed range. S4 evaluates one agent per
+   run; the metrics CSV records that run's seed, but the three-seed
+   aggregation, range, and gate report are S7. Accepted on 2026-11-03: one
+   master seed per S4 run.
+5. **Added modules — accepted.** The plan lists `greedy_agent.py`, `arena.py`,
    `metrics.py`, and `config.py`. This spec adds `protocol.py`,
    `artifacts.py`, `evaluation/__init__.py`, and `tests/test_config.py` to keep
    the protocol shared and the CLI thin. If the file list is binding, fold
-   these into the listed modules.
+   these into the listed modules. Accepted on 2026-11-03: keep the added
+   modules.
 6. **Plots are owned by S5/S7 — resolved by ADR 0004.** The brief lists plots,
    and ADR 0003 §11 originally said the plot contents were fixed in spec 0004;
    the plan's S4 acceptance criteria only require CSV, and S5/S7 own the plots.
@@ -1624,27 +1628,31 @@ until approved.
    this spec adds `TERMINAL_SCORE` so the baseline does not ignore an immediate
    win or draw. Pure material-only scoring is the alternative, at the cost of
    weaker choices. Accepted on 2026-11-03: keep the terminal bonus.
-8. **Confidence-interval method.** ADR 0003 requires a 95% interval but does
-   not fix the method. This spec uses the normal approximation on per-game
-   scores with sample variance, clamped to `[0, 1]`. It treats games as
-   independent draws, which ADR 0003 already flags as a diagnostic assumption.
-   A bootstrap or Wilson interval would change the numbers and need its own
-   contract.
-9. **Two-ply openings.** Openings 3 and 4 start after two plies, so games begin
-   with `no_progress_plies` 2 and a three-key history. This is legal and
-   reachable, but it shortens the no-progress horizon and changes repetition
-   history. All-one-ply openings are the simpler alternative.
-10. **Side seeds are derived, not stored.** `games.csv` records the base
-    `game_seed` only. Reproducing a side stream requires the derivation
+8. **Confidence-interval method — accepted.** ADR 0003 requires a 95% interval
+   but does not fix the method. This spec uses the normal approximation on
+   per-game scores with sample variance, clamped to `[0, 1]`. It treats games
+   as independent draws, which ADR 0003 already flags as a diagnostic
+   assumption. A bootstrap or Wilson interval would change the numbers and
+   need its own contract. Accepted on 2026-11-03: keep the normal
+   approximation.
+9. **Two-ply openings — accepted.** Openings 3 and 4 start after two plies, so
+   games begin with `no_progress_plies` 2 and a three-key history. This is
+   legal and reachable, but it shortens the no-progress horizon and changes
+   repetition history. All-one-ply openings are the simpler alternative.
+   Accepted on 2026-11-03: keep openings 3 and 4 as written.
+10. **Side seeds are derived, not stored — accepted.** `games.csv` records the
+    base `game_seed` only. Reproducing a side stream requires the derivation
     contract in this spec and the code. Adding `black_seed` and `white_seed`
     columns would make the log self-contained at the cost of two columns.
+    Accepted on 2026-11-03: store the base seed only.
 11. **Registry scope — accepted.** The plan says the arena supports "any two
     agents"; the arena API accepts any `AgentFactory`, but the config/CLI
     registry exposes only `random` and `greedy`. The Q-agent joins in S5.
     Accepted on 2026-11-03.
-12. **Fixed suite in code.** The suite is a code constant, not a config field.
-    This keeps runs comparable. A configurable suite would create a new
-    evaluation contract per config and is out of scope.
+12. **Fixed suite in code — accepted.** The suite is a code constant, not a
+    config field. This keeps runs comparable. A configurable suite would create
+    a new evaluation contract per config and is out of scope. Accepted on
+    2026-11-03: keep the suite in code.
 13. **Greedy cost — accepted.** The baseline calls `state.apply` for each
     candidate move, duplicating move generation. S4 accepts that for clarity; a
     1,000-game run should still be minutes, and optimization waits for a
@@ -1652,6 +1660,27 @@ until approved.
 
 ## Approval
 
-Proposed for approval on 2026-11-01. Decisions 6, 7, 11, and 13 were resolved on
-2026-11-03; the spec remains proposed pending the rest of the walkthrough. The
-next step after approval is `/tdd` for the first behaviour in S4.
+Approved by the author on 2026-11-03 after the walkthrough. The next step is
+`/tdd` for the first behaviour in S4.
+
+Approved decisions:
+
+1. The five-opening standard suite, using the same positions with swapped
+   colours rather than mirrored boards (decision 1).
+2. Three artifacts: `metrics.csv`, `games.csv`, and `run.json` (decision 2).
+3. Game counts constrained to a multiple of ten (decision 3).
+4. One master seed per S4 run; three-seed aggregation stays in S7 (decision 4).
+5. The added modules `protocol.py`, `artifacts.py`, `evaluation/__init__.py`, and
+   `tests/test_config.py` (decision 5).
+6. Plots owned by S5/S7 under ADR 0004 (decision 6).
+7. The greedy terminal bonus with `TERMINAL_SCORE = 1000` (decision 7).
+8. The normal-approximation 95% confidence interval, clamped to `[0, 1]`
+   (decision 8).
+9. Two-ply openings 3 and 4 with their history and no-progress counters
+   (decision 9).
+10. Deriving side seeds from the base game seed instead of storing them
+    (decision 10).
+11. The arena API accepting any `AgentFactory` while the registry exposes only
+    `random` and `greedy` until S5 (decision 11).
+12. The opening suite as a code constant (decision 12).
+13. The depth-1 greedy cost accepted for S4 (decision 13).
