@@ -38,12 +38,15 @@ flowchart LR
 
   subgraph Matchup["<span style='background-color:#ffffff'><span style='color:#000000'>3. Matchup</span></span>"]
     ARENA["<span style='color:#000000;font-weight:bold'>play_matchup</span><br/><span style='color:#000000'>validate · schedule · play · collect</span>"]
-    AGENTS["<span style='color:#000000;font-weight:bold'>AgentFactory</span><br/><span style='color:#000000'>random or greedy + side seed</span>"]
+    FACTORY["<span style='color:#000000;font-weight:bold'>AgentFactory</span><br/><span style='color:#000000'>side seed → Agent</span>"]
+    AGENT["<span style='color:#000000;font-weight:bold'>Agent</span><br/><span style='color:#000000'>choose_move(state)</span>"]
     RULES["<span style='color:#000000;font-weight:bold'>GameState</span><br/><span style='color:#000000'>legal moves · apply · outcome</span>"]
     RESULT["<span style='color:#000000;font-weight:bold'>ArenaResult</span><br/><span style='color:#000000'>metadata + GameResult per game</span>"]
     CLI -->|"<span style='background-color:#ffffff'><span style='color:#000000'>starts</span></span>"| ARENA
-    ARENA -->|"<span style='background-color:#ffffff'><span style='color:#000000'>asks for moves</span></span>"| AGENTS
-    AGENTS -->|"<span style='background-color:#ffffff'><span style='color:#000000'>Move</span></span>"| ARENA
+    ARENA -->|"<span style='background-color:#ffffff'><span style='color:#000000'>factory(side_seed)</span></span>"| FACTORY
+    FACTORY -->|"<span style='background-color:#ffffff'><span style='color:#000000'>Agent</span></span>"| ARENA
+    ARENA -->|"<span style='background-color:#ffffff'><span style='color:#000000'>asks for moves</span></span>"| AGENT
+    AGENT -->|"<span style='background-color:#ffffff'><span style='color:#000000'>Move</span></span>"| ARENA
     ARENA -->|"<span style='background-color:#ffffff'><span style='color:#000000'>applies</span></span>"| RULES
     RULES -->|"<span style='background-color:#ffffff'><span style='color:#000000'>next state</span></span>"| ARENA
     ARENA -->|"<span style='background-color:#ffffff'><span style='color:#000000'>returns</span></span>"| RESULT
@@ -89,21 +92,22 @@ flowchart LR
   class TOML,CFG input
   class CLI compose
   class ARENA,RESULT arena
-  class AGENTS,RULES rules
+  class FACTORY,AGENT,RULES rules
   class METRICS,WRITE result
   class M,G,J,OUT output
   class FAIL fail
 ```
 
 **Figure 1 — S4 runtime pipeline.** The CLI is the only place that composes
-all five contracts. The arena returns an `ArenaResult`; only then does
-`write_artifacts` create files, so a failed game or an invalid config cannot
-leave partial metrics. Blue is input, indigo is composition, green is
-rules/agents, orange is the matchup, purple is results, grey is output, and red
-is the loud-failure path. Each box carries an explicit black label, with the
-title in bold, so the viewer's theme cannot turn the text grey; the stage hue
-stays in the fill and stroke. Related decisions: 2 (artifact count), 5
-(modules), and 11 (registry scope).
+all five contracts. The arena calls each factory with a side seed, then asks the
+produced agent for moves; the factory is not in the move loop. The arena returns
+an `ArenaResult`; only then does `write_artifacts` create files, so a failed game
+or an invalid config cannot leave partial metrics. Blue is input, indigo is
+composition, green is rules/agents, orange is the matchup, purple is results,
+grey is output, and red is the loud-failure path. Each box carries an explicit
+black label, with the title in bold, so the viewer's theme cannot turn the text
+grey; the stage hue stays in the fill and stroke. Related decisions: 2 (artifact
+count), 5 (modules), and 11 (registry scope).
 
 ### Modules and imports
 
