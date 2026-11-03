@@ -14,7 +14,7 @@ from dataclasses import dataclass
 from enum import Enum
 
 from rlcheckers.agents.protocol import AgentFactory
-from rlcheckers.game.board import Side
+from rlcheckers.game.board import Board, Side
 from rlcheckers.game.moves import Move
 from rlcheckers.game.state import GameState, Outcome
 
@@ -68,7 +68,10 @@ STANDARD_OPENINGS: tuple[tuple[Move, ...], ...] = (
 
 def opening_state(moves: Sequence[Move]) -> GameState:
     """Return the game state after applying an opening prefix."""
-    raise NotImplementedError
+    state = GameState.from_board(Board.initial())
+    for move in moves:
+        state = state.apply(move)
+    return state
 
 
 def outcome_for(outcome: Outcome, agent_colour: Side) -> GameOutcome:
