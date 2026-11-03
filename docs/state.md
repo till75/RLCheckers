@@ -7,8 +7,8 @@ accepted, and ADR 0004 (plot ownership) resolves the last spec-level conflict.
 Spec 0004 is written and approved, with explanatory diagrams in the spec and
 `docs/architecture.md`; all thirteen walkthrough decisions are resolved. S4
 implementation is underway: the bootstrap, greedy baseline, opening suite,
-seeded matchup arena, and metrics are committed. The prep commits are local and
-unpushed; 166 tests pass and `ruff check .` is clean.
+seeded matchup arena, metrics, and config are committed. The prep commits are
+local and unpushed; 178 tests pass and `ruff check .` is clean.
 
 ## Done since last handoff
 - `b0e87c4`, `295859d` — `GameState`, `GameRecord`, counters, terminal/draw rules, and constructor validation in `state.py`.
@@ -50,11 +50,13 @@ unpushed; 166 tests pass and `ruff check .` is clean.
   covered by fourteen tests. `make_agent` now creates the two baselines.
 - `b62fff3` — score summaries and the 95% normal-approximation interval,
   `summary_rows` ordering, and `format_float`; A6 covered by seven tests.
+- `d3c8faa` — config loading: five-key TOML schema, validation, relative and
+  absolute output paths, and the 1,000-game case; A7 covered by twelve tests.
 
 ## Next
-1. Write the red tests for A7: config loading, validation, relative and absolute
-   output paths, and the 1,000-game acceptance.
-2. Then follow the TDD order in spec 0004: artifacts, CLI.
+1. Write the red tests for A8: CSV/JSON schemas, overwrite, byte
+   reproducibility, and config mismatches.
+2. Then follow the TDD order in spec 0004: CLI.
 3. Keep training code out until the S4 evaluation harness is green.
 
 ## Open questions
@@ -70,7 +72,7 @@ unpushed; 166 tests pass and `ruff check .` is clean.
 - Generated moves use at most four captures and five path squares, so the six-square action-key limit is not reached.
 - ADR 0003 fixes evaluation policy only. Opening positions, baseline functions, seed derivation, the CI method, and CSV/CLI details belong in spec 0004.
 - ADR 0004 fixes plot ownership only: S4 writes CSV/JSON, S5/S7 own plot contents. The planned Q-learning and self-play ADRs are now 0005 and 0006.
-- The greedy baseline, opening suite, matchup arena, and metrics are implemented; config and artifacts still raise `NotImplementedError`.
+- The greedy baseline, opening suite, matchup arena, metrics, and config are implemented; artifacts and the `evaluate` handler still raise `NotImplementedError`.
 - Diagrams in spec 0004 are explanatory; the tables and prose are the contract.
 - Mermaid diagrams force a light base theme and explicit black labels. Sequence diagrams must use theme variables, not inline HTML spans. See the diagram conventions in `AGENTS.md`.
 - The gate evaluates greedily; the random baseline still draws from its own seeded stream.
