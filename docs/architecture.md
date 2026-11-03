@@ -2,7 +2,9 @@
 
 **Status:** S3 implements the immutable board, legal move generation, game state
 with repetition and no-progress counters, terminal detection, seeded random
-play, and the `play-random` CLI command. Evaluation and learning are next.
+play, and the `play-random` CLI command. Spec 0004 defines the S4 evaluation
+arena; it is proposed, not implemented. Evaluation and learning beyond that are
+planned.
 
 ## Components
 
@@ -20,18 +22,74 @@ on both. Evaluation depends on the rules and agents. The CLI composes them.
 
 ```mermaid
 flowchart LR
-    CFG[TOML config + seed] --> CLI[CLI]
-    CLI --> TRAIN[Training loop]
-    TRAIN --> GAME[Game rules]
-    TRAIN --> AGENT[Q agent]
-    AGENT --> QT[Q-table]
-    GAME --> EVAL[Evaluation arena]
-    AGENT --> EVAL
-    BASE[Random and greedy baselines] --> EVAL
-    EVAL --> METRICS[W/D/L + derived score]
-    METRICS --> ART[CSV + plots]
-    ART --> GATE[Three-seed gate]
+  subgraph Config["Configuration"]
+    TOML["eval.toml<br/>human-authored run settings"]
+    CFG["EvalConfig<br/>resolved seed · games · agents · output dir"]
+    TOML -->|"load_eval_config"| CFG
+  end
+
+  subgraph Rules["Rules engine · S1–S3"]
+    STATE["GameState<br/>board · legal moves · apply · outcome"]
+  end
+
+  subgraph Agents["Agents"]
+    BASE["Random + greedy<br/>S3/S4 baselines"]
+    Q["Q-agent<br/>S5+"]
+  end
+
+  subgraph Evaluation["Evaluation · S4/S7"]
+    ARENA["Arena<br/>pairings · seeds · game loop"]
+    METRICS["Metrics<br/>W/D/L · score · 95% CI"]
+    GATE["Three-seed gate<br/>S7"]
+  end
+
+  subgraph Outputs["Artifacts"]
+    FILES["CSV + JSON<br/>metrics · games · run"]
+    PLOTS["Plots<br/>S5/S7"]
+    CONSUMER["Report / next slice<br/>reads artifacts"]
+  end
+
+  CLI["CLI<br/>play-random · evaluate"]
+  TRAIN["Training loop<br/>S5/S6"]
+
+  CFG -->|"configures"| CLI
+  CLI -->|"starts matchup"| ARENA
+  STATE -->|"state + legal moves"| ARENA
+  ARENA -->|"apply move"| STATE
+  BASE -->|"Move"| ARENA
+  Q -.->|"Move (S5+)"| ARENA
+  TRAIN -.->|"updates"| Q
+  ARENA -->|"ArenaResult"| METRICS
+  METRICS -->|"summary rows"| FILES
+  METRICS -.->|"per-seed scores (S7)"| GATE
+  GATE -.->|"gate report (S7)"| PLOTS
+  FILES -.->|"plot input (S5/S7)"| PLOTS
+  FILES -->|"CSV/JSON"| CONSUMER
+
+  classDef config fill:#e3f2fd,stroke:#1565c0,color:#0d47a1
+  classDef cli fill:#e8eaf6,stroke:#283593,color:#1a237e
+  classDef rules fill:#e8f5e9,stroke:#2e7d32,color:#1b5e20
+  classDef agents fill:#f1f8e9,stroke:#558b2f,color:#33691e
+  classDef eval fill:#fff3e0,stroke:#ef6c00,color:#e65100
+  classDef metrics fill:#f3e5f5,stroke:#6a1b9a,color:#4a148c
+  classDef output fill:#eceff1,stroke:#455a64,color:#263238
+  classDef future fill:#f5f5f5,stroke:#9e9e9e,color:#616161,stroke-dasharray: 5 5
+
+  class TOML,CFG config
+  class CLI cli
+  class STATE rules
+  class BASE agents
+  class ARENA eval
+  class METRICS metrics
+  class FILES,CONSUMER output
+  class Q,GATE,PLOTS,TRAIN future
 ```
+
+**Figure A — Component map.** Solid arrows are implemented or specified through
+S4; dashed arrows point at later slices. Blue is configuration, indigo is
+composition, green is rules/agents, orange is evaluation, purple is metrics,
+and grey is artifacts/reporting. The arena is the only component that talks to
+both the rules engine and the agents.
 
 ## Board module (S1)
 
@@ -123,6 +181,11 @@ or non-integer seeds as usage errors with exit code 2.
 - [ADR 0001 — 5x5 English draughts rules](adr/0001-5x5-rules.md)
 - [ADR 0002 — Board, move, and state encoding](adr/0002-board-and-state-encoding.md)
 - [ADR 0003 — Evaluation protocol and gate](adr/0003-evaluation-protocol.md)
+
+## Specifications
+
+- [Spec 0003 — Game application and random play](specs/0003-game-application-and-random-play.md)
+- [Spec 0004 — Baselines and evaluation arena](specs/0004-evaluation-arena.md)
 
 ## Current milestone boundaries
 

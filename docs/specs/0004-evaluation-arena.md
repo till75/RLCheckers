@@ -17,6 +17,85 @@ breakdowns, and CSV/JSON artifacts, including through
 
 ## Public interface
 
+### System view
+
+Figure 1 is the runtime path from a TOML file to the three artifacts. It is
+explanatory rather than a second contract; the sections below define each box.
+
+```mermaid
+flowchart LR
+  subgraph Input["1. Input"]
+    TOML["eval.toml<br/>seed · games · agent · opponent · output_dir"]
+    CFG["EvalConfig<br/>validated · resolved paths"]
+    TOML -->|"load_eval_config"| CFG
+  end
+
+  subgraph Composition["2. Composition"]
+    CLI["cli.main('evaluate')<br/>load · compose · run · report"]
+    CFG -->|"configures"| CLI
+  end
+
+  subgraph Matchup["3. Matchup"]
+    ARENA["play_matchup<br/>validate · schedule · play · collect"]
+    AGENTS["AgentFactory<br/>random or greedy + side seed"]
+    RULES["GameState<br/>legal moves · apply · outcome"]
+    RESULT["ArenaResult<br/>metadata + GameResult per game"]
+    CLI -->|"starts"| ARENA
+    ARENA -->|"asks for moves"| AGENTS
+    AGENTS -->|"Move"| ARENA
+    ARENA -->|"applies"| RULES
+    RULES -->|"next state"| ARENA
+    ARENA -->|"returns"| RESULT
+  end
+
+  subgraph Results["4. Results"]
+    METRICS["summary_rows / summarize<br/>W/D/L · score · 95% CI"]
+    WRITE["write_artifacts<br/>validate · write · return path"]
+    RESULT -->|"games"| METRICS
+    RESULT -->|"games"| WRITE
+    METRICS -->|"rows"| WRITE
+  end
+
+  subgraph Outputs["5. Outputs"]
+    M["metrics.csv<br/>summary + CI"]
+    G["games.csv<br/>per-game audit trail"]
+    J["run.json<br/>config · versions · command"]
+    OUT["stdout<br/>ten-line summary"]
+    WRITE -->|"writes"| M
+    WRITE -->|"writes"| G
+    WRITE -->|"writes"| J
+    METRICS -->|"score + CI"| OUT
+  end
+
+  FAIL["Failure<br/>no artifacts written"]
+  ARENA -.->|"illegal move / non-termination"| FAIL
+  WRITE -.->|"config mismatch / I/O error"| FAIL
+
+  classDef input fill:#e3f2fd,stroke:#1565c0,color:#0d47a1
+  classDef compose fill:#e8eaf6,stroke:#283593,color:#1a237e
+  classDef arena fill:#fff3e0,stroke:#ef6c00,color:#e65100
+  classDef rules fill:#e8f5e9,stroke:#2e7d32,color:#1b5e20
+  classDef result fill:#f3e5f5,stroke:#6a1b9a,color:#4a148c
+  classDef output fill:#eceff1,stroke:#455a64,color:#263238
+  classDef fail fill:#ffebee,stroke:#c62828,color:#b71c1c
+
+  class TOML,CFG input
+  class CLI compose
+  class ARENA,RESULT arena
+  class AGENTS,RULES rules
+  class METRICS,WRITE result
+  class M,G,J,OUT output
+  class FAIL fail
+```
+
+**Figure 1 — S4 runtime pipeline.** The CLI is the only place that composes
+all five contracts. The arena returns an `ArenaResult`; only then does
+`write_artifacts` create files, so a failed game or an invalid config cannot
+leave partial metrics. Blue is input, indigo is composition, green is
+rules/agents, orange is the matchup, purple is results, grey is output, and red
+is the loud-failure path. Related decisions: 2 (artifact count), 5 (modules),
+and 11 (registry scope).
+
 ### Modules and imports
 
 New production modules:
@@ -182,6 +261,39 @@ function does not look at side to move.
    `(move.path, move.captures)` in ordinary tuple order.
 6. Return the chosen move.
 
+```mermaid
+flowchart TD
+  S["GameState<br/>current board + side to move"] -->|"inspect"| T{"terminal?"}
+  T -->|"yes"| E["ValueError<br/>finished"]
+  T -->|"no"| L["legal_moves()<br/>engine already enforces captures"]
+  L -->|"enumerate"| C["for each legal Move<br/>apply → next_state"]
+  C -->|"score each"| D{"next_state terminal?"}
+  D -->|"yes"| W["terminal score<br/>win +1000 · draw 0 · loss -1000"]
+  D -->|"no"| M["material_balance<br/>man 1 · king 3"]
+  W -->|"candidate score"| P["rank by score<br/>then smallest (path, captures)"]
+  M -->|"candidate score"| P
+  P -->|"best"| R["return Move<br/>deterministic · no RNG"]
+
+  classDef state fill:#e3f2fd,stroke:#1565c0,color:#0d47a1
+  classDef agent fill:#e8f5e9,stroke:#2e7d32,color:#1b5e20
+  classDef score fill:#fff3e0,stroke:#ef6c00,color:#e65100
+  classDef choice fill:#f3e5f5,stroke:#6a1b9a,color:#4a148c
+  classDef fail fill:#ffebee,stroke:#c62828,color:#b71c1c
+
+  class S state
+  class L,C agent
+  class W,M score
+  class P,R choice
+  class E fail
+```
+
+**Figure 2 — Greedy choice.** The baseline searches exactly one ply. The
+terminal override makes it take an immediate win, but it never sees the
+opponent's reply; that is the trade-off for a cheap, deterministic baseline.
+Blue is the input state, green is the legal-move path, orange is scoring,
+purple is the tie-break and return, and red is the error. Related decisions: 7
+(terminal bonus) and 13 (cost).
+
 The terminal override prevents the baseline from ignoring an immediate win or
 draw just because material is unchanged. It is still depth-1: the agent never
 considers the opponent's reply, so it can walk into a capture.
@@ -311,6 +423,35 @@ The derivation uses SHA-256 rather than `hash()` because Python's string hash
 is salted per process. The recorded `game_seed` is the base seed, not either
 side seed.
 
+```mermaid
+flowchart LR
+  M["Master seed<br/>one per run"] -->|"seeds"| G["Game seed<br/>SHA-256 of master + pair + opening + colour"]
+  P["Pair index<br/>repetition number"] -->|"repetition"| G
+  O["Opening index<br/>0..4"] -->|"position"| G
+  C["Agent colour<br/>Black or White"] -->|"perspective"| G
+  G -->|"derive"| AS["Agent side seed<br/>SHA-256 of game seed + agent colour"]
+  G -->|"derive"| OS["Opponent side seed<br/>SHA-256 of game seed + opponent colour"]
+  AS -->|"initialise"| AR["Agent stream<br/>random or deterministic"]
+  OS -->|"initialise"| OR["Opponent stream<br/>random or deterministic"]
+
+  classDef master fill:#e3f2fd,stroke:#1565c0,color:#0d47a1
+  classDef identity fill:#fff3e0,stroke:#ef6c00,color:#e65100
+  classDef side fill:#e8f5e9,stroke:#2e7d32,color:#1b5e20
+  classDef stream fill:#f3e5f5,stroke:#6a1b9a,color:#4a148c
+
+  class M master
+  class P,O,C,G identity
+  class AS,OS side
+  class AR,OR stream
+```
+
+**Figure 3 — Seed derivation.** Every stream is a pure function of the master
+seed and the game's identity, so execution order cannot change a game.
+Blue is the master seed, orange is game identity, green is side seeds, and
+purple is the resulting streams. `games.csv` stores only the base `game_seed`;
+the side seeds are reproducible from it. Related decisions: 4 (one master seed)
+and 10 (side seeds).
+
 #### Game loop
 
 For each scheduled game:
@@ -329,6 +470,56 @@ For each scheduled game:
      `MAX_GAME_PLIES` (2000) plies.
 4. Map the final `Outcome` to the agent perspective with `outcome_for`.
 5. Record the `GameResult`.
+
+```mermaid
+sequenceDiagram
+  participant CLI as CLI<br/>compose + report
+  participant Arena as Arena<br/>schedule + validate
+  participant Factory as AgentFactory<br/>seed → agent
+  participant Agent as Agent<br/>choose_move
+  participant State as GameState<br/>rules + history
+
+  rect rgb(227, 242, 253)
+    Note over CLI,Arena: Preflight — fail before the first game
+    CLI->>Arena: play_matchup(agent, opponent, seed, games)
+    Arena->>Arena: validate seed, games, openings
+  end
+
+  rect rgb(255, 243, 224)
+    Note over Arena,State: Setup — one opening, one colour
+    Arena->>Arena: pair_index, opening_index, agent_colour
+    Arena->>Arena: derive_game_seed(...)
+    Arena->>Factory: derive_side_seed(game_seed, agent_colour)
+    Factory-->>Arena: agent
+    Arena->>Factory: derive_side_seed(game_seed, opponent_colour)
+    Factory-->>Arena: opponent
+    Arena->>State: opening_state(prefix)
+  end
+
+  rect rgb(232, 245, 233)
+    Note over Arena,State: Move loop — until terminal
+    loop until state.is_terminal
+      Arena->>Agent: choose_move(state)
+      Agent-->>Arena: Move
+      Arena->>Arena: validate Move in legal_moves()
+      Arena->>State: apply(move)
+      State-->>Arena: next state
+    end
+  end
+
+  rect rgb(243, 229, 245)
+    Note over Arena,CLI: Finish — perspective + record
+    Arena->>Arena: outcome_for(final outcome, agent_colour)
+    Arena-->>CLI: ArenaResult
+  end
+
+  Note over Arena: write_artifacts runs only after ArenaResult exists
+```
+
+**Figure 4 — One game.** Blue is preflight, orange is setup, green is the move
+loop, and purple is result mapping. The arena validates every move; an illegal
+move or a 2,000-ply non-termination raises before any artifact is written.
+Related decisions: 7 (greedy policy), 10 (side seeds), and 13 (greedy cost).
 
 `outcome_for(outcome: Outcome, agent_colour: Side) -> GameOutcome` is public:
 
@@ -513,6 +704,40 @@ postponed annotations and reads `config.seed`, `config.games`, `config.agent`,
 `config.opponent`, and `config.output_dir` at runtime. `config.py` imports
 `STANDARD_OPENINGS` from `evaluation.arena`, so a runtime `config` import here
 would create a cycle.
+
+```mermaid
+flowchart LR
+  R["ArenaResult<br/>metadata + games"] -->|"pool games"| S["summary_rows<br/>overall · colour · opening"]
+  R -->|"one row per game"| G["games.csv rows<br/>one per GameResult"]
+  C["EvalConfig<br/>seed · games · output dir"] -->|"expected seed + count"| V{"result.seed matches config.seed<br/>and game count matches?"}
+  R -->|"actual seed + count"| V
+  V -->|"yes"| W["write_artifacts<br/>mkdir · write · return path"]
+  V -->|"no"| E["ValueError<br/>config mismatch"]
+  S -->|"rows"| W
+  G -->|"rows"| W
+  W -->|"writes"| M["metrics.csv<br/>summary + CI"]
+  W -->|"writes"| GF["games.csv<br/>audit trail"]
+  W -->|"writes"| J["run.json<br/>config · versions · command"]
+  S -->|"score + CI"| O["stdout<br/>ten-line summary"]
+
+  classDef result fill:#f3e5f5,stroke:#6a1b9a,color:#4a148c
+  classDef config fill:#e3f2fd,stroke:#1565c0,color:#0d47a1
+  classDef output fill:#eceff1,stroke:#455a64,color:#263238
+  classDef fail fill:#ffebee,stroke:#c62828,color:#b71c1c
+
+  class R,S,G result
+  class C,V config
+  class W,M,GF,J,O output
+  class E fail
+```
+
+**Figure 5 — From `ArenaResult` to artifacts.** The writer validates the result
+against the config before creating files, so metadata and rows cannot silently
+disagree. Purple is result/summary data, blue is config and validation, red is
+failure, and grey is output. The `seed` column in `metrics.csv` and the
+per-game `game_seed` in `games.csv` make the outputs self-describing when S7
+concatenates runs. Related decisions: 2 (artifact count) and 6 (plots are
+absent).
 
 #### `metrics.csv`
 
