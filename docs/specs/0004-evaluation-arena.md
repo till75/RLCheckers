@@ -4,7 +4,7 @@
 - **Date:** 2026-11-01
 - **Slice:** S4 — Baselines and evaluation arena
 - **Related:** `docs/00-brief.md`, `docs/plan.md`, ADR 0001, ADR 0002,
-  ADR 0003, `docs/architecture.md`,
+  ADR 0003, ADR 0004, `docs/architecture.md`,
   `docs/specs/0003-game-application-and-random-play.md`
 
 ## Outcome
@@ -1567,7 +1567,8 @@ session runs out; do not carry a half-finished slice across turns.
   save/load, memory cap, and `q_key`.
 - Self-play, snapshots, the three-seed gate, and the milestone report (S6 and
   S7).
-- Plot output. S4 writes CSV and JSON only; plots arrive with training.
+- Plot output. S4 writes CSV and JSON only; plots arrive with training under
+  ADR 0004.
 - Configurable opening suites, opening books, and endgame tablebases.
 - Additional agents beyond random and greedy, and any plugin system. The
   arena protocol is ready for S5, but registration waits.
@@ -1587,7 +1588,8 @@ session runs out; do not carry a half-finished slice across turns.
 ## Contradictions, gaps, and decisions
 
 These need explicit approval because the brief, plan, or an ADR does not fully
-settle them:
+settle them. Decision 6 is resolved by ADR 0004; the others remain open until
+approved.
 
 1. **"Mirrored for colour".** The brief's assumption 4 says positions are
    "mirrored for colour"; ADR 0003 says every opening is played twice, once
@@ -1612,12 +1614,12 @@ settle them:
    `artifacts.py`, `evaluation/__init__.py`, and `tests/test_config.py` to keep
    the protocol shared and the CLI thin. If the file list is binding, fold
    these into the listed modules.
-6. **No plots, despite ADR 0003 §11.** The brief lists plots, and ADR 0003 says
-   the plot contents are fixed in spec 0004; the plan's S4 acceptance criteria
-   only require CSV, and S5/S7 own the plots. This spec writes no plots and does
-   not fix their contents. If ADR 0003's sentence is binding for S4, this needs
-   either a plot contract here (implemented in S5/S7) or a superseding ADR that
-   moves plot contents to those slices.
+6. **Plots are owned by S5/S7 — resolved by ADR 0004.** The brief lists plots,
+   and ADR 0003 §11 originally said the plot contents were fixed in spec 0004;
+   the plan's S4 acceptance criteria only require CSV, and S5/S7 own the plots.
+   ADR 0004 supersedes that one sentence: S4 writes no plots and does not fix
+   their contents, while S5 and S7 fix the plot contract in their own specs. The
+   rest of ADR 0003 remains in force. Resolved on 2026-11-03.
 7. **Greedy terminal bonus.** The plan says "material evaluation"; this spec
    adds `TERMINAL_SCORE` so the baseline does not ignore an immediate win or
    draw. Pure material-only scoring is the alternative, at the cost of weaker
@@ -1648,5 +1650,6 @@ settle them:
 
 ## Approval
 
-Proposed for approval on 2026-11-01. The next step is `/tdd` for the first
-behaviour in S4.
+Proposed for approval on 2026-11-01. Decision 6 was resolved by ADR 0004 on
+2026-11-03; the spec remains proposed pending the rest of the walkthrough. The
+next step after approval is `/tdd` for the first behaviour in S4.

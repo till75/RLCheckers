@@ -222,7 +222,7 @@ integration.
 
 **Rough size:** M–L, 4–6 hours. Split the arena from the baselines if needed.
 
-**Gate:** ADR 0003; spec `0004-evaluation-arena.md`.
+**Gate:** ADR 0003 and ADR 0004; spec `0004-evaluation-arena.md`.
 
 **Risk:** High for trust. This slice is the answer to "no reliable evaluation".
 
@@ -253,7 +253,7 @@ save/load, memory cap, short training smoke test, improvement check.
 
 **Rough size:** M–L, 4–6 hours. Split the agent from the training loop if needed.
 
-**Gate:** ADR 0004; spec `0005-tabular-q-learning.md`.
+**Gate:** ADR 0005; spec `0005-tabular-q-learning.md`.
 
 **Risk:** High. If the update is wrong, fix it here before adding self-play.
 
@@ -284,7 +284,7 @@ no-collapse smoke test, artifact writing.
 
 **Rough size:** M, 3–4 hours.
 
-**Gate:** ADR 0005; spec `0006-self-play-snapshots.md`.
+**Gate:** ADR 0006; spec `0006-self-play-snapshots.md`.
 
 **Risk:** High. Self-play is non-stationary; keep the fixed baselines as the
 scoreboard.
@@ -324,8 +324,9 @@ small-N integration.
 | 0001 | 5x5 rules, starting position, orientation, first player, draw rule | S0/S1 |
 | 0002 | Board, move, and canonical-state encoding; Q-table memory cap | S0/S1 |
 | 0003 | Evaluation protocol: score definition, colour pairing, fixed-opening policy, gate statistics, determinism, agent interface | S4 |
-| 0004 | Q-learning state/action representation and initial hyperparameters | S5 |
-| 0005 | Self-play snapshot cadence and opponent selection | S6 |
+| 0004 | Plot ownership: S4 writes CSV/JSON only; S5/S7 own plot contents | S4 |
+| 0005 | Q-learning state/action representation and initial hyperparameters | S5 |
+| 0006 | Self-play snapshot cadence and opponent selection | S6 |
 
 ADR 0003 settles evaluation policy: the score definition, colour pairing,
 fixed-opening policy, gate statistics, determinism guarantees, and the agent
@@ -333,6 +334,10 @@ interface the arena depends on. Spec 0004 settles the concrete contract: the
 opening positions, baseline definitions, arena pairing mechanics, metric
 schema, CSV columns, config schema, and CLI syntax. A concrete choice moves up
 into ADR 0003 only if it would change the evaluation contract.
+
+ADR 0004 settles plot ownership: S4 writes CSV/JSON only, and S5/S7 fix plot
+contents in their own specs. It supersedes only the plot sentence of ADR 0003
+§11; the evaluation contract is unchanged.
 
 ## Deliberately deferred
 

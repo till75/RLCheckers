@@ -3,6 +3,7 @@
 - **Status:** accepted
 - **Date:** 2026-10-31
 - **Deciders:** author, opencode
+- **Superseded in part by:** ADR 0004 (plot ownership)
 - **Related:** ADR 0001, ADR 0002, `docs/00-brief.md`, `docs/plan.md`,
   `docs/specs/0004-evaluation-arena.md` (next)
 
@@ -134,8 +135,11 @@ are written. Invalid seeds, openings, or configs fail before the first game.
 
 Every reported number is reproducible from the saved config, the master seed,
 and the agent artifact. Each run records the resolved config, seed, code
-version, and command line. The CSV schema, file names, and plot contents are
-fixed in spec 0004.
+version, and command line. The CSV schema and file names are fixed in spec 0004.
+Plot contents are owned by S5 and S7 under ADR 0004.
+
+ADR 0004 supersedes only the plot-ownership sentence of this section; the
+artifact and reproducibility requirements remain in force.
 
 ## Consequences
 

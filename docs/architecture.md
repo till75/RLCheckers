@@ -18,7 +18,8 @@ planned.
 - **Composition:** CLI (S3), TOML config, seed handling, and artifact writing.
 
 The rules do not depend on agents. Agents depend on the rules. Training depends
-on both. Evaluation depends on the rules and agents. The CLI composes them.
+on both. Evaluation depends on the rules and agents. The CLI composes them. S4
+writes CSV/JSON only; S5 and S7 own plots under ADR 0004.
 
 ```mermaid
 %%{init: {"theme": "base", "themeVariables": {"darkMode": false, "primaryTextColor": "#000000", "secondaryTextColor": "#000000", "tertiaryTextColor": "#000000", "textColor": "#000000", "lineColor": "#334155", "edgeLabelBackground": "#ffffff", "clusterBkg": "#f8fafc", "clusterBorder": "#94a3b8"}}}%%
@@ -188,6 +189,7 @@ or non-integer seeds as usage errors with exit code 2.
 - [ADR 0001 — 5x5 English draughts rules](adr/0001-5x5-rules.md)
 - [ADR 0002 — Board, move, and state encoding](adr/0002-board-and-state-encoding.md)
 - [ADR 0003 — Evaluation protocol and gate](adr/0003-evaluation-protocol.md)
+- [ADR 0004 — Plot ownership](adr/0004-plot-ownership.md)
 
 ## Specifications
 

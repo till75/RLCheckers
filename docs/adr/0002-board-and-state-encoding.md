@@ -34,7 +34,7 @@ a key back into a position.
 - Put the side-to-move bit at bit 39.
 - The result is a 40-bit integer.
 - Repetition and no-progress counters are environment state, not part of this
-  key. Whether they enter the agent's learning state is decided in ADR 0004.
+  key. Whether they enter the agent's learning state is decided in ADR 0005.
 
 ### Move and action key
 
