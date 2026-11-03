@@ -1,7 +1,7 @@
 # Plan — RLCheckers, first milestone
 
 **Date:** 2026-10-27
-**Status:** S0–S3 complete; S4 next
+**Status:** S0–S3 pushed; S4 complete and awaiting approval; S5 next
 **Source:** `docs/00-brief.md`
 
 ## How this plan works
@@ -195,6 +195,8 @@ repetition draw, no-progress draw, seeded reproducibility, CLI smoke test.
 
 ## S4 — Baselines and evaluation arena
 
+**Status:** complete and awaiting approval (2026-11-03).
+
 **Outcome:** A headless evaluation command plays two agents over a fixed opening
 suite, both colours, for N games, and reports W/D/L and the derived score.
 
@@ -204,21 +206,26 @@ suite, both colours, for N games, and reports W/D/L and the derived score.
 - The depth-1 greedy baseline uses a documented material evaluation and a
   deterministic tie-break; the exact definition is in the spec.
 - The arena supports any two agents, both colours per opening, fixed seeds, and
-  configurable game counts.
-- Metrics include wins, draws, losses, derived score, and per-seed results.
+  game counts that are multiples of ten.
+- Metrics include wins, draws, losses, the derived score, and the run's seed.
 - `python -m rlcheckers evaluate --config ...` writes a CSV with the documented
   schema.
 - A 10-game smoke evaluation completes; a 1,000-game evaluation is available.
 
-**Files touched:** `src/rlcheckers/agents/greedy_agent.py`,
-`src/rlcheckers/evaluation/arena.py`,
-`src/rlcheckers/evaluation/metrics.py`, `src/rlcheckers/config.py`,
-`tests/agents/test_greedy_agent.py`, `tests/evaluation/test_arena.py`,
-`tests/evaluation/test_metrics.py`, `docs/architecture.md`.
+**Files touched:** `src/rlcheckers/agents/protocol.py`,
+`src/rlcheckers/agents/greedy_agent.py`, `src/rlcheckers/agents/__init__.py`,
+`src/rlcheckers/evaluation/arena.py`, `src/rlcheckers/evaluation/metrics.py`,
+`src/rlcheckers/evaluation/artifacts.py`,
+`src/rlcheckers/evaluation/__init__.py`, `src/rlcheckers/config.py`,
+`src/rlcheckers/cli.py`, `tests/agents/test_greedy_agent.py`,
+`tests/evaluation/test_arena.py`, `tests/evaluation/test_metrics.py`,
+`tests/evaluation/test_artifacts.py`, `tests/test_config.py`,
+`tests/test_cli.py`, `docs/architecture.md`, `README.md`.
 
-**Tests added:** Greedy choice on known positions, colour swap, opening-suite
-application, metric arithmetic, seed reproducibility, CSV schema, small-N
-integration.
+**Tests added:** Greedy choice on known positions, opening-suite keys and
+history, colour swap, seed reproducibility, perspective mapping, illegal moves,
+argument validation, metric arithmetic and interval, config validation, CSV and
+JSON schemas, byte reproducibility, and the `evaluate` CLI.
 
 **Rough size:** M–L, 4–6 hours. Split the arena from the baselines if needed.
 

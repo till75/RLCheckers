@@ -1,7 +1,7 @@
 """Depth-1 greedy baseline for the evaluation arena.
 
 The baseline scores each legal move by material balance from the moving side's
-perspective. An immediate win or draw overrides material with
+perspective. An immediate win, draw, or loss overrides material with
 ``TERMINAL_SCORE``. Ties are broken by the smallest ``(path, captures)`` tuple,
 so the agent is deterministic and owns no RNG.
 """

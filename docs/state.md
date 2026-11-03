@@ -5,11 +5,10 @@ S3 is complete, approved, and pushed at `2a2c47a`. S4 has started: the plan's
 ADR/spec split is reconciled, ADR 0003 (evaluation protocol and gate) is
 accepted, and ADR 0004 (plot ownership) resolves the last spec-level conflict.
 Spec 0004 is written and approved, with explanatory diagrams in the spec and
-`docs/architecture.md`; all thirteen walkthrough decisions are resolved. S4
-implementation is complete: the bootstrap, baselines, arena, metrics, config,
-artifacts, and `evaluate` CLI are committed. The prep commits are local and
-unpushed; 191 tests pass and `ruff check .` is clean. A10 documentation is the
-remaining task.
+`docs/architecture.md`; all thirteen walkthrough decisions are resolved. S4 is
+complete: the bootstrap, baselines, arena, metrics, config, artifacts,
+`evaluate` CLI, and A10 documentation are committed. The slice is awaiting
+approval; 191 tests pass and `ruff check .` is clean.
 
 ## Done since last handoff
 - `b0e87c4`, `295859d` — `GameState`, `GameRecord`, counters, terminal/draw rules, and constructor validation in `state.py`.
@@ -58,11 +57,13 @@ remaining task.
   covered by seven tests.
 - `6a24680` — `evaluate` CLI: config loading, matchup, artifacts, the ten-line
   summary, error handling, and the module entry point; A9 covered by six tests.
+- A10 — `docs/architecture.md`, `README.md`, and `docs/plan.md` document the S4
+  arena, baselines, metrics, config, artifacts, and `evaluate` command. The
+  module docstrings state the same contracts.
 
 ## Next
-1. Finish A10: update `docs/architecture.md`, `README.md`, and `docs/plan.md`,
-   and review the module docstrings.
-2. Run the full suite and `ruff check .`, then commit the slice for approval.
+1. Request approval for S4.
+2. After approval, push the completed slice.
 3. Do not start S5 until S4 is approved.
 
 ## Open questions
@@ -78,7 +79,7 @@ remaining task.
 - Generated moves use at most four captures and five path squares, so the six-square action-key limit is not reached.
 - ADR 0003 fixes evaluation policy only. Opening positions, baseline functions, seed derivation, the CI method, and CSV/CLI details belong in spec 0004.
 - ADR 0004 fixes plot ownership only: S4 writes CSV/JSON, S5/S7 own plot contents. The planned Q-learning and self-play ADRs are now 0005 and 0006.
-- All S4 behaviour is implemented; A10 documentation is the remaining task.
+- S4 is complete and awaiting approval; the prep commits are unpushed.
 - Diagrams in spec 0004 are explanatory; the tables and prose are the contract.
 - Mermaid diagrams force a light base theme and explicit black labels. Sequence diagrams must use theme variables, not inline HTML spans. See the diagram conventions in `AGENTS.md`.
 - The gate evaluates greedily; the random baseline still draws from its own seeded stream.

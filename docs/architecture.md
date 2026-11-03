@@ -1,10 +1,9 @@
 # Architecture
 
-**Status:** S3 implements the immutable board, legal move generation, game state
-with repetition and no-progress counters, terminal detection, seeded random
-play, and the `play-random` CLI command. Spec 0004 defines the S4 evaluation
-arena; it is proposed, not implemented. Evaluation and learning beyond that are
-planned.
+**Status:** S4 implements the immutable rules engine (S1–S3), seeded random
+play, the depth-1 greedy baseline, the seeded evaluation arena, metrics with a
+95% interval, TOML config, CSV/JSON artifacts, and the `evaluate` CLI command.
+Spec 0004 is approved. Learning and the three-seed gate are planned.
 
 ## Components
 
@@ -13,9 +12,10 @@ planned.
 - **Agents:** random baseline (S3), depth-1 greedy baseline (S4), and tabular
   Q-agent (S5).
 - **Training:** self-play loop with periodic snapshots (S6).
-- **Evaluation:** arena for pairing agents over openings and colours, plus the
-  three-seed gate and metrics (S4 and S7).
-- **Composition:** CLI (S3), TOML config, seed handling, and artifact writing.
+- **Evaluation:** arena for pairing agents over openings and colours, metrics,
+  config, and artifacts (S4), plus the three-seed gate (S7).
+- **Composition:** CLI (`play-random` and `evaluate`), TOML config, seed
+  handling, and artifact writing.
 
 The rules do not depend on agents. Agents depend on the rules. Training depends
 on both. Evaluation depends on the rules and agents. The CLI composes them. S4
@@ -93,11 +93,11 @@ flowchart LR
   class Q,GATE,PLOTS,TRAIN future
 ```
 
-**Figure A — Component map.** Solid arrows are implemented or specified through
-S4; dashed arrows point at later slices. Blue is configuration, indigo is
-composition, green is rules/agents, orange is evaluation, purple is metrics,
-and grey is artifacts/reporting. The arena is the only component that talks to
-both the rules engine and the agents.
+**Figure A — Component map.** Solid arrows are implemented through S4; dashed
+arrows point at later slices. Blue is configuration, indigo is composition,
+green is rules/agents, orange is evaluation, purple is metrics, and grey is
+artifacts/reporting. The arena is the only component that talks to both the
+rules engine and the agents.
 
 ## Board module (S1)
 
@@ -167,22 +167,87 @@ applies moves until the state is terminal, and returns a `GameRecord`. The same
 seed reproduces the whole game. A game that exceeds `MAX_GAME_PLIES` without
 terminating raises `RuntimeError`.
 
-## CLI (S3)
+## Greedy baseline and protocol (S4)
+
+`src/rlcheckers/agents/greedy_agent.py` owns `GreedyAgent`, `material_balance`,
+and the `MAN_VALUE`, `KING_VALUE`, and `TERMINAL_SCORE` constants. The baseline
+searches exactly one ply: it applies every legal move, scores an immediate win
+as `+1000`, a draw as `0`, and a loss as `-1000`, otherwise scores material from
+the moving side's perspective, and breaks ties with the smallest
+`(path, captures)`. It is deterministic, owns no RNG, and never mutates the
+state. `material_balance` counts men as 1 and kings as 3.
+
+`src/rlcheckers/agents/protocol.py` owns the `Agent` protocol
+(`choose_move(state) -> Move`) and `AgentFactory` (a callable from a seed to an
+agent). The registry in `agents/__init__.py` exposes
+`AGENT_NAMES = ("greedy", "random")` and `make_agent()`, which raises
+`ValueError` for an unknown name. The arena depends on `AgentFactory`, not on
+the registry.
+
+## Evaluation arena (S4)
+
+`src/rlcheckers/evaluation/arena.py` owns `STANDARD_OPENINGS`, `opening_state`,
+`GameOutcome`, `GameResult`, `ArenaResult`, `ArenaError`, `play_matchup`,
+`outcome_for`, and the two seed helpers.
+
+The standard suite is five move prefixes from the initial position: empty,
+`6-10`, `8-14`, `6-10 18-14`, and `8-14 16-12`. `opening_state` applies the
+prefix through `GameState.apply`, so the prefix contributes to position history
+and the no-progress counter. The suite is fixed in code.
+
+`play_matchup` validates the seed, game count, and openings before the first
+game; rejects duplicate opening keys; schedules every opening with both agent
+colours; derives one game seed and two side seeds with SHA-256; and records one
+`GameResult` per game from the agent-under-test perspective. Every returned move
+is checked against the legal moves; an illegal move raises `ArenaError`, and a
+game over 2,000 plies raises `RuntimeError`.
+
+## Metrics (S4)
+
+`src/rlcheckers/evaluation/metrics.py` owns `summarize`, `summary_rows`,
+`format_float`, `ScoreSummary`, and `SummaryRow`. The derived score is
+`(wins + 0.5 * draws) / games`. The 95% interval uses the per-game sample
+variance and the normal approximation, clamped to `[0, 1]`; it describes
+game-level sampling noise, not unseen openings. Rows are ordered overall,
+black, white, then each opening. `format_float` writes six decimals, and fewer
+than two games in a group is rejected rather than given an invented interval.
+
+## Config (S4)
+
+`src/rlcheckers/config.py` owns `EvalConfig`, `ConfigError`, and
+`load_eval_config`. The TOML file has exactly five top-level keys: `seed`,
+`games`, `agent`, `opponent`, and `output_dir`. The loader validates types, the
+ten-game cycle, and the agent names; a relative `output_dir` resolves against
+the config file's parent. Loading does not create the directory.
+
+## Artifacts (S4)
+
+`src/rlcheckers/evaluation/artifacts.py` owns `write_artifacts`,
+`METRICS_FIELDS`, and `GAMES_FIELDS`. It validates the result against the config
+before creating anything, then writes `metrics.csv` (overall, colour, and
+opening summaries), `games.csv` (one audit row per game), and `run.json`
+(command line, config, opening keys, package and Python versions). CSVs use
+`\n` line endings, and rerunning the same result produces identical bytes. S4
+writes no plots; S5 and S7 own them under ADR 0004.
+
+## CLI (S3, S4)
 
 `src/rlcheckers/cli.py` exposes `main(argv)`, and `src/rlcheckers/__main__.py`
-runs it for `python -m rlcheckers`. The only command is
-`play-random --seed INT`. It prints the seed, numbered moves, final outcome, and
-ply count, with no board render or draw-reason line. `argparse` handles missing
-or non-integer seeds as usage errors with exit code 2.
+runs it for `python -m rlcheckers`. `play-random --seed INT` prints the seed,
+numbered moves, final outcome, and ply count. `evaluate --config PATH` loads the
+config, composes the agent factories, plays the matchup, writes the three
+artifacts, and prints the ten-line summary. Runtime problems print
+`error: <message>` to stderr and return 1; `argparse` usage errors keep exit
+code 2.
 
 ## Data flow
 
 1. A TOML config and seed define a run.
-2. Training plays games and updates the Q-table.
-3. The Q-table and metrics are saved.
-4. Evaluation replays the trained agent against fixed baselines over a fixed
-   opening suite, using both colours.
-5. The gate aggregates three seeds and writes the milestone report.
+2. In an S4 evaluation, the CLI composes the baselines and the arena plays the
+   fixed suite with both colours; metrics and artifacts are written.
+3. Training plays games and updates the Q-table (S5/S6).
+4. The trained agent is evaluated against the same arena (S5 onward).
+5. The gate aggregates three seeds and writes the milestone report (S7).
 
 ## Decisions
 

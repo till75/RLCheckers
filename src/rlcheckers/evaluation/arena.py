@@ -4,7 +4,8 @@
 matchup schedules every opening with both agent colours, derives one base seed
 per game from the master seed and the game's identity, and records one
 ``GameResult`` per game. The arena validates every agent move and never asks an
-agent to move in a terminal state.
+agent to move in a terminal state. An illegal move raises ``ArenaError``; a game
+over ``MAX_GAME_PLIES`` raises ``RuntimeError``.
 """
 
 from __future__ import annotations
