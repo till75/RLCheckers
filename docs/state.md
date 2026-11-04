@@ -30,7 +30,7 @@ No S5 code has started. 191 tests pass and `ruff check .` is clean.
 - `games` must be a positive multiple of 10; `summarize` rejects fewer than two games per group.
 - `games.csv` stores the base `game_seed` only; side seeds are derived.
 - `run.json` has no timestamp, but `python_version` varies by environment.
-- Mermaid: no HTML spans in labels; console prints them literally. Use plain narrow diagrams; tables for classifications.
+- Mermaid: console = plain labels, no HTML, narrow; Markdown = S4 black-text spans, white/light-grey fills only. See `AGENTS.md` "Two outputs, two rules".
 - `evaluate` maps `OSError`, `RuntimeError`, and `ValueError` to `error:` plus exit 1.
 - Draw baseline: 7/1,000 random-vs-random draws; 17.5 plies average. The game is not inherently drawish.
 - S5 design note chooses the trainer-owned loop, a JSON Q-table, and board-only state. ADR 0005 is proposed; do not implement until `/spec-review` approves.

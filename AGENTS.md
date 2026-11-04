@@ -48,21 +48,32 @@ These are author preferences, not optional styling:
   %%{init: {"theme": "base", "themeVariables": {"darkMode": false, "primaryTextColor": "#000000", "secondaryTextColor": "#000000", "tertiaryTextColor": "#000000", "textColor": "#000000", "lineColor": "#334155", "edgeLabelBackground": "#ffffff", "clusterBkg": "#f8fafc", "clusterBorder": "#94a3b8"}}}%%
   ```
 
-- Do not put HTML, `<span>`, `<b>`, or inline CSS inside Mermaid labels. Some
-  renderers print it literally. Use plain text and `classDef` or `style` for
-  colour; if a renderer ignores the style, the plain label must still be
-  readable.
-- In flowcharts, give each node a short plain label. If a box needs a title and
-  summary, use two short lines or split the node; do not use inline HTML for bold.
-- Give edge and cluster labels a white backing plus black text where the
-  renderer supports it; otherwise keep them plain and readable.
-- In sequence diagrams, use theme variables for text colour and no inline HTML.
-- Use one diagram per job. Split a wide diagram rather than letting it overflow.
-  Use a table for decision lists and classifications.
-- Use colour to carry meaning, label arrows, and give each box a title and a
-  short summary. Keep the prose or table as the contract; the diagram explains.
-- Check every diagram in the console renderer as well as light and dark Markdown
-  previews. Text that renders as raw HTML, or is clipped, is a defect.
+### Two outputs, two rules
+
+Console chat and Markdown documents use different renderers. Do not copy one
+rule to the other.
+
+- **Console chat:** use plain labels, no HTML, no inline CSS, and no colour
+  fills. Use a narrow `flowchart TB`, a text tree, or a table. The console
+  chooses text colour; check the console render. HTML spans are Markdown-only
+  and print literally here.
+- **Markdown documents:** force black text with the S4 technique: wrap every
+  node and edge label in `<span style='color:#000000'>...</span>`. Give edge
+  labels a white backing. This is allowed here because the Markdown renderer
+  interprets it; check light and dark previews.
+- **Markdown backgrounds:** use only white or light-grey fills: `#ffffff`,
+  `#f8fafc`, `#f1f5f9`, or `#e2e8f0`. Never use a darker fill. Carry category
+  meaning with the stroke colour, not the fill.
+
+In flowcharts, give each node a short plain label. If a box needs a title and
+summary, use two short lines or split the node; do not use inline HTML for bold.
+In sequence diagrams, use theme variables for text colour and no inline HTML.
+Use one diagram per job. Split a wide diagram rather than letting it overflow.
+Use a table for decision lists and classifications. Use colour to carry meaning,
+label arrows, and give each box a title and a short summary. Keep the prose or
+table as the contract; the diagram explains. Check every diagram in the console
+renderer as well as light and dark Markdown previews. Text that renders as raw
+HTML, or is clipped, is a defect.
 
 ## Working agreement
 
