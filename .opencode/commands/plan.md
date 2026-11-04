@@ -9,6 +9,9 @@ Read `docs/00-brief.md` and write `docs/plan.md`.
 - Order by risk. The slice that could invalidate the design goes first.
 - For each slice record: ID, outcome, acceptance criterion, files touched,
   tests added, rough size.
+- For each slice, say whether it needs `/learn` (new concepts or unsettled
+  approach) before `/spec`; every slice goes through `/spec-review` before
+  `/tdd`.
 - Flag anything that needs an ADR before implementation.
 - Call out what you deliberately deferred.
 

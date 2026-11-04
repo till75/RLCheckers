@@ -8,8 +8,11 @@
 
 - A slice is one testable outcome, with its tests, code, docs, and one or more
   green Conventional Commits.
-- Every slice starts with `/spec`, then `/tdd` for one behaviour at a time. The
-  failing test is shown before implementation.
+- Every slice starts with `/learn` when it introduces a new approach or the
+  author has not chosen one. `/learn` ends with a one-page design note and an
+  explicit choice. Then `/spec` writes the contract, `/spec-review` reviews and
+  approves it, and `/tdd` implements one behaviour at a time. The failing test is
+  shown before implementation.
 - Every slice follows the definition of done in `AGENTS.md`: test first, full
   suite green, `ruff` clean, docs updated, and no push before approval.
 - Commit each successful TDD cycle. A slice may span several self-contained,
@@ -19,7 +22,8 @@
 - Push only at the end of a slice, after explicit approval.
 - Non-obvious decisions get an ADR before implementation. An ADR records
   policy and trade-offs: choices that change what a result means or whether two
-  runs are comparable. A spec records the observable contract: interfaces,
+  runs are comparable. A design note records the slice's approach and the
+  learning behind it. A spec records the observable contract: interfaces,
   formats, examples, and acceptance tests. A concrete detail belongs in the
   spec unless it would change the evaluation contract, in which case it moves
   up into the ADR.
