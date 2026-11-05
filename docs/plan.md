@@ -1,7 +1,7 @@
 # Plan — RLCheckers, first milestone
 
 **Date:** 2026-10-27
-**Status:** S0–S4 complete; S5 next
+**Status:** S0–S4 complete and pushed; S5 implementation complete, awaiting approval and push; S6 next
 **Source:** `docs/00-brief.md`
 
 ## How this plan works
@@ -239,6 +239,10 @@ JSON schemas, byte reproducibility, and the `evaluate` CLI.
 
 ## S5 — Tabular Q-learning against a fixed random opponent
 
+**Status:** implementation complete, awaiting slice approval and push (2026-11-05).
+The slow A9 diagnostic scored 0.819 against random (794 W / 50 D / 156 L, 95% CI
+0.796–0.842; 21,773 table entries).
+
 **Outcome:** A Q-learning agent trains against a fixed random opponent, saves its
 Q-table and metrics, and measurably improves against random.
 
@@ -256,11 +260,13 @@ Q-table and metrics, and measurably improves against random.
 
 **Files touched:** `src/rlcheckers/agents/q_agent.py`,
 `src/rlcheckers/training/train_q.py`, `src/rlcheckers/config.py`,
-`tests/agents/test_q_agent.py`, `tests/training/test_train_q.py`,
-`docs/architecture.md`.
+`src/rlcheckers/cli.py`, `pyproject.toml`, `tests/agents/test_q_agent.py`,
+`tests/training/test_train_q.py`, `tests/test_config.py`, `tests/test_cli.py`,
+`README.md`, `docs/architecture.md`.
 
 **Tests added:** Q-update arithmetic, epsilon schedule, state-key stability,
-save/load, memory cap, short training smoke test, improvement check.
+save/load, memory cap, short training smoke test, training config validation,
+artifacts/plot, `train-q` CLI, and the slow improvement check.
 
 **Rough size:** M–L, 4–6 hours. Split the agent from the training loop if needed.
 

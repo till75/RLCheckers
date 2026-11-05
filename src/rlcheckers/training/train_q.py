@@ -1,7 +1,10 @@
 """Tabular Q-learning training loop.
 
-The trainer owns exploration and updates; the Q-agent only plays. Public
-signatures are added in TDD order.
+``train_q`` plays the five-opening suite with both learner colours against a
+seeded random opponent, applies epsilon-greedy exploration and terminal
+Q-updates, and returns a ``QTable`` plus per-episode metrics. The module also
+owns the training artifacts and learning-curve plot. The Q-agent only plays; it
+does not train.
 """
 
 from __future__ import annotations

@@ -1,9 +1,11 @@
 # Architecture
 
-**Status:** S4 implements the immutable rules engine (S1–S3), seeded random
-play, the depth-1 greedy baseline, the seeded evaluation arena, metrics with a
-95% interval, TOML config, CSV/JSON artifacts, and the `evaluate` CLI command.
-Spec 0004 is approved. Learning and the three-seed gate are planned.
+**Status:** S5 implements the immutable rules engine (S1–S3), seeded random
+play, the depth-1 greedy baseline (S4), the seeded evaluation arena (S4), and
+tabular Q-learning against a fixed random opponent (S5): Q-table, Q-agent,
+training loop, training config, four artifacts, learning curve, and `train-q`
+CLI. S5 is awaiting slice approval and push. Self-play and the three-seed gate
+are planned (S6–S7).
 
 ## Components
 
@@ -11,23 +13,25 @@ Spec 0004 is approved. Learning and the three-seed gate are planned.
   transitions and terminal/draw detection (S3).
 - **Agents:** random baseline (S3), depth-1 greedy baseline (S4), and tabular
   Q-agent (S5).
-- **Training:** self-play loop with periodic snapshots (S6).
+- **Training:** fixed random-opponent trainer (S5), then self-play with periodic
+  snapshots (S6).
 - **Evaluation:** arena for pairing agents over openings and colours, metrics,
   config, and artifacts (S4), plus the three-seed gate (S7).
-- **Composition:** CLI (`play-random` and `evaluate`), TOML config, seed
-  handling, and artifact writing.
+- **Composition:** CLI (`play-random`, `evaluate`, `train-q`), TOML configs,
+  seed handling, and artifact writing.
 
 The rules do not depend on agents. Agents depend on the rules. Training depends
 on both. Evaluation depends on the rules and agents. The CLI composes them. S4
-writes CSV/JSON only; S5 and S7 own plots under ADR 0004.
+writes CSV/JSON only; S5 adds the Q-table, training CSV, run metadata, and
+learning curve; S7 owns the gate report and its plots under ADR 0004.
 
 ```mermaid
 %%{init: {"theme": "base", "themeVariables": {"darkMode": false, "primaryTextColor": "#000000", "secondaryTextColor": "#000000", "tertiaryTextColor": "#000000", "textColor": "#000000", "lineColor": "#334155", "edgeLabelBackground": "#ffffff", "clusterBkg": "#f8fafc", "clusterBorder": "#94a3b8"}}}%%
-flowchart LR
+flowchart TB
   subgraph Config["<span style='background-color:#ffffff'><span style='color:#000000'>Configuration</span></span>"]
-    TOML["<span style='color:#000000'>eval.toml<br/>human-authored run settings</span>"]
-    CFG["<span style='color:#000000'>EvalConfig<br/>resolved seed · games · agents · output dir</span>"]
-    TOML -->|"<span style='background-color:#ffffff'><span style='color:#000000'>load_eval_config</span></span>"| CFG
+    TOML["<span style='color:#000000'>eval.toml · train.toml<br/>human-authored settings</span>"]
+    CFG["<span style='color:#000000'>EvalConfig · TrainConfig<br/>resolved values and paths</span>"]
+    TOML -->|"<span style='background-color:#ffffff'><span style='color:#000000'>load_*_config</span></span>"| CFG
   end
 
   subgraph Rules["<span style='background-color:#ffffff'><span style='color:#000000'>Rules engine · S1–S3</span></span>"]
@@ -36,7 +40,11 @@ flowchart LR
 
   subgraph Agents["<span style='background-color:#ffffff'><span style='color:#000000'>Agents</span></span>"]
     BASE["<span style='color:#000000'>Random + greedy<br/>S3/S4 baselines</span>"]
-    Q["<span style='color:#000000'>Q-agent<br/>S5+</span>"]
+    Q["<span style='color:#000000'>Q-agent<br/>S5</span>"]
+  end
+
+  subgraph Training["<span style='background-color:#ffffff'><span style='color:#000000'>Training · S5/S6</span></span>"]
+    TRAIN["<span style='color:#000000'>Trainer<br/>fixed opponent S5 · self-play S6</span>"]
   end
 
   subgraph Evaluation["<span style='background-color:#ffffff'><span style='color:#000000'>Evaluation · S4/S7</span></span>"]
@@ -46,58 +54,63 @@ flowchart LR
   end
 
   subgraph Outputs["<span style='background-color:#ffffff'><span style='color:#000000'>Artifacts</span></span>"]
-    FILES["<span style='color:#000000'>CSV + JSON<br/>metrics · games · run</span>"]
-    PLOTS["<span style='color:#000000'>Plots<br/>S5/S7</span>"]
+    FILES["<span style='color:#000000'>CSV + JSON + Q-table<br/>training · evaluation · run</span>"]
+    PLOTS["<span style='color:#000000'>Plots<br/>learning curve S5 · report S7</span>"]
     CONSUMER["<span style='color:#000000'>Report / next slice<br/>reads artifacts</span>"]
   end
 
-  CLI["<span style='color:#000000'>CLI<br/>play-random · evaluate</span>"]
-  TRAIN["<span style='color:#000000'>Training loop<br/>S5/S6</span>"]
+  CLI["<span style='color:#000000'>CLI<br/>play-random · evaluate · train-q</span>"]
 
   CFG -->|"<span style='background-color:#ffffff'><span style='color:#000000'>configures</span></span>"| CLI
   CLI -->|"<span style='background-color:#ffffff'><span style='color:#000000'>starts matchup</span></span>"| ARENA
+  CLI -->|"<span style='background-color:#ffffff'><span style='color:#000000'>starts training</span></span>"| TRAIN
   STATE -->|"<span style='background-color:#ffffff'><span style='color:#000000'>state + legal moves</span></span>"| ARENA
   ARENA -->|"<span style='background-color:#ffffff'><span style='color:#000000'>apply move</span></span>"| STATE
   BASE -->|"<span style='background-color:#ffffff'><span style='color:#000000'>Move</span></span>"| ARENA
-  Q -.->|"<span style='background-color:#ffffff'><span style='color:#000000'>Move (S5+)</span></span>"| ARENA
-  TRAIN -.->|"<span style='background-color:#ffffff'><span style='color:#000000'>updates</span></span>"| Q
+  Q -->|"<span style='background-color:#ffffff'><span style='color:#000000'>Move</span></span>"| ARENA
+  TRAIN -->|"<span style='background-color:#ffffff'><span style='color:#000000'>updates</span></span>"| Q
   ARENA -->|"<span style='background-color:#ffffff'><span style='color:#000000'>ArenaResult</span></span>"| METRICS
   METRICS -->|"<span style='background-color:#ffffff'><span style='color:#000000'>summary rows</span></span>"| FILES
+  TRAIN -->|"<span style='background-color:#ffffff'><span style='color:#000000'>training artifacts</span></span>"| FILES
   METRICS -.->|"<span style='background-color:#ffffff'><span style='color:#000000'>per-seed scores (S7)</span></span>"| GATE
   GATE -.->|"<span style='background-color:#ffffff'><span style='color:#000000'>gate report (S7)</span></span>"| PLOTS
-  FILES -.->|"<span style='background-color:#ffffff'><span style='color:#000000'>plot input (S5/S7)</span></span>"| PLOTS
-  FILES -->|"<span style='background-color:#ffffff'><span style='color:#000000'>CSV/JSON</span></span>"| CONSUMER
+  FILES -->|"<span style='background-color:#ffffff'><span style='color:#000000'>plot input (S5/S7)</span></span>"| PLOTS
+  FILES -->|"<span style='background-color:#ffffff'><span style='color:#000000'>CSV/JSON/Q-table</span></span>"| CONSUMER
 
-  style Config fill:#eff6ff,stroke:#1565c0
-  style Rules fill:#f0fdf4,stroke:#2e7d32
-  style Agents fill:#f7fee7,stroke:#558b2f
-  style Evaluation fill:#fff7ed,stroke:#ef6c00
+  style Config fill:#f8fafc,stroke:#1565c0
+  style Rules fill:#f8fafc,stroke:#2e7d32
+  style Agents fill:#f8fafc,stroke:#558b2f
+  style Training fill:#f8fafc,stroke:#0f766e
+  style Evaluation fill:#f8fafc,stroke:#ef6c00
   style Outputs fill:#f8fafc,stroke:#455a64
 
-  classDef config fill:#e3f2fd,stroke:#1565c0,color:#000000
-  classDef cli fill:#e8eaf6,stroke:#283593,color:#000000
-  classDef rules fill:#e8f5e9,stroke:#2e7d32,color:#000000
-  classDef agents fill:#f1f8e9,stroke:#558b2f,color:#000000
-  classDef eval fill:#fff3e0,stroke:#ef6c00,color:#000000
-  classDef metrics fill:#f3e5f5,stroke:#6a1b9a,color:#000000
-  classDef output fill:#eceff1,stroke:#455a64,color:#000000
-  classDef future fill:#f5f5f5,stroke:#9e9e9e,color:#000000,stroke-dasharray: 5 5
+  classDef config fill:#f8fafc,stroke:#1565c0,color:#000000
+  classDef cli fill:#f8fafc,stroke:#283593,color:#000000
+  classDef rules fill:#f8fafc,stroke:#2e7d32,color:#000000
+  classDef agents fill:#f8fafc,stroke:#558b2f,color:#000000
+  classDef train fill:#f8fafc,stroke:#0f766e,color:#000000
+  classDef eval fill:#f8fafc,stroke:#ef6c00,color:#000000
+  classDef metrics fill:#f8fafc,stroke:#6a1b9a,color:#000000
+  classDef output fill:#f8fafc,stroke:#455a64,color:#000000
+  classDef future fill:#f8fafc,stroke:#9e9e9e,color:#000000,stroke-dasharray: 5 5
 
   class TOML,CFG config
   class CLI cli
   class STATE rules
-  class BASE agents
+  class BASE,Q agents
+  class TRAIN train
   class ARENA eval
   class METRICS metrics
-  class FILES,CONSUMER output
-  class Q,GATE,PLOTS,TRAIN future
+  class FILES,PLOTS,CONSUMER output
+  class GATE future
 ```
 
-**Figure A — Component map.** Solid arrows are implemented through S4; dashed
-arrows point at later slices. Blue is configuration, indigo is composition,
-green is rules/agents, orange is evaluation, purple is metrics, and grey is
-artifacts/reporting. The arena is the only component that talks to both the
-rules engine and the agents.
+**Figure A — Component map.** Solid arrows are implemented through S5; dashed
+arrows point at S6/S7. Category colour is carried by the stroke; every fill is
+white or light grey. The arena talks to the rules engine and the agents; the
+`train-q` command composes the trainer and the diagnostic. Blue is
+configuration, indigo is composition, green is rules/agents/training, orange is
+evaluation, purple is metrics, and grey is artifacts/reporting.
 
 ## Board module (S1)
 
@@ -184,6 +197,41 @@ agent). The registry in `agents/__init__.py` exposes
 `ValueError` for an unknown name. The arena depends on `AgentFactory`, not on
 the registry.
 
+## Q-table and Q-agent (S5)
+
+`src/rlcheckers/agents/q_agent.py` owns `q_key`, `QTable`, `QTableError`,
+`TableCapacityError`, and `QAgent`. The key is
+`(state.board.state_key << 33) | move.action_key`, a 73-bit value. The table is a
+sparse `dict[int, float]` with a 2,000,000-entry cap; missing entries are `0.0`,
+and a new key at the cap raises rather than evicting.
+
+The S5 learning state is the 40-bit board key only; repetition and no-progress
+counters are excluded under ADR 0005. `QTable` saves to and loads from JSON with
+decimal-string keys, validates the schema and saved cap, and estimates memory
+from the dictionary and its keys and values. `QAgent` is the thin greedy
+adapter: it owns no RNG and returns `table.best_move(state)`, with ties broken by
+the first legal move in `(path, captures)` order. A finished game is rejected.
+
+## Training (S5)
+
+`src/rlcheckers/training/train_q.py` owns the fixed-opponent trainer and its
+helpers: `q_update`, `epsilon_at`, `choose_epsilon_greedy`, `reward_for`,
+`derive_episode_seed`, `EpisodeMetric`, `TrainingResult`, `train_q`,
+`write_training_artifacts`, and `write_learning_curve`.
+
+Training alternates the five S4 openings with both learner colours, plays a
+seeded random opponent, and updates only the learner's actions. `alpha = 0.1`,
+`gamma = 0.9`, and epsilon decays linearly from `1.0` to `0.05` over 80% of the
+episodes; zero decay is rejected. Rewards are terminal `+1/0/-1` from the
+learner's perspective; the S4 derived score remains evaluation-only. The table
+cap and a 2,000-ply guard fail loudly. Episode seeds use a separate `train`
+domain while reusing `derive_side_seed`.
+
+The S5 diagnostic trains 10,000 seeded episodes and plays 1,000 games against
+random. The recorded result is **794 W / 50 D / 156 L**, score **0.819**, 95% CI
+**0.796–0.842**, and 21,773 table entries. That is a diagnostic, not the S7 gate.
+Self-play with periodic snapshots is S6.
+
 ## Evaluation arena (S4)
 
 `src/rlcheckers/evaluation/arena.py` owns `STANDARD_OPENINGS`, `opening_state`,
@@ -212,15 +260,23 @@ game-level sampling noise, not unseen openings. Rows are ordered overall,
 black, white, then each opening. `format_float` writes six decimals, and fewer
 than two games in a group is rejected rather than given an invented interval.
 
-## Config (S4)
+## Config (S4, S5)
 
-`src/rlcheckers/config.py` owns `EvalConfig`, `ConfigError`, and
-`load_eval_config`. The TOML file has exactly five top-level keys: `seed`,
-`games`, `agent`, `opponent`, and `output_dir`. The loader validates types, the
-ten-game cycle, and the agent names; a relative `output_dir` resolves against
-the config file's parent. Loading does not create the directory.
+`src/rlcheckers/config.py` owns `EvalConfig`, `TrainConfig`, `ConfigError`,
+`load_eval_config`, and `load_train_config`. The evaluation TOML file has exactly
+five top-level keys: `seed`, `games`, `agent`, `opponent`, and `output_dir`; the
+loader validates types, the ten-game cycle, and the agent names.
 
-## Artifacts (S4)
+The training TOML file has exactly ten top-level keys: `seed`, `episodes`,
+`alpha`, `gamma`, `epsilon_start`, `epsilon_end`, `epsilon_decay_fraction`,
+`opponent`, `output_dir`, and `max_table_entries`. Episodes are a positive
+multiple of 10; alpha is in `(0, 1]`, gamma in `[0, 1)`, the epsilon endpoints
+are in `[0, 1]` with start at least end, the decay fraction is in `(0, 1]`
+(zero is rejected), opponent is `"random"`, and the cap is positive. Both loaders
+resolve a relative `output_dir` against the config file's parent and do not
+create it.
+
+## Artifacts (S4, S5)
 
 `src/rlcheckers/evaluation/artifacts.py` owns `write_artifacts`,
 `METRICS_FIELDS`, and `GAMES_FIELDS`. It validates the result against the config
@@ -228,26 +284,39 @@ before creating anything, then writes `metrics.csv` (overall, colour, and
 opening summaries), `games.csv` (one audit row per game), and `run.json`
 (command line, config, opening keys, package and Python versions). CSVs use
 `\n` line endings, and rerunning the same result produces identical bytes. S4
-writes no plots; S5 and S7 own them under ADR 0004.
+writes no plots.
 
-## CLI (S3, S4)
+`src/rlcheckers/training/train_q.py` owns `write_training_artifacts`,
+`TRAINING_FIELDS`, `write_learning_curve`, and `DIAGNOSTIC_GAMES`. The training
+writer validates the result, diagnostic seed, names, game count, and openings
+before creating anything, then writes `q_table.json`, `training.csv`, `run.json`,
+and `learning_curve.png`. The CSV records episode, opening, learner colour,
+outcome, plies, epsilon, and table size. JSON and CSV are byte-reproducible;
+the PNG is reproducible in content from the metrics and config. S5 owns the
+learning-curve contract under ADR 0004.
+
+## CLI (S3, S4, S5)
 
 `src/rlcheckers/cli.py` exposes `main(argv)`, and `src/rlcheckers/__main__.py`
 runs it for `python -m rlcheckers`. `play-random --seed INT` prints the seed,
 numbered moves, final outcome, and ply count. `evaluate --config PATH` loads the
-config, composes the agent factories, plays the matchup, writes the three
-artifacts, and prints the ten-line summary. Runtime problems print
-`error: <message>` to stderr and return 1; `argparse` usage errors keep exit
-code 2.
+evaluation config, composes the agent factories, plays the matchup, writes the
+three artifacts, and prints the ten-line summary. `train-q --config PATH` loads
+the training config, trains the Q-table, runs the 1,000-game diagnostic through
+the S4 arena, writes the four training artifacts, and prints the thirteen-line
+summary. Runtime problems print `error: <message>` to stderr and return 1;
+`argparse` usage errors keep exit code 2.
 
 ## Data flow
 
 1. A TOML config and seed define a run.
 2. In an S4 evaluation, the CLI composes the baselines and the arena plays the
    fixed suite with both colours; metrics and artifacts are written.
-3. Training plays games and updates the Q-table (S5/S6).
-4. The trained agent is evaluated against the same arena (S5 onward).
-5. The gate aggregates three seeds and writes the milestone report (S7).
+3. In S5, `train-q` trains the Q-table against a fixed random opponent, writes
+   the Q-table/training metrics/plot, then evaluates the frozen Q-agent on the
+   same arena for the diagnostic.
+4. S6 replaces the fixed training opponent with periodic self-play snapshots.
+5. S7 aggregates three training seeds and writes the milestone report.
 
 ## Decisions
 
@@ -255,11 +324,13 @@ code 2.
 - [ADR 0002 — Board, move, and state encoding](adr/0002-board-and-state-encoding.md)
 - [ADR 0003 — Evaluation protocol and gate](adr/0003-evaluation-protocol.md)
 - [ADR 0004 — Plot ownership](adr/0004-plot-ownership.md)
+- [ADR 0005 — Tabular Q-learning representation and hyperparameters](adr/0005-tabular-q-learning.md)
 
 ## Specifications
 
 - [Spec 0003 — Game application and random play](specs/0003-game-application-and-random-play.md)
 - [Spec 0004 — Baselines and evaluation arena](specs/0004-evaluation-arena.md)
+- [Spec 0005 — Tabular Q-learning against a fixed random opponent](specs/0005-tabular-q-learning.md)
 
 ## Current milestone boundaries
 
