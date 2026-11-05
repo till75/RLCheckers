@@ -4,11 +4,11 @@
 S4 is complete, approved, and pushed at `b616189`. The workflow change
 (`/learn` → `/spec` → `/spec-review` → `/tdd`) is pushed at `7a2643f`.
 S5's `/learn` and spec review are done: design note 0005 is chosen, spec 0005 is
-approved, and ADR 0005 is accepted. S5 code has started: A1-A7 and A8's
-artifacts/plot are implemented; the `train-q` CLI remains. 250 tests pass and
-`ruff check .` is clean, but the full suite now takes about 52s because the
-artifact tests retrain and replay 1,000 diagnostic games each. Local commits
-after `7a2643f` are not pushed.
+approved, and ADR 0005 is accepted. S5 code has started: A1-A8 are implemented
+(Q-table, QAgent, training loop, config, artifacts, plot, and `train-q` CLI).
+256 tests pass and `ruff check .` is clean, but the full suite now takes about
+82s because the artifact and CLI tests retrain and replay 1,000 diagnostic games
+each. Local commits after `7a2643f` are not pushed.
 
 ## Done since last handoff
 - `ff23f98` — S4 bootstrap: protocol, greedy, arena, metrics, artifacts, config, `evaluate` subparser.
@@ -27,14 +27,15 @@ after `7a2643f` are not pushed.
 - A6 fixed-opponent training loop, schedule, rewards, reproducibility, and cap; 225 tests.
 - A7 training TOML loader and validation implemented; 243 tests.
 - A8 artifacts/plot (`q_table.json`, `training.csv`, `run.json`, PNG) implemented; 250 tests.
+- A8 `train-q` CLI, diagnostic, and 13-line stdout implemented; 256 tests.
 
 ## Next
-1. Add A8 CLI: the `train-q` subcommand and 13-line stdout.
-2. Then A9: the slow improvement diagnostic.
+1. Add A9: the slow improvement diagnostic.
+2. Then A10: documentation and the final slice checks.
 3. Do not push local commits without approval.
 
 ## Open questions
-- None blocking. Continue the spec's TDD order at the CLI.
+- None blocking. Continue the spec's TDD order at the improvement diagnostic.
 
 ## Gotchas
 - Windows/PowerShell; use `.\.venv\Scripts\python.exe` (Python 3.14). `ruff check` is the gate; `ruff format` rewrites Markdown fences.
@@ -45,7 +46,7 @@ after `7a2643f` are not pushed.
 - Mermaid: console = plain labels, no HTML, narrow; Markdown = S4 black-text spans, white/light-grey fills only. See `AGENTS.md` "Two outputs, two rules".
 - `evaluate` maps `OSError`, `RuntimeError`, and `ValueError` to `error:` plus exit 1.
 - Draw baseline: 7/1,000 random-vs-random draws; 17.5 plies average. The game is not inherently drawish.
-- Full suite is about 52s after A8: each artifact test retrains 20 episodes and plays 1,000 diagnostic games.
+- Full suite is about 82s after A8: artifact and CLI tests retrain 20 episodes and play 1,000 diagnostic games repeatedly.
 - S5 design note chooses the trainer-owned loop, a JSON Q-table, and board-only state. ADR 0005 is accepted; implementation starts with `/tdd A1`.
 
 ## Not in an ADR
