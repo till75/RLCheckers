@@ -96,10 +96,28 @@ class QTable:
         self._entries[key] = value
 
     def best_value(self, state: GameState) -> float:
-        raise NotImplementedError
+        if state.is_terminal:
+            raise QTableError(f"game is finished: {state.outcome.value}")
+        moves = state.legal_moves()
+        if not moves:
+            raise QTableError("no legal moves")
+        return max(self.get(q_key(state, move)) for move in moves)
 
     def best_move(self, state: GameState) -> Move:
-        raise NotImplementedError
+        if state.is_terminal:
+            raise QTableError(f"game is finished: {state.outcome.value}")
+        moves = state.legal_moves()
+        if not moves:
+            raise QTableError("no legal moves")
+
+        best = moves[0]
+        best_value = self.get(q_key(state, best))
+        for move in moves[1:]:
+            value = self.get(q_key(state, move))
+            if value > best_value:
+                best = move
+                best_value = value
+        return best
 
     def size(self) -> int:
         return len(self._entries)
@@ -125,11 +143,17 @@ class QAgent:
     """A greedy adapter that reads a Q-table and chooses legal moves."""
 
     def __init__(self, table: QTable) -> None:
-        raise NotImplementedError
+        if not isinstance(table, QTable):
+            raise TypeError(
+                f"table must be a QTable, got {type(table).__name__}"
+            )
+        self._table = table
 
     @property
     def table(self) -> QTable:
-        raise NotImplementedError
+        return self._table
 
     def choose_move(self, state: GameState) -> Move:
-        raise NotImplementedError
+        if state.is_terminal:
+            raise ValueError(f"game is finished: {state.outcome.value}")
+        return self._table.best_move(state)

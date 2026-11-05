@@ -2,14 +2,29 @@ from __future__ import annotations
 
 import pytest
 
-from rlcheckers.agents.q_agent import QTable, TableCapacityError, q_key
-from rlcheckers.game.board import Board
+from rlcheckers.agents.q_agent import QAgent, QTable, TableCapacityError, q_key
+from rlcheckers.game.board import (
+    PLAYABLE_SQUARES,
+    SQUARE_COUNT,
+    Board,
+    Piece,
+    Side,
+)
 from rlcheckers.game.moves import Move
 from rlcheckers.game.state import GameState
 
 
 def _initial_state() -> GameState:
     return GameState.from_board(Board.initial())
+
+
+def _board_with(
+    pieces: dict[int, Piece], side: Side = Side.BLACK
+) -> Board:
+    cells: list[Piece | None] = [None] * SQUARE_COUNT
+    for square in PLAYABLE_SQUARES:
+        cells[square] = pieces.get(square, Piece.EMPTY)
+    return Board(tuple(cells), side)
 
 
 def test_q_key_combines_state_and_action() -> None:
@@ -74,3 +89,42 @@ def test_q_table_rejects_non_finite() -> None:
 
 def test_q_table_memory_estimate() -> None:
     assert QTable().estimated_memory_bytes() > 0
+
+
+def test_q_agent_picks_highest_value() -> None:
+    state = _initial_state()
+    table = QTable()
+    best = Move((6, 10))
+    table.set(q_key(state, best), 1.0)
+    agent = QAgent(table)
+
+    assert agent.table is table
+    assert agent.choose_move(state) == best
+
+
+def test_q_agent_tie_breaks_by_path() -> None:
+    state = _initial_state()
+
+    assert QAgent(QTable()).choose_move(state) == Move((6, 10))
+
+
+def test_q_agent_returns_legal_move() -> None:
+    state = _initial_state()
+
+    assert QAgent(QTable()).choose_move(state) in state.legal_moves()
+
+
+def test_q_agent_is_deterministic() -> None:
+    state = _initial_state()
+    agent = QAgent(QTable())
+
+    assert agent.choose_move(state) == agent.choose_move(state)
+
+
+def test_q_agent_rejects_finished_game() -> None:
+    finished = GameState.from_board(
+        _board_with({20: Piece.BLACK_KING})
+    )
+
+    with pytest.raises(ValueError, match="finished"):
+        QAgent(QTable()).choose_move(finished)
