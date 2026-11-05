@@ -31,6 +31,22 @@ class EvalConfig:
     output_dir: Path
 
 
+@dataclass(frozen=True)
+class TrainConfig:
+    """A training configuration; validation lives in ``load_train_config``."""
+
+    seed: int
+    episodes: int
+    alpha: float
+    gamma: float
+    epsilon_start: float
+    epsilon_end: float
+    epsilon_decay_fraction: float
+    opponent: str
+    output_dir: Path
+    max_table_entries: int
+
+
 class ConfigError(ValueError):
     """Raised when an evaluation config is invalid."""
 
