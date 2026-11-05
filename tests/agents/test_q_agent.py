@@ -4,7 +4,7 @@ import json
 
 import pytest
 
-from rlcheckers.agents.q_agent import (
+from rlcheckers.agents import (
     QAgent,
     QTable,
     QTableError,

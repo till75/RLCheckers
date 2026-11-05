@@ -2,6 +2,13 @@
 
 from rlcheckers.agents.greedy_agent import GreedyAgent, material_balance
 from rlcheckers.agents.protocol import Agent, AgentFactory
+from rlcheckers.agents.q_agent import (
+    QAgent,
+    QTable,
+    QTableError,
+    TableCapacityError,
+    q_key,
+)
 from rlcheckers.agents.random_agent import (
     MAX_GAME_PLIES,
     RandomAgent,
@@ -26,8 +33,13 @@ __all__ = [
     "Agent",
     "AgentFactory",
     "GreedyAgent",
+    "QAgent",
+    "QTable",
+    "QTableError",
     "RandomAgent",
+    "TableCapacityError",
     "make_agent",
     "material_balance",
     "play_random_game",
+    "q_key",
 ]
