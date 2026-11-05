@@ -1,6 +1,6 @@
 # ADR 0005 — Tabular Q-learning representation and hyperparameters
 
-- **Status:** proposed
+- **Status:** accepted
 - **Date:** 2026-11-04
 - **Deciders:** author, opencode
 - **Related:** ADR 0002, ADR 0003, ADR 0004, `docs/00-brief.md`,
@@ -95,8 +95,10 @@ diagnostic instead.
   `alpha`, `gamma`, `epsilon_start`, `epsilon_end`, `epsilon_decay_fraction`,
   `opponent`, `output_dir`, `max_table_entries`.
 - Validate required keys, types, and ranges; reject unknown keys; require
-  `episodes > 0`; require epsilon values in `[0, 1]` with
-  `epsilon_start >= epsilon_end`; require the decay fraction in `[0, 1]`; require
+  `episodes` to be a positive multiple of 10 (minimum 10); require
+  `0 < alpha <= 1` and `0 <= gamma < 1`; require epsilon values in `[0, 1]` with
+  `epsilon_start >= epsilon_end`; require the decay fraction in `(0, 1]` (zero is
+  rejected; use `epsilon_start == epsilon_end` for a constant schedule); require
   `max_table_entries > 0`; resolve relative `output_dir` against the config file.
   S5 fixes `opponent = "random"`.
 - The resolved config is saved with the run. The S4 `EvalConfig` remains
@@ -178,6 +180,8 @@ diagnostic instead.
 
 ## Approval
 
-Proposed on 2026-11-04. The design note records the author's choice of option 1:
-the agent plays and the trainer trains. Review and approval happen in
-`/spec-review` for S5; this ADR is a gate for implementation.
+Accepted on 2026-11-04 in `/spec-review S5`. The design note records the
+author's choice of option 1: the agent plays and the trainer trains. The review
+approved the final blocking decisions: training episodes are a positive multiple
+of 10 (minimum 10), and alpha/gamma ranges are `0 < alpha <= 1` and
+`0 <= gamma < 1`. This ADR is the S5 gate and is now accepted.
