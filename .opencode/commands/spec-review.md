@@ -22,7 +22,10 @@ Read the spec, its linked design note, the brief, plan, and relevant ADRs.
    decided here.
 4. **Review in rounds.** One theme per round; do not mix outputs, semantics, and
    internals. At most three blocking decisions per round. After each round give a
-   one-line recap and ask `continue, adjust, or stop`.
+   one-line recap and ask for an explicit yes/no on each decision. Restate each
+   decision in full in the same message: what changes, the recommendation, and the
+   alternative. Never refer to "decision 1" or "Round 2" without repeating it; the
+   author should not have to scroll up.
 5. **Triage decisions.** Ask only contract-level choices. For semantics,
    recommend and ask for a veto. Record internal or reversible choices as
    assumptions. If a choice changes what a result means or whether runs are

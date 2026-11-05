@@ -88,6 +88,11 @@ HTML, or is clipped, is a defect.
   with `/spec-review`. `/spec-review` reviews the contract against the design
   note, resolves concrete decisions, and records approval. `/tdd` starts only
   after that approval.
+- **Review questions stand alone.** In `/spec-review` and any approval message,
+  restate each decision in full: what changes, the recommended choice, and the
+  alternative. Do not refer to "decision 1" or "Round 2" without repeating the
+  decision; the author should not have to scroll up. Ask for an explicit yes/no
+  per decision.
 - **TDD, failing test first.** Show the failing test and its output before
   writing implementation code. The failure must be the missing behaviour, not
   an import or syntax error.
