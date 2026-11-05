@@ -1,7 +1,7 @@
 # Plan — RLCheckers, first milestone
 
 **Date:** 2026-10-27
-**Status:** S0–S5 complete and pushed; S6 next
+**Status:** S0–S5 complete and pushed; S6 learn complete; spec next
 **Source:** `docs/00-brief.md`
 
 ## How this plan works
@@ -278,6 +278,9 @@ artifacts/plot, `train-q` CLI, and the slow improvement check.
 S6.
 
 ## S6 — Self-play with periodic snapshots
+
+**Status:** learn complete; spec next (2026-11-05). Design note 0006 chooses the
+latest-snapshot policy; ADR 0006 is proposed.
 
 **Outcome:** The Q-agent trains through self-play against periodic snapshots and
 improves against random and depth-1 greedy without a fixed training opponent.

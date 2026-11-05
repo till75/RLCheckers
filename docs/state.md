@@ -1,4 +1,4 @@
-# State — 2026-11-04
+# State — 2026-11-05
 
 ## Where we are
 S4 is complete, approved, and pushed at `b616189`. The workflow change
@@ -8,7 +8,9 @@ approved, and ADR 0005 is accepted. S5 is implemented and documented: Q-table,
 QAgent, training loop, config, artifacts, plot, `train-q` CLI, and the slow
 improvement diagnostic. 256 default tests pass in about 80s; the A9 slow test is
 excluded by default. A9 observed W/D/L 794/50/156, score 0.819, CI 0.796-0.842,
-table 21,773. S5 is complete, approved, and pushed.
+table 21,773. S5 is complete, approved, and pushed. S6's `/learn` is complete:
+design note 0006 chooses latest-snapshot self-play and ADR 0006 is proposed. The
+next gate is `/spec S6`.
 
 ## Done since last handoff
 - `ff23f98` — S4 bootstrap: protocol, greedy, arena, metrics, artifacts, config, `evaluate` subparser.
@@ -31,14 +33,15 @@ table 21,773. S5 is complete, approved, and pushed.
 - A9 slow improvement diagnostic passed: W/D/L 794/50/156, score 0.819, CI 0.796-0.842, table 21,773.
 - A10 architecture, README, plan, and handoff docs updated; final checks pass (256 default tests, ruff, A9 0.819).
 - S5 approved and pushed.
+- S6 learn complete: design note 0006 chooses latest-snapshot self-play; ADR 0006 proposed; local.
 
 ## Next
-1. Start S6 with `/learn` for self-play snapshots.
-2. Then `/spec` S6 → `/spec-review` → `/tdd`.
-3. Do not push S6 without approval.
+1. Write spec 0006 from design note 0006 and ADR 0006.
+2. Run `/spec-review S6`; accept ADR 0006 there.
+3. Then `/tdd A1`; do not push S6 without approval.
 
 ## Open questions
-- None blocking. S5 is closed; S6 starts with self-play learning.
+- None blocking. ADR 0006 is proposed; `/spec-review S6` will accept or revise it.
 
 ## Gotchas
 - Windows/PowerShell; use `.\.venv\Scripts\python.exe` (Python 3.14). `ruff check` is the gate; `ruff format` rewrites Markdown fences.
@@ -52,6 +55,8 @@ table 21,773. S5 is complete, approved, and pushed.
 - Default suite excludes slow tests via `addopts = "-m 'not slow'"`; run A9 with `pytest -m slow tests/training/test_train_q.py::test_train_q_improves_against_random -q`. Artifact/CLI tests make the default suite about 82s.
 - A9 diagnostic result: W/D/L 794/50/156, score 0.819, CI 0.796-0.842, table 21,773 entries.
 - S5 design note chooses the trainer-owned loop, a JSON Q-table, and board-only state. ADR 0005 is accepted; implementation starts with `/tdd A1`.
+- S6 design note 0006 chooses latest-snapshot self-play: empty initial table, refresh every N episodes, learner-only updates. ADR 0006 is proposed; N is a positive multiple of 10. Fixed baselines remain the scoreboard.
+- S6 training results are not directly comparable to S5 because the opponent distribution changes; compare final agents on the same fixed baselines.
 
 ## Not in an ADR
 - `apply_move` validates by membership in `generate_moves`; `format_move` is display-only.
