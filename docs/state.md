@@ -8,8 +8,7 @@ approved, and ADR 0005 is accepted. S5 is implemented and documented: Q-table,
 QAgent, training loop, config, artifacts, plot, `train-q` CLI, and the slow
 improvement diagnostic. 256 default tests pass in about 80s; the A9 slow test is
 excluded by default. A9 observed W/D/L 794/50/156, score 0.819, CI 0.796-0.842,
-table 21,773. S5 awaits slice approval and push. Local commits after `7a2643f`
-are not pushed.
+table 21,773. S5 is complete, approved, and pushed.
 
 ## Done since last handoff
 - `ff23f98` — S4 bootstrap: protocol, greedy, arena, metrics, artifacts, config, `evaluate` subparser.
@@ -31,14 +30,15 @@ are not pushed.
 - A8 `train-q` CLI, diagnostic, and 13-line stdout implemented; 256 tests.
 - A9 slow improvement diagnostic passed: W/D/L 794/50/156, score 0.819, CI 0.796-0.842, table 21,773.
 - A10 architecture, README, plan, and handoff docs updated; final checks pass (256 default tests, ruff, A9 0.819).
+- S5 approved and pushed.
 
 ## Next
-1. Approve and push S5; nothing may be pushed before approval.
-2. After approval, start S6 with `/learn` for self-play snapshots.
-3. Then `/spec` S6 → `/spec-review` → `/tdd`.
+1. Start S6 with `/learn` for self-play snapshots.
+2. Then `/spec` S6 → `/spec-review` → `/tdd`.
+3. Do not push S6 without approval.
 
 ## Open questions
-- None blocking. S5 is ready for slice approval.
+- None blocking. S5 is closed; S6 starts with self-play learning.
 
 ## Gotchas
 - Windows/PowerShell; use `.\.venv\Scripts\python.exe` (Python 3.14). `ruff check` is the gate; `ruff format` rewrites Markdown fences.

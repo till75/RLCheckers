@@ -1,7 +1,7 @@
 # Plan — RLCheckers, first milestone
 
 **Date:** 2026-10-27
-**Status:** S0–S4 complete and pushed; S5 implementation complete, awaiting approval and push; S6 next
+**Status:** S0–S5 complete and pushed; S6 next
 **Source:** `docs/00-brief.md`
 
 ## How this plan works
@@ -239,7 +239,7 @@ JSON schemas, byte reproducibility, and the `evaluate` CLI.
 
 ## S5 — Tabular Q-learning against a fixed random opponent
 
-**Status:** implementation complete, awaiting slice approval and push (2026-11-05).
+**Status:** complete, approved, and pushed (2026-11-05).
 The slow A9 diagnostic scored 0.819 against random (794 W / 50 D / 156 L, 95% CI
 0.796–0.842; 21,773 table entries).
 
