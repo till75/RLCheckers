@@ -4,8 +4,9 @@
 S4 is complete, approved, and pushed at `b616189`. The workflow change
 (`/learn` → `/spec` → `/spec-review` → `/tdd`) is pushed at `7a2643f`.
 S5's `/learn` and spec review are done: design note 0005 is chosen, spec 0005 is
-approved, and ADR 0005 is accepted. No S5 code has started. 191 tests pass and
-`ruff check .` is clean. Local docs commits after `7a2643f` are not pushed.
+approved, and ADR 0005 is accepted. S5 code has started: A1's `q_key` is
+implemented; `QTable` and `QAgent` are stubs. 192 tests pass and `ruff check .`
+is clean. Local commits after `7a2643f` are not pushed.
 
 ## Done since last handoff
 - `ff23f98` — S4 bootstrap: protocol, greedy, arena, metrics, artifacts, config, `evaluate` subparser.
@@ -16,14 +17,15 @@ approved, and ADR 0005 is accepted. No S5 code has started. 191 tests pass and
 - `0da3f19` — design note 0005 and proposed ADR 0005; local.
 - `04eb6da` — Mermaid rules split by output; local.
 - Approved spec 0005 and accepted ADR 0005; local.
+- A1 `q_key` implemented; QTable/QAgent stubs in place; 192 tests.
 
 ## Next
-1. Implement S5 with `/tdd A1`; no push until the slice is approved.
-2. Follow the spec's TDD order and stop at a green boundary if the session runs out.
-3. Do not push the local docs commits without approval.
+1. Continue A1: QTable storage, default zero, cap, and memory estimate.
+2. Then A2: `q_update` arithmetic.
+3. Do not push local commits without approval.
 
 ## Open questions
-- None blocking. S5's contract is approved; A1 starts the TDD order.
+- None blocking. Continue the spec's TDD order at the QTable behaviour.
 
 ## Gotchas
 - Windows/PowerShell; use `.\.venv\Scripts\python.exe` (Python 3.14). `ruff check` is the gate; `ruff format` rewrites Markdown fences.
