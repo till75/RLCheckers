@@ -7,8 +7,11 @@ train. Public signatures are added in TDD order.
 
 from __future__ import annotations
 
+import math
+import sys
 from collections.abc import Mapping
 from pathlib import Path
+from types import MappingProxyType
 from typing import Any
 
 from rlcheckers.game.moves import Move
@@ -28,6 +31,21 @@ def q_key(state: GameState, move: Move) -> int:
     return (state.board.state_key << 33) | move.action_key
 
 
+def _validate_key(key: object) -> int:
+    if not isinstance(key, int) or isinstance(key, bool):
+        raise ValueError(f"Q-table key must be an int, got {key!r}")
+    return key
+
+
+def _validate_value(value: object) -> float:
+    if not isinstance(value, (int, float)) or isinstance(value, bool):
+        raise ValueError(f"Q-table value must be a finite float, got {value!r}")
+    number = float(value)
+    if not math.isfinite(number):
+        raise ValueError(f"Q-table value must be a finite float, got {value!r}")
+    return number
+
+
 class QTable:
     """A sparse state-action value table."""
 
@@ -37,21 +55,45 @@ class QTable:
         *,
         max_entries: int = 2_000_000,
     ) -> None:
-        raise NotImplementedError
+        if (
+            not isinstance(max_entries, int)
+            or isinstance(max_entries, bool)
+            or max_entries <= 0
+        ):
+            raise ValueError(
+                f"max_entries must be a positive int, got {max_entries!r}"
+            )
+
+        self._max_entries = max_entries
+        self._entries: dict[int, float] = {}
+        if entries is not None:
+            for raw_key, raw_value in entries.items():
+                self._entries[_validate_key(raw_key)] = _validate_value(raw_value)
+            if len(self._entries) > max_entries:
+                raise TableCapacityError(
+                    f"Q-table cap of {max_entries} entries exceeded by initial data"
+                )
 
     @property
     def entries(self) -> Mapping[int, float]:
-        raise NotImplementedError
+        return MappingProxyType(self._entries)
 
     @property
     def max_entries(self) -> int:
-        raise NotImplementedError
+        return self._max_entries
 
     def get(self, key: int) -> float:
-        raise NotImplementedError
+        return self._entries.get(_validate_key(key), 0.0)
 
     def set(self, key: int, value: float) -> None:
-        raise NotImplementedError
+        key = _validate_key(key)
+        value = _validate_value(value)
+        if key not in self._entries and len(self._entries) >= self._max_entries:
+            raise TableCapacityError(
+                f"Q-table cap of {self._max_entries} entries reached; "
+                "refusing new key"
+            )
+        self._entries[key] = value
 
     def best_value(self, state: GameState) -> float:
         raise NotImplementedError
@@ -60,10 +102,13 @@ class QTable:
         raise NotImplementedError
 
     def size(self) -> int:
-        raise NotImplementedError
+        return len(self._entries)
 
     def estimated_memory_bytes(self) -> int:
-        raise NotImplementedError
+        return sys.getsizeof(self._entries) + sum(
+            sys.getsizeof(key) + sys.getsizeof(value)
+            for key, value in self._entries.items()
+        )
 
     def __eq__(self, other: object) -> bool:
         raise NotImplementedError
