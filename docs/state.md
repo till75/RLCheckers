@@ -5,9 +5,10 @@ S4 is complete, approved, and pushed at `b616189`. The workflow change
 (`/learn` → `/spec` → `/spec-review` → `/tdd`) is pushed at `7a2643f`.
 S5's `/learn` and spec review are done: design note 0005 is chosen, spec 0005 is
 approved, and ADR 0005 is accepted. S5 code has started: A1's `q_key` and
-`QTable` storage/defaults/cap/memory, plus A2's `q_update`, are implemented;
-`QAgent`, `best_value`, `best_move`, and save/load remain stubs. 203 tests pass
-and `ruff check .` is clean. Local commits after `7a2643f` are not pushed.
+`QTable` storage/defaults/cap/memory, A2's `q_update`, and A3's `epsilon_at` are
+implemented; `QAgent`, `best_value`, `best_move`, and save/load remain stubs.
+209 tests pass and `ruff check .` is clean. Local commits after `7a2643f` are
+not pushed.
 
 ## Done since last handoff
 - `ff23f98` — S4 bootstrap: protocol, greedy, arena, metrics, artifacts, config, `evaluate` subparser.
@@ -20,14 +21,15 @@ and `ruff check .` is clean. Local commits after `7a2643f` are not pushed.
 - Approved spec 0005 and accepted ADR 0005; local.
 - A1 `q_key` and QTable storage/defaults/cap/memory implemented; 198 tests.
 - A2 `q_update` arithmetic and alpha/gamma validation implemented; 203 tests.
+- A3 `epsilon_at` schedule and validation implemented; 209 tests.
 
 ## Next
-1. Add A3: epsilon schedule.
-2. Then A4: the greedy QAgent adapter with best-value/best-move.
+1. Add A4: the greedy QAgent adapter with best-value/best-move.
+2. Then A5: JSON save/load.
 3. Do not push local commits without approval.
 
 ## Open questions
-- None blocking. Continue the spec's TDD order at the epsilon schedule.
+- None blocking. Continue the spec's TDD order at the QAgent adapter.
 
 ## Gotchas
 - Windows/PowerShell; use `.\.venv\Scripts\python.exe` (Python 3.14). `ruff check` is the gate; `ruff format` rewrites Markdown fences.
