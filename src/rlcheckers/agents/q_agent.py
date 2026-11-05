@@ -7,6 +7,7 @@ train. Public signatures are added in TDD order.
 
 from __future__ import annotations
 
+import json
 import math
 import sys
 from collections.abc import Mapping
@@ -16,6 +17,17 @@ from typing import Any
 
 from rlcheckers.game.moves import Move
 from rlcheckers.game.state import GameState
+
+_QTABLE_FORMAT = "rlcheckers.qtable"
+_QTABLE_VERSION = 1
+_QKEY_LIMIT = 1 << 73
+_METADATA_KEYS = {
+    "config",
+    "package_version",
+    "python_version",
+    "seed",
+    "table_size",
+}
 
 
 class QTableError(ValueError):
@@ -129,14 +141,120 @@ class QTable:
         )
 
     def __eq__(self, other: object) -> bool:
-        raise NotImplementedError
+        if not isinstance(other, QTable):
+            return NotImplemented
+        return (
+            self._max_entries == other._max_entries
+            and self._entries == other._entries
+        )
 
     def save(self, path: str | Path, metadata: Mapping[str, Any]) -> Path:
-        raise NotImplementedError
+        target = Path(path)
+        document = {
+            "format": _QTABLE_FORMAT,
+            "version": _QTABLE_VERSION,
+            "metadata": dict(metadata),
+            "table": {
+                str(key): value for key, value in self._entries.items()
+            },
+        }
+        target.write_text(
+            json.dumps(document, indent=2, sort_keys=True) + "\n",
+            encoding="utf-8",
+        )
+        return target
 
     @classmethod
     def load(cls, path: str | Path) -> tuple[QTable, dict[str, Any]]:
-        raise NotImplementedError
+        target = Path(path)
+        try:
+            document = json.loads(target.read_text(encoding="utf-8"))
+        except json.JSONDecodeError as error:
+            raise QTableError(
+                f"could not parse Q-table {target}: {error}"
+            ) from None
+
+        if not isinstance(document, dict):
+            raise QTableError("Q-table JSON must be an object")
+        expected = {"format", "version", "metadata", "table"}
+        if set(document) != expected:
+            raise QTableError(
+                "Q-table JSON must have exactly "
+                f"{sorted(expected)}, got {sorted(document)}"
+            )
+        if document["format"] != _QTABLE_FORMAT:
+            raise QTableError(
+                f"Q-table format must be {_QTABLE_FORMAT!r}, "
+                f"got {document['format']!r}"
+            )
+        if document["version"] != _QTABLE_VERSION:
+            raise QTableError(
+                f"Q-table version must be {_QTABLE_VERSION}, "
+                f"got {document['version']!r}"
+            )
+
+        metadata = document["metadata"]
+        if not isinstance(metadata, dict):
+            raise QTableError("Q-table metadata must be an object")
+        if set(metadata) != _METADATA_KEYS:
+            raise QTableError(
+                "Q-table metadata must have exactly "
+                f"{sorted(_METADATA_KEYS)}, got {sorted(metadata)}"
+            )
+
+        config = metadata["config"]
+        if not isinstance(config, dict):
+            raise QTableError("Q-table metadata.config must be an object")
+        max_entries = config.get("max_table_entries")
+        if (
+            not isinstance(max_entries, int)
+            or isinstance(max_entries, bool)
+            or max_entries <= 0
+        ):
+            raise QTableError(
+                "Q-table metadata.config.max_table_entries must be "
+                f"a positive int, got {max_entries!r}"
+            )
+
+        raw_table = document["table"]
+        if not isinstance(raw_table, dict):
+            raise QTableError("Q-table table must be an object")
+        table_size = metadata["table_size"]
+        if (
+            not isinstance(table_size, int)
+            or isinstance(table_size, bool)
+            or table_size != len(raw_table)
+        ):
+            raise QTableError(
+                "Q-table metadata.table_size must match the table length, "
+                f"got {table_size!r} for {len(raw_table)} entries"
+            )
+
+        entries: dict[int, float] = {}
+        for raw_key, raw_value in raw_table.items():
+            if not isinstance(raw_key, str):
+                raise QTableError(
+                    f"Q-table key must be a decimal string, got {raw_key!r}"
+                )
+            try:
+                key = int(raw_key)
+            except ValueError:
+                raise QTableError(
+                    f"Q-table key must be a decimal string, got {raw_key!r}"
+                ) from None
+            if not 0 <= key < _QKEY_LIMIT:
+                raise QTableError(
+                    f"Q-table key must be in 0..{_QKEY_LIMIT - 1}, "
+                    f"got {key}"
+                )
+            try:
+                entries[key] = _validate_value(raw_value)
+            except ValueError as error:
+                raise QTableError(str(error)) from None
+        if len(entries) != len(raw_table):
+            raise QTableError("Q-table contains duplicate integer keys")
+
+        return cls(entries, max_entries=max_entries), metadata
 
 
 class QAgent:

@@ -1,8 +1,16 @@
 from __future__ import annotations
 
+import json
+
 import pytest
 
-from rlcheckers.agents.q_agent import QAgent, QTable, TableCapacityError, q_key
+from rlcheckers.agents.q_agent import (
+    QAgent,
+    QTable,
+    QTableError,
+    TableCapacityError,
+    q_key,
+)
 from rlcheckers.game.board import (
     PLAYABLE_SQUARES,
     SQUARE_COUNT,
@@ -128,3 +136,90 @@ def test_q_agent_rejects_finished_game() -> None:
 
     with pytest.raises(ValueError, match="finished"):
         QAgent(QTable()).choose_move(finished)
+
+
+def _q_table_artifact(
+    tmp_path, *, max_entries: int = 1000
+):
+    metadata = {
+        "config": {
+            "alpha": 0.1,
+            "epsilon_decay_fraction": 0.8,
+            "epsilon_end": 0.05,
+            "epsilon_start": 1.0,
+            "episodes": 20,
+            "gamma": 0.9,
+            "max_table_entries": max_entries,
+            "opponent": "random",
+            "output_dir": "out",
+            "seed": 7,
+        },
+        "package_version": "0.1.0",
+        "python_version": "3.14.0",
+        "seed": 7,
+        "table_size": 2,
+    }
+    table = QTable(max_entries=max_entries)
+    table.set(1, 0.25)
+    table.set(2, -0.5)
+    path = tmp_path / "q_table.json"
+    table.save(path, metadata)
+    return table, metadata, path
+
+
+def test_q_table_save_load_round_trip(tmp_path) -> None:
+    table, metadata, path = _q_table_artifact(tmp_path)
+
+    loaded, loaded_metadata = QTable.load(path)
+
+    assert loaded == table
+    assert loaded_metadata == metadata
+    assert loaded.get(1) == 0.25
+    assert loaded.get(2) == -0.5
+
+
+def test_q_table_json_schema(tmp_path) -> None:
+    _, _, path = _q_table_artifact(tmp_path)
+
+    document = json.loads(path.read_text(encoding="utf-8"))
+
+    assert set(document) == {"format", "metadata", "table", "version"}
+    assert document["format"] == "rlcheckers.qtable"
+    assert document["version"] == 1
+    assert set(document["table"]) == {"1", "2"}
+    assert set(document["metadata"]) == {
+        "config",
+        "package_version",
+        "python_version",
+        "seed",
+        "table_size",
+    }
+
+
+def test_q_table_save_is_byte_reproducible(tmp_path) -> None:
+    table, metadata, path = _q_table_artifact(tmp_path)
+    first = path.read_bytes()
+
+    table.save(path, metadata)
+
+    assert path.read_bytes() == first
+
+
+def test_q_table_load_rejects_bad_format(tmp_path) -> None:
+    bad = tmp_path / "bad.json"
+    bad.write_text(
+        '{"format":"wrong","version":1,"metadata":{},"table":{}}',
+        encoding="utf-8",
+    )
+
+    with pytest.raises(QTableError, match="format"):
+        QTable.load(bad)
+
+
+def test_q_table_load_uses_saved_cap(tmp_path) -> None:
+    table, _, path = _q_table_artifact(tmp_path, max_entries=7)
+
+    loaded, _ = QTable.load(path)
+
+    assert loaded.max_entries == 7
+    assert loaded == table

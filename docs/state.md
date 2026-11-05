@@ -4,10 +4,10 @@
 S4 is complete, approved, and pushed at `b616189`. The workflow change
 (`/learn` → `/spec` → `/spec-review` → `/tdd`) is pushed at `7a2643f`.
 S5's `/learn` and spec review are done: design note 0005 is chosen, spec 0005 is
-approved, and ADR 0005 is accepted. S5 code has started: A1-A4 are implemented
-(`q_key`, QTable storage, `q_update`, `epsilon_at`, and the greedy QAgent with
-best-value/best-move); QTable save/load and `__eq__` remain stubs. 214 tests pass
-and `ruff check .` is clean. Local commits after `7a2643f` are not pushed.
+approved, and ADR 0005 is accepted. S5 code has started: A1-A5 are implemented
+(`q_key`, QTable storage, `q_update`, `epsilon_at`, the greedy QAgent, and JSON
+persistence with value equality). 219 tests pass and `ruff check .` is clean.
+Local commits after `7a2643f` are not pushed.
 
 ## Done since last handoff
 - `ff23f98` — S4 bootstrap: protocol, greedy, arena, metrics, artifacts, config, `evaluate` subparser.
@@ -22,14 +22,15 @@ and `ruff check .` is clean. Local commits after `7a2643f` are not pushed.
 - A2 `q_update` arithmetic and alpha/gamma validation implemented; 203 tests.
 - A3 `epsilon_at` schedule and validation implemented; 209 tests.
 - A4 best-value/best-move and the greedy QAgent adapter implemented; 214 tests.
+- A5 JSON save/load, schema, byte reproducibility, saved cap, and equality; 219 tests.
 
 ## Next
-1. Add A5: JSON save/load, schema, byte reproducibility, and the saved cap.
-2. Then A6: the training loop.
+1. Add A6: the training loop.
+2. Then A7: training config.
 3. Do not push local commits without approval.
 
 ## Open questions
-- None blocking. Continue the spec's TDD order at QTable save/load.
+- None blocking. Continue the spec's TDD order at the training loop.
 
 ## Gotchas
 - Windows/PowerShell; use `.\.venv\Scripts\python.exe` (Python 3.14). `ruff check` is the gate; `ruff format` rewrites Markdown fences.
