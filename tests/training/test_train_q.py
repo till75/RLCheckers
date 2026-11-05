@@ -13,6 +13,7 @@ from rlcheckers.evaluation import (
     STANDARD_OPENINGS,
     GameOutcome,
     play_matchup,
+    summarize,
 )
 from rlcheckers.game.board import Side
 from rlcheckers.training import (
@@ -295,3 +296,31 @@ def test_learning_curve_is_written(tmp_path) -> None:
 
     assert write_learning_curve(result.metrics, path, seed=config.seed) == path
     assert path.stat().st_size > 0
+
+
+@pytest.mark.slow
+def test_train_q_improves_against_random(tmp_path) -> None:
+    config = _train_config(
+        tmp_path,
+        episodes=10000,
+        max_table_entries=2_000_000,
+    )
+    result = train_q(config)
+    agent = QAgent(result.table)
+    diagnostic = play_matchup(
+        lambda seed: agent,
+        RandomAgent,
+        seed=config.seed,
+        games=DIAGNOSTIC_GAMES,
+        agent_name="q",
+        opponent_name="random",
+    )
+    summary = summarize([game.outcome for game in diagnostic.games])
+
+    assert summary.games == DIAGNOSTIC_GAMES
+    assert summary.wins + summary.draws + summary.losses == DIAGNOSTIC_GAMES
+    assert 0.0 <= summary.ci_low <= summary.score <= summary.ci_high <= 1.0
+    assert summary.score > 0.5, (
+        f"W/D/L {summary.wins}/{summary.draws}/{summary.losses}, "
+        f"score {summary.score:.6f}"
+    )
