@@ -4,10 +4,11 @@
 S4 is complete, approved, and pushed at `b616189`. The workflow change
 (`/learn` → `/spec` → `/spec-review` → `/tdd`) is pushed at `7a2643f`.
 S5's `/learn` and spec review are done: design note 0005 is chosen, spec 0005 is
-approved, and ADR 0005 is accepted. S5 code has started: A1-A6 are implemented
+approved, and ADR 0005 is accepted. S5 code has started: A1-A7 are implemented
 (`q_key`, QTable storage, `q_update`, `epsilon_at`, the greedy QAgent, JSON
-persistence, and the fixed-opponent training loop). 225 tests pass and
-`ruff check .` is clean. Local commits after `7a2643f` are not pushed.
+persistence, the fixed-opponent training loop, and the training config loader).
+243 tests pass and `ruff check .` is clean. Local commits after `7a2643f` are
+not pushed.
 
 ## Done since last handoff
 - `ff23f98` — S4 bootstrap: protocol, greedy, arena, metrics, artifacts, config, `evaluate` subparser.
@@ -24,14 +25,15 @@ persistence, and the fixed-opponent training loop). 225 tests pass and
 - A4 best-value/best-move and the greedy QAgent adapter implemented; 214 tests.
 - A5 JSON save/load, schema, byte reproducibility, saved cap, and equality; 219 tests.
 - A6 fixed-opponent training loop, schedule, rewards, reproducibility, and cap; 225 tests.
+- A7 training TOML loader and validation implemented; 243 tests.
 
 ## Next
-1. Add A7: training config loading and validation.
-2. Then A8: artifacts, plot, and CLI.
+1. Add A8: artifacts, plot, and CLI.
+2. Then A9: the slow improvement diagnostic.
 3. Do not push local commits without approval.
 
 ## Open questions
-- None blocking. Continue the spec's TDD order at the training config.
+- None blocking. Continue the spec's TDD order at artifacts/CLI.
 
 ## Gotchas
 - Windows/PowerShell; use `.\.venv\Scripts\python.exe` (Python 3.14). `ruff check` is the gate; `ruff format` rewrites Markdown fences.

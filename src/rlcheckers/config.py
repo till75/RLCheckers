@@ -1,10 +1,10 @@
-"""Evaluation configuration loading and validation.
+"""Configuration loading and validation.
 
-``load_eval_config`` reads a TOML document with ``tomllib`` and returns an
-immutable ``EvalConfig``. It validates exactly five top-level keys and resolves
-a relative ``output_dir`` against the config file's directory. Loading does not
-create the output directory. ``ConfigError`` subclasses ``ValueError`` so callers
-do not need to import ``tomllib`` exceptions.
+``load_eval_config`` reads the evaluation TOML schema and returns an immutable
+``EvalConfig``. ``load_train_config`` reads the training schema and returns an
+immutable ``TrainConfig``. Both resolve a relative ``output_dir`` against the
+config file's directory and do not create it. ``ConfigError`` subclasses
+``ValueError`` so callers do not need to import ``tomllib`` exceptions.
 """
 
 from __future__ import annotations
@@ -18,6 +18,18 @@ from rlcheckers.evaluation.arena import STANDARD_OPENINGS
 
 _GAME_CYCLE = 2 * len(STANDARD_OPENINGS)
 _CONFIG_KEYS = ("seed", "games", "agent", "opponent", "output_dir")
+_TRAIN_CONFIG_KEYS = (
+    "seed",
+    "episodes",
+    "alpha",
+    "gamma",
+    "epsilon_start",
+    "epsilon_end",
+    "epsilon_decay_fraction",
+    "opponent",
+    "output_dir",
+    "max_table_entries",
+)
 
 
 @dataclass(frozen=True)
@@ -126,4 +138,139 @@ def load_eval_config(path: str | Path) -> EvalConfig:
         agent=document["agent"],
         opponent=document["opponent"],
         output_dir=resolved,
+    )
+
+
+def load_train_config(path: str | Path) -> TrainConfig:
+    """Load and validate a training config from ``path``."""
+    config_path = Path(path)
+    try:
+        with config_path.open("rb") as handle:
+            document = tomllib.load(handle)
+    except FileNotFoundError:
+        raise ConfigError(f"config file not found: {config_path}") from None
+    except OSError as error:
+        raise ConfigError(
+            f"could not read config file {config_path}: {error}"
+        ) from None
+    except tomllib.TOMLDecodeError as error:
+        raise ConfigError(
+            f"could not parse config {config_path}: {error}"
+        ) from None
+
+    if not isinstance(document, dict):
+        raise ConfigError(
+            f"config must be a table, got {type(document).__name__}"
+        )
+
+    unexpected = sorted(set(document) - set(_TRAIN_CONFIG_KEYS))
+    if unexpected:
+        raise ConfigError(
+            f"unexpected config key(s): {', '.join(unexpected)}"
+        )
+
+    for key in _TRAIN_CONFIG_KEYS:
+        if key not in document:
+            raise ConfigError(f"missing config key: {key}")
+
+    seed = document["seed"]
+    if not isinstance(seed, int) or isinstance(seed, bool):
+        raise ConfigError(
+            f"config seed must be an int, got {type(seed).__name__}"
+        )
+
+    episodes = document["episodes"]
+    if (
+        not isinstance(episodes, int)
+        or isinstance(episodes, bool)
+        or episodes <= 0
+        or episodes % 10 != 0
+    ):
+        raise ConfigError(
+            "config episodes must be a positive multiple of 10, "
+            f"got {episodes!r}"
+        )
+
+    numeric = {}
+    for key in (
+        "alpha",
+        "gamma",
+        "epsilon_start",
+        "epsilon_end",
+        "epsilon_decay_fraction",
+    ):
+        value = document[key]
+        if not isinstance(value, (int, float)) or isinstance(value, bool):
+            raise ConfigError(
+                f"config {key} must be a number, got {type(value).__name__}"
+            )
+        numeric[key] = float(value)
+
+    alpha = numeric["alpha"]
+    if not 0 < alpha <= 1:
+        raise ConfigError(f"config alpha must be in (0, 1], got {alpha!r}")
+
+    gamma = numeric["gamma"]
+    if not 0 <= gamma < 1:
+        raise ConfigError(f"config gamma must be in [0, 1), got {gamma!r}")
+
+    for key in ("epsilon_start", "epsilon_end"):
+        value = numeric[key]
+        if not 0 <= value <= 1:
+            raise ConfigError(
+                f"config {key} must be in [0, 1], got {value!r}"
+            )
+    if numeric["epsilon_start"] < numeric["epsilon_end"]:
+        raise ConfigError(
+            "config epsilon_start must be >= epsilon_end, "
+            f"got {numeric['epsilon_start']!r} < "
+            f"{numeric['epsilon_end']!r}"
+        )
+
+    decay_fraction = numeric["epsilon_decay_fraction"]
+    if not 0 < decay_fraction <= 1:
+        raise ConfigError(
+            "config epsilon_decay_fraction must be in (0, 1], "
+            f"got {decay_fraction!r}"
+        )
+
+    opponent = document["opponent"]
+    if opponent != "random":
+        raise ConfigError(
+            f"config opponent must be 'random', got {opponent!r}"
+        )
+
+    output_dir = document["output_dir"]
+    if not isinstance(output_dir, str) or not output_dir:
+        raise ConfigError(
+            "config output_dir must be a non-empty string, "
+            f"got {output_dir!r}"
+        )
+    resolved = Path(output_dir)
+    if not resolved.is_absolute():
+        resolved = config_path.parent / resolved
+    resolved = resolved.resolve()
+
+    max_table_entries = document["max_table_entries"]
+    if (
+        not isinstance(max_table_entries, int)
+        or isinstance(max_table_entries, bool)
+        or max_table_entries <= 0
+    ):
+        raise ConfigError(
+            "config max_table_entries must be a positive int, "
+            f"got {max_table_entries!r}"
+        )
+
+    return TrainConfig(
+        seed=seed,
+        episodes=episodes,
+        alpha=alpha,
+        gamma=gamma,
+        epsilon_start=numeric["epsilon_start"],
+        epsilon_end=numeric["epsilon_end"],
+        epsilon_decay_fraction=decay_fraction,
+        opponent=opponent,
+        output_dir=resolved,
+        max_table_entries=max_table_entries,
     )
