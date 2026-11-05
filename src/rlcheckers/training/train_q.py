@@ -6,25 +6,47 @@ signatures are added in TDD order.
 
 from __future__ import annotations
 
+import csv
 import hashlib
+import json
+import platform
 import random
 from collections.abc import Sequence
 from dataclasses import dataclass
+from pathlib import Path
 
+from matplotlib.backends.backend_agg import FigureCanvasAgg
+from matplotlib.figure import Figure
+
+import rlcheckers
 from rlcheckers.agents.protocol import AgentFactory
 from rlcheckers.agents.q_agent import QTable, q_key
 from rlcheckers.agents.random_agent import MAX_GAME_PLIES, RandomAgent
 from rlcheckers.config import TrainConfig
 from rlcheckers.evaluation import (
     STANDARD_OPENINGS,
+    ArenaResult,
     GameOutcome,
     derive_side_seed,
+    format_float,
     opening_state,
     outcome_for,
+    summarize,
 )
 from rlcheckers.game.board import Side
 from rlcheckers.game.moves import Move
 from rlcheckers.game.state import GameState
+
+DIAGNOSTIC_GAMES = 1000
+TRAINING_FIELDS = (
+    "episode",
+    "opening_index",
+    "learner_colour",
+    "outcome",
+    "plies",
+    "epsilon",
+    "table_size",
+)
 
 
 def _random_opponent(seed: int) -> RandomAgent:
@@ -241,6 +263,186 @@ def train_q(
         metrics=tuple(metrics),
         openings=suite,
     )
+
+
+def _config_dict(config: TrainConfig) -> dict[str, object]:
+    return {
+        "seed": config.seed,
+        "episodes": config.episodes,
+        "alpha": config.alpha,
+        "gamma": config.gamma,
+        "epsilon_start": config.epsilon_start,
+        "epsilon_end": config.epsilon_end,
+        "epsilon_decay_fraction": config.epsilon_decay_fraction,
+        "opponent": config.opponent,
+        "output_dir": str(config.output_dir),
+        "max_table_entries": config.max_table_entries,
+    }
+
+
+def write_learning_curve(
+    metrics: Sequence[EpisodeMetric],
+    path: str | Path,
+    *,
+    seed: int,
+) -> Path:
+    """Write the training learning-curve plot."""
+    metrics = tuple(metrics)
+    if not metrics:
+        raise ValueError("metrics must be non-empty")
+
+    episodes = [metric.episode for metric in metrics]
+    win_rates: list[float] = []
+    draw_rates: list[float] = []
+    loss_rates: list[float] = []
+    for index in range(len(metrics)):
+        window = metrics[max(0, index - 99) : index + 1]
+        count = len(window)
+        win_rates.append(
+            sum(
+                1
+                for metric in window
+                if metric.outcome is GameOutcome.WIN
+            )
+            / count
+        )
+        draw_rates.append(
+            sum(
+                1
+                for metric in window
+                if metric.outcome is GameOutcome.DRAW
+            )
+            / count
+        )
+        loss_rates.append(
+            sum(
+                1
+                for metric in window
+                if metric.outcome is GameOutcome.LOSS
+            )
+            / count
+        )
+
+    target = Path(path)
+    figure = Figure(figsize=(8, 4.5))
+    FigureCanvasAgg(figure)
+    axes = figure.subplots()
+    axes.plot(episodes, win_rates, label="win")
+    axes.plot(episodes, draw_rates, label="draw")
+    axes.plot(episodes, loss_rates, label="loss")
+    axes.set_ylim(0, 1)
+    axes.set_xlabel("episode")
+    axes.set_ylabel("rolling rate")
+    axes.set_title(f"Q-learning training, seed {seed}")
+    axes.legend()
+    axes.grid(True, alpha=0.3)
+    figure.tight_layout()
+    figure.savefig(target, dpi=150)
+    return target
+
+
+def write_training_artifacts(
+    result: TrainingResult,
+    diagnostic: ArenaResult,
+    config: TrainConfig,
+    *,
+    command_line: Sequence[str],
+) -> Path:
+    """Write the training run's four artifacts."""
+    if len(result.metrics) != config.episodes:
+        raise ValueError(
+            "result does not match config: "
+            f"metrics {len(result.metrics)} vs episodes {config.episodes}"
+        )
+    if diagnostic.seed != config.seed:
+        raise ValueError(
+            "diagnostic does not match config: "
+            f"seed {diagnostic.seed} vs {config.seed}"
+        )
+    if diagnostic.agent_name != "q" or diagnostic.opponent_name != "random":
+        raise ValueError(
+            "diagnostic names must be 'q' and 'random', got "
+            f"{diagnostic.agent_name!r} and {diagnostic.opponent_name!r}"
+        )
+    if len(diagnostic.games) != DIAGNOSTIC_GAMES:
+        raise ValueError(
+            "diagnostic does not match config: "
+            f"games {len(diagnostic.games)} vs {DIAGNOSTIC_GAMES}"
+        )
+    if result.openings != diagnostic.openings:
+        raise ValueError("training and diagnostic openings differ")
+
+    output_dir = Path(config.output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    metadata = {
+        "config": _config_dict(config),
+        "package_version": rlcheckers.__version__,
+        "python_version": platform.python_version(),
+        "seed": config.seed,
+        "table_size": result.table.size(),
+    }
+    result.table.save(output_dir / "q_table.json", metadata)
+
+    training_rows = [
+        {
+            "episode": metric.episode,
+            "opening_index": metric.opening_index,
+            "learner_colour": metric.learner_colour.name.lower(),
+            "outcome": metric.outcome.value,
+            "plies": metric.plies,
+            "epsilon": format_float(metric.epsilon),
+            "table_size": metric.table_size,
+        }
+        for metric in result.metrics
+    ]
+    with (output_dir / "training.csv").open(
+        "w", newline="", encoding="utf-8"
+    ) as handle:
+        writer = csv.DictWriter(
+            handle, fieldnames=TRAINING_FIELDS, lineterminator="\n"
+        )
+        writer.writeheader()
+        writer.writerows(training_rows)
+
+    summary = summarize([game.outcome for game in diagnostic.games])
+    document = {
+        "command_line": list(command_line),
+        "config": _config_dict(config),
+        "diagnostic": {
+            "agent": diagnostic.agent_name,
+            "ci_high": summary.ci_high,
+            "ci_low": summary.ci_low,
+            "draws": summary.draws,
+            "games": len(diagnostic.games),
+            "losses": summary.losses,
+            "opponent": diagnostic.opponent_name,
+            "score": summary.score,
+            "wins": summary.wins,
+        },
+        "openings": [
+            {
+                "index": index,
+                "state_key": opening_state(opening).board.state_key,
+            }
+            for index, opening in enumerate(result.openings)
+        ],
+        "package_version": rlcheckers.__version__,
+        "python_version": platform.python_version(),
+        "table_bytes": result.table.estimated_memory_bytes(),
+        "table_size": result.table.size(),
+    }
+    (output_dir / "run.json").write_text(
+        json.dumps(document, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+
+    write_learning_curve(
+        result.metrics,
+        output_dir / "learning_curve.png",
+        seed=config.seed,
+    )
+    return output_dir
 
 
 def q_update(

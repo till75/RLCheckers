@@ -1,6 +1,8 @@
 """Training loops and updates."""
 
 from rlcheckers.training.train_q import (
+    DIAGNOSTIC_GAMES,
+    TRAINING_FIELDS,
     EpisodeMetric,
     TrainingResult,
     choose_epsilon_greedy,
@@ -9,9 +11,13 @@ from rlcheckers.training.train_q import (
     q_update,
     reward_for,
     train_q,
+    write_learning_curve,
+    write_training_artifacts,
 )
 
 __all__ = [
+    "DIAGNOSTIC_GAMES",
+    "TRAINING_FIELDS",
     "EpisodeMetric",
     "TrainingResult",
     "choose_epsilon_greedy",
@@ -20,4 +26,6 @@ __all__ = [
     "q_update",
     "reward_for",
     "train_q",
+    "write_learning_curve",
+    "write_training_artifacts",
 ]

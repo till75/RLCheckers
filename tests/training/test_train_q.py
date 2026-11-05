@@ -1,14 +1,30 @@
 from __future__ import annotations
 
+import csv
+import json
 from dataclasses import replace
 
 import pytest
 
-from rlcheckers.agents.q_agent import TableCapacityError
+from rlcheckers.agents.q_agent import QAgent, TableCapacityError
+from rlcheckers.agents.random_agent import RandomAgent
 from rlcheckers.config import TrainConfig
-from rlcheckers.evaluation import STANDARD_OPENINGS, GameOutcome
+from rlcheckers.evaluation import (
+    STANDARD_OPENINGS,
+    GameOutcome,
+    play_matchup,
+)
 from rlcheckers.game.board import Side
-from rlcheckers.training import epsilon_at, q_update, reward_for, train_q
+from rlcheckers.training import (
+    DIAGNOSTIC_GAMES,
+    TRAINING_FIELDS,
+    epsilon_at,
+    q_update,
+    reward_for,
+    train_q,
+    write_learning_curve,
+    write_training_artifacts,
+)
 
 
 def test_q_update_non_terminal() -> None:
@@ -137,3 +153,145 @@ def test_train_q_smoke(tmp_path) -> None:
     assert all(metric.plies > 0 for metric in result.metrics)
     assert all(metric.outcome in tuple(GameOutcome) for metric in result.metrics)
     assert result.openings == STANDARD_OPENINGS
+
+
+def _artifact_inputs(tmp_path):
+    config = _train_config(tmp_path)
+    result = train_q(config)
+    agent = QAgent(result.table)
+    diagnostic = play_matchup(
+        lambda seed: agent,
+        RandomAgent,
+        seed=config.seed,
+        games=DIAGNOSTIC_GAMES,
+        agent_name="q",
+        opponent_name="random",
+    )
+    return config, result, diagnostic
+
+
+def test_write_training_artifacts_creates_files(tmp_path) -> None:
+    config, result, diagnostic = _artifact_inputs(tmp_path)
+
+    out = write_training_artifacts(
+        result,
+        diagnostic,
+        config,
+        command_line=["rlcheckers", "train-q", "--config", "train.toml"],
+    )
+
+    assert out == config.output_dir
+    assert (out / "q_table.json").exists()
+    assert (out / "training.csv").exists()
+    assert (out / "run.json").exists()
+    assert (out / "learning_curve.png").exists()
+
+
+def test_training_csv_schema(tmp_path) -> None:
+    config, result, diagnostic = _artifact_inputs(tmp_path)
+    out = write_training_artifacts(
+        result,
+        diagnostic,
+        config,
+        command_line=["rlcheckers", "train-q"],
+    )
+
+    with (out / "training.csv").open(newline="", encoding="utf-8") as handle:
+        rows = list(csv.DictReader(handle))
+
+    assert list(rows[0]) == list(TRAINING_FIELDS)
+    assert len(rows) == config.episodes
+
+
+def test_run_json_schema(tmp_path) -> None:
+    config, result, diagnostic = _artifact_inputs(tmp_path)
+    out = write_training_artifacts(
+        result,
+        diagnostic,
+        config,
+        command_line=["rlcheckers", "train-q"],
+    )
+
+    run = json.loads((out / "run.json").read_text(encoding="utf-8"))
+
+    assert set(run) == {
+        "command_line",
+        "config",
+        "diagnostic",
+        "openings",
+        "package_version",
+        "python_version",
+        "table_bytes",
+        "table_size",
+    }
+    assert run["diagnostic"]["games"] == DIAGNOSTIC_GAMES
+    assert len(run["openings"]) == 5
+
+
+def test_training_artifacts_are_byte_reproducible(tmp_path) -> None:
+    config, result, diagnostic = _artifact_inputs(tmp_path)
+    out = write_training_artifacts(
+        result,
+        diagnostic,
+        config,
+        command_line=["rlcheckers", "train-q"],
+    )
+    first = {
+        name: (out / name).read_bytes()
+        for name in ("q_table.json", "training.csv", "run.json")
+    }
+
+    write_training_artifacts(
+        result,
+        diagnostic,
+        config,
+        command_line=["rlcheckers", "train-q"],
+    )
+
+    second = {name: (out / name).read_bytes() for name in first}
+    assert first == second
+
+
+def test_write_training_artifacts_preserves_unrelated_files(
+    tmp_path,
+) -> None:
+    config, result, diagnostic = _artifact_inputs(tmp_path)
+    out = write_training_artifacts(
+        result,
+        diagnostic,
+        config,
+        command_line=["rlcheckers", "train-q"],
+    )
+    keep = out / "keep.txt"
+    keep.write_text("keep", encoding="utf-8")
+
+    write_training_artifacts(
+        result,
+        diagnostic,
+        config,
+        command_line=["rlcheckers", "train-q"],
+    )
+
+    assert keep.read_text(encoding="utf-8") == "keep"
+
+
+def test_write_training_artifacts_rejects_mismatched_config(
+    tmp_path,
+) -> None:
+    config, result, diagnostic = _artifact_inputs(tmp_path)
+
+    with pytest.raises(ValueError, match="episodes"):
+        write_training_artifacts(
+            result,
+            diagnostic,
+            replace(config, episodes=10),
+            command_line=["rlcheckers", "train-q"],
+        )
+
+
+def test_learning_curve_is_written(tmp_path) -> None:
+    config, result, _ = _artifact_inputs(tmp_path)
+    path = tmp_path / "learning_curve.png"
+
+    assert write_learning_curve(result.metrics, path, seed=config.seed) == path
+    assert path.stat().st_size > 0
