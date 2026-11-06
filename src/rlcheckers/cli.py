@@ -4,9 +4,11 @@
 ``evaluate`` with a required ``--config`` path, and ``train-q`` with a required
 training ``--config`` path. ``play-random`` prints the seed, moves, outcome, and
 ply count. ``evaluate`` loads the config, plays the matchup, writes the
-artifacts, and prints the ten-line summary. ``train-q`` trains the Q-table, runs
-the 1,000-game diagnostic, writes four artifacts, and prints the thirteen-line
-summary. Argument errors exit through ``argparse`` with code ``2`` and usage on
+artifacts, and prints the ten-line summary. ``train-q`` dispatches on the
+config: the random opponent runs the S5 trainer and one diagnostic with a
+thirteen-line summary; the self-play opponent runs the snapshot trainer, random
+and greedy diagnostics, and a twenty-one-line summary. Both write four
+artifacts. Argument errors exit through ``argparse`` with code ``2`` and usage on
 stderr; runtime problems print ``error: <message>`` and return ``1``.
 """
 
@@ -16,7 +18,7 @@ import argparse
 import sys
 from collections.abc import Sequence
 
-from rlcheckers.agents import make_agent
+from rlcheckers.agents import GreedyAgent, make_agent
 from rlcheckers.agents.q_agent import QAgent
 from rlcheckers.agents.random_agent import RandomAgent, play_random_game
 from rlcheckers.config import load_eval_config, load_train_config
@@ -31,6 +33,7 @@ from rlcheckers.training import (
     DIAGNOSTIC_GAMES,
     train_q,
     train_self_play,
+    write_self_play_artifacts,
     write_training_artifacts,
 )
 
@@ -109,30 +112,32 @@ def _run_train_q(config_path: str, argv: Sequence[str]) -> int:
     try:
         config = load_train_config(config_path)
         if config.opponent == "self":
-            train_self_play(config)
-            raise NotImplementedError(
-                "self-play artifacts and summary are not implemented"
-            )
-        result = train_q(config)
-        agent = QAgent(result.table)
-        diagnostic = play_matchup(
-            lambda seed: agent,
-            lambda seed: RandomAgent(seed=seed),
-            seed=config.seed,
-            games=DIAGNOSTIC_GAMES,
-            agent_name="q",
-            opponent_name="random",
-        )
-        summary = summarize([game.outcome for game in diagnostic.games])
-        write_training_artifacts(
-            result,
-            diagnostic,
-            config,
-            command_line=["rlcheckers", *argv],
-        )
+            return _run_self_play(config, argv)
+        return _run_fixed_opponent(config, argv)
     except (OSError, RuntimeError, ValueError) as error:
         print(f"error: {error}", file=sys.stderr)
         return 1
+
+
+def _run_fixed_opponent(config, argv: Sequence[str]) -> int:
+    """Train and summarize the S5 fixed-random path."""
+    result = train_q(config)
+    agent = QAgent(result.table)
+    diagnostic = play_matchup(
+        lambda seed: agent,
+        lambda seed: RandomAgent(seed=seed),
+        seed=config.seed,
+        games=DIAGNOSTIC_GAMES,
+        agent_name="q",
+        opponent_name="random",
+    )
+    summary = summarize([game.outcome for game in diagnostic.games])
+    write_training_artifacts(
+        result,
+        diagnostic,
+        config,
+        command_line=["rlcheckers", *argv],
+    )
 
     print(f"episodes: {config.episodes}")
     print(f"seed: {config.seed}")
@@ -148,6 +153,73 @@ def _run_train_q(config_path: str, argv: Sequence[str]) -> int:
     print(
         f"ci95: {format_float(summary.ci_low)}"
         f"..{format_float(summary.ci_high)}"
+    )
+    print(f"artifacts: {config.output_dir}")
+    return 0
+
+
+def _run_self_play(config, argv: Sequence[str]) -> int:
+    """Train and summarize the S6 self-play path."""
+    result = train_self_play(config)
+    agent = QAgent(result.table)
+    diagnostics = {
+        "random": play_matchup(
+            lambda seed: agent,
+            lambda seed: RandomAgent(seed=seed),
+            seed=config.seed,
+            games=DIAGNOSTIC_GAMES,
+            agent_name="q",
+            opponent_name="random",
+            openings=result.openings,
+        ),
+        "greedy": play_matchup(
+            lambda seed: agent,
+            lambda seed: GreedyAgent(),
+            seed=config.seed,
+            games=DIAGNOSTIC_GAMES,
+            agent_name="q",
+            opponent_name="greedy",
+            openings=result.openings,
+        ),
+    }
+    summaries = {
+        name: summarize([game.outcome for game in diagnostic.games])
+        for name, diagnostic in diagnostics.items()
+    }
+    write_self_play_artifacts(
+        result,
+        diagnostics,
+        config,
+        command_line=["rlcheckers", *argv],
+    )
+
+    random_summary = summaries["random"]
+    greedy_summary = summaries["greedy"]
+    print(f"episodes: {config.episodes}")
+    print(f"seed: {config.seed}")
+    print(f"snapshot_interval: {config.snapshot_interval}")
+    print(f"snapshots: {len(result.snapshots)}")
+    print(f"table_size: {result.table.size()}")
+    print(f"table_bytes: {result.table.estimated_memory_bytes()}")
+    print("agent: q")
+    print("opponent: self")
+    print(f"random_games: {len(diagnostics['random'].games)}")
+    print(f"random_wins: {random_summary.wins}")
+    print(f"random_draws: {random_summary.draws}")
+    print(f"random_losses: {random_summary.losses}")
+    print(f"random_score: {format_float(random_summary.score)}")
+    print(
+        f"random_ci95: {format_float(random_summary.ci_low)}"
+        f"..{format_float(random_summary.ci_high)}"
+    )
+    print(f"greedy_games: {len(diagnostics['greedy'].games)}")
+    print(f"greedy_wins: {greedy_summary.wins}")
+    print(f"greedy_draws: {greedy_summary.draws}")
+    print(f"greedy_losses: {greedy_summary.losses}")
+    print(f"greedy_score: {format_float(greedy_summary.score)}")
+    print(
+        f"greedy_ci95: {format_float(greedy_summary.ci_low)}"
+        f"..{format_float(greedy_summary.ci_high)}"
     )
     print(f"artifacts: {config.output_dir}")
     return 0
