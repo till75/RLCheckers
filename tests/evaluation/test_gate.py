@@ -18,6 +18,7 @@ from rlcheckers.evaluation import (
     SeedGateResult,
     SnapshotCurvePoint,
     aggregate_gate,
+    run_gate,
     summarize,
     write_gate_artifacts,
 )
@@ -614,3 +615,68 @@ def test_gate_fails_below_mean(
     result = aggregate_gate(config, seeds)
 
     assert result.passed is False
+
+
+def _reproducibility_config(tmp_path: Path) -> GateConfig:
+    return replace(
+        _gate_config(tmp_path),
+        episodes=20,
+        snapshot_interval=10,
+        games=50,
+        snapshot_games=10,
+        unique_games=10,
+    )
+
+
+def test_gate_is_reproducible(tmp_path: Path) -> None:
+    config = _reproducibility_config(tmp_path)
+
+    first = run_gate(config)
+    second = run_gate(config)
+
+    assert first == second
+
+    names = (
+        "q_table_seed_7.json",
+        "q_table_seed_8.json",
+        "q_table_seed_9.json",
+        "gate.json",
+        "gate.csv",
+        "snapshot_curve.csv",
+        "s7-three-seed-gate-diagnostics.md",
+    )
+    out = write_gate_artifacts(
+        first,
+        first.config,
+        command_line=["rlcheckers", "gate", "--config", "gate.toml"],
+    )
+    first_bytes = {name: (out / name).read_bytes() for name in names}
+
+    write_gate_artifacts(
+        second,
+        second.config,
+        command_line=["rlcheckers", "gate", "--config", "gate.toml"],
+    )
+    second_bytes = {name: (out / name).read_bytes() for name in names}
+
+    assert first_bytes == second_bytes
+
+
+def test_gate_eval_seed_changes_evaluation_only(tmp_path: Path) -> None:
+    config = _reproducibility_config(tmp_path)
+
+    first = run_gate(replace(config, eval_seed=7))
+    second = run_gate(replace(config, eval_seed=8))
+
+    assert [seed.table for seed in first.seeds] == [
+        seed.table for seed in second.seeds
+    ]
+    assert [seed.snapshots for seed in first.seeds] == [
+        seed.snapshots for seed in second.seeds
+    ]
+    assert any(
+        first_seed.matchups["random"] != second_seed.matchups["random"]
+        or first_seed.matchups["stochastic_greedy"]
+        != second_seed.matchups["stochastic_greedy"]
+        for first_seed, second_seed in zip(first.seeds, second.seeds)
+    )
