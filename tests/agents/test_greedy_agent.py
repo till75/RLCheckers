@@ -2,7 +2,11 @@ from __future__ import annotations
 
 import pytest
 
-from rlcheckers.agents.greedy_agent import GreedyAgent, material_balance
+from rlcheckers.agents.greedy_agent import (
+    GreedyAgent,
+    StochasticGreedyAgent,
+    material_balance,
+)
 from rlcheckers.game.board import (
     PLAYABLE_SQUARES,
     SQUARE_COUNT,
@@ -104,3 +108,51 @@ def test_greedy_is_deterministic() -> None:
     agent = GreedyAgent()
     first = agent.choose_move(game)
     assert agent.choose_move(game) == first
+
+
+def test_stochastic_greedy_is_seeded() -> None:
+    game = GameState.from_board(
+        board_with({12: Piece.BLACK_KING, 0: Piece.WHITE_KING})
+    )
+    first = StochasticGreedyAgent(seed=7)
+    second = StochasticGreedyAgent(seed=7)
+    third = StochasticGreedyAgent(seed=8)
+
+    first_moves = [first.choose_move(game) for _ in range(20)]
+    second_moves = [second.choose_move(game) for _ in range(20)]
+    third_moves = [third.choose_move(game) for _ in range(20)]
+
+    assert first_moves == second_moves
+    assert len(set(first_moves)) > 1
+    assert third_moves != first_moves
+
+
+def test_stochastic_greedy_uses_best_moves() -> None:
+    game = GameState.from_board(
+        board_with(
+            {
+                12: Piece.BLACK_KING,
+                6: Piece.WHITE_KING,
+                18: Piece.WHITE_MAN,
+            }
+        )
+    )
+    expected = Move((12, 0), (6,))
+
+    assert all(
+        StochasticGreedyAgent(seed=seed).choose_move(game) == expected
+        for seed in range(10)
+    )
+
+
+@pytest.mark.parametrize("seed", [True, "7", 7.0, None])
+def test_stochastic_greedy_rejects_bad_seed(seed: object) -> None:
+    with pytest.raises(ValueError, match="seed"):
+        StochasticGreedyAgent(seed=seed)
+
+
+def test_stochastic_greedy_rejects_terminal_state() -> None:
+    finished = GameState.from_board(board_with({20: Piece.BLACK_KING}))
+
+    with pytest.raises(ValueError, match="finished"):
+        StochasticGreedyAgent(seed=7).choose_move(finished)

@@ -8,6 +8,8 @@ so the agent is deterministic and owns no RNG.
 
 from __future__ import annotations
 
+import random
+
 from rlcheckers.game.board import Board, Piece, Side
 from rlcheckers.game.moves import Move
 from rlcheckers.game.state import GameState, Outcome
@@ -71,3 +73,29 @@ class GreedyAgent:
             return 0
         winner = Side.BLACK if outcome is Outcome.BLACK_WIN else Side.WHITE
         return TERMINAL_SCORE if winner is moving_side else -TERMINAL_SCORE
+
+
+class StochasticGreedyAgent:
+    """A depth-1 material baseline with a seeded random tie-break."""
+
+    def __init__(self, seed: int) -> None:
+        if not isinstance(seed, int) or isinstance(seed, bool):
+            raise ValueError(
+                f"seed must be an int, got {type(seed).__name__}"
+            )
+        self._rng = random.Random(seed)
+
+    def choose_move(self, state: GameState) -> Move:
+        """Return a highest-scoring legal move for ``state``."""
+        if state.is_terminal:
+            raise ValueError(f"game is finished: {state.outcome.value}")
+
+        scored = [
+            (GreedyAgent._score(state, move), move)
+            for move in state.legal_moves()
+        ]
+        best_score = max(score for score, _ in scored)
+        best_moves = [
+            move for score, move in scored if score == best_score
+        ]
+        return self._rng.choice(best_moves)
