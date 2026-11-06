@@ -3,13 +3,70 @@
 An AI learning project: applying reinforcement learning to a checkers AI, while
 learning to co-author a program with opencode.
 
-**Status:** S7 is complete and the full gate passed. The project has the
-immutable 5x5 rules engine, seeded random play, the depth-1 greedy baseline, the
-seeded evaluation arena, tabular Q-learning against a fixed random opponent,
-self-play against periodic frozen snapshots, and the three-seed gate. The gate
-trains three seeds, evaluates random and stochastic greedy over 1,000 unique
-games, reports deterministic greedy and depth-2 as unique-game diagnostics, and
-writes the slice report and learning-curve plot under `docs/results/`.
+**Status:** the first milestone is complete. The approved three-seed gate
+passed. The project has the immutable 5x5 rules engine, seeded random play, the
+depth-1 greedy baseline, the seeded evaluation arena, tabular Q-learning against
+a fixed random opponent, self-play against periodic frozen snapshots, and the
+three-seed gate. The gate trains three seeds, evaluates random and stochastic
+greedy over 1,000 unique games, reports deterministic greedy and depth-2 as
+unique-game diagnostics, and writes the slice report and learning-curve plot
+under `docs/results/`. S7 is complete and awaiting approval; it has not been
+pushed.
+
+## First milestone result
+
+The milestone asked for a headless, reproducible experiment showing that a
+tabular agent learns to beat two fixed baselines on 5x5 English draughts. The
+approved gate passed.
+
+| Metric | Value | Threshold |
+|---|---:|---:|
+| Random mean | 0.830667 | 0.600000 |
+| Random minimum | 0.818000 | 0.500000 |
+| Stochastic greedy mean | 0.816833 | 0.550000 |
+| Stochastic greedy minimum | 0.800500 | 0.500000 |
+
+| Seed | Table size | Random W/D/L | Random score | Stochastic greedy W/D/L | Stochastic greedy score | Deterministic greedy, 10 unique | Depth-2, 10 unique |
+|---:|---:|---:|---:|---:|---:|---:|---:|
+| 7 | 7,181 | 818/23/159 | 0.829500 | 808/22/170 | 0.819000 | 10/0/0 | 4/0/6 |
+| 8 | 7,409 | 832/25/143 | 0.844500 | 817/28/155 | 0.831000 | 10/0/0 | 4/0/6 |
+| 9 | 7,388 | 800/36/164 | 0.818000 | 783/35/182 | 0.800500 | 10/0/0 | 4/0/6 |
+
+![Self-play snapshot learning curve](docs/results/snapshot_curve.png)
+
+The curve shows the expected shape: a large gain in the first 1,000 episodes,
+then a slower and noisy plateau. The final agents are strong against random and
+stochastic greedy, but the depth-2 diagnostic is only 4/10 for every seed. The
+gate is a diagnostic, not a general-strength claim.
+
+Full evidence: [S7 slice report](docs/results/s7-three-seed-gate-diagnostics.md)
+and [first milestone report](docs/results/first-milestone.md).
+
+## How the milestone was built
+
+The work followed the project's learning-first workflow:
+
+1. **Learn and decide.** Each new approach started with a design note and an
+   explicit choice. Non-obvious evaluation decisions became ADRs.
+2. **Specify and review.** Each slice had an observable contract, pass/fail
+   criteria, and a diagnostic report path before implementation.
+3. **TDD in small cycles.** Each behaviour started with a failing test, then the
+   smallest implementation, then a green commit. The full suite and
+   `ruff check .` stayed green.
+4. **Evaluate the slice.** Every slice ended with a diagnostic report under
+   `docs/results/` recording the goal, evidence, caveats, and decision.
+5. **Do not push early.** Slices were pushed only after approval.
+
+| Slice | Outcome | Status |
+|---|---|---|
+| S0 | Feasibility, rules, and encoding decisions | complete |
+| S1 | 5x5 board and initial position | complete |
+| S2 | Legal move generation, captures, promotions, perft | complete |
+| S3 | Game application, terminal states, seeded random play | complete |
+| S4 | Baselines, evaluation arena, metrics, artifacts | complete |
+| S5 | Tabular Q-learning against a fixed random opponent | complete |
+| S6 | Self-play with periodic frozen snapshots | complete |
+| S7 | Three-seed gate, stochastic greedy baseline, reports | complete; awaiting approval |
 
 ## Development
 
