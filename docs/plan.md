@@ -1,7 +1,7 @@
 # Plan — RLCheckers, first milestone
 
 **Date:** 2026-10-27
-**Status:** S0–S6 complete, approved, and pushed; S7 next
+**Status:** S0–S6 complete, approved, and pushed; S7 spec approved (2026-11-06); TDD next
 **Source:** `docs/00-brief.md`
 
 ## How this plan works
@@ -343,6 +343,8 @@ scoreboard.
 
 ## S7 — Three-seed gate and report
 
+**Status:** spec approved (2026-11-06); TDD next.
+
 **Outcome:** A reproducible three-seed evaluation against random and a
 stochastic greedy baseline, with W/D/L, derived score, unique-game accounting,
 per-snapshot learning curves, plots, and a written first-milestone report.
@@ -482,10 +484,7 @@ contents in their own specs. It supersedes only the plot sentence of ADR 0003
 
 ## Next step
 
-1. S6 is approved and pushed. Start S7 with `/learn`, then
-   `/spec 0007-three-seed-gate.md`, review, and TDD the gate and report. The spec
-   must settle the stochastic greedy baseline, unique-game accounting, the
-   10,000-episode per-seed budget, the per-snapshot learning curve, and the
-   depth-2 reported diagnostic before implementation.
+1. S6 is approved and pushed. S7 spec is approved; start TDD with the bootstrap
+   and A1 (gate config), following `docs/specs/0007-three-seed-gate.md`.
 2. Do not push S7 before its slice is implemented, tested, documented, and
    approved.

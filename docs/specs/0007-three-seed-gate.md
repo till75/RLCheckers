@@ -1,6 +1,6 @@
 # Spec 0007 — Three-seed gate and report
 
-- **Status:** draft for review
+- **Status:** approved (2026-11-06)
 - **Date:** 2026-11-06
 - **Slice:** S7 — Three-seed gate and report
 - **Related:** `docs/00-brief.md`, `docs/plan.md` S7, ADR 0003, ADR 0004,
@@ -483,4 +483,50 @@ half-finished slice across turns.
 
 ## Approval
 
-Pending `/spec-review S7`.
+Approved by the author on 2026-11-06 in `/spec-review S7`.
+
+### Approved decisions
+
+1. One self-contained `gate` command owns training, evaluation, and report
+   writing.
+2. Keep the ADR 0003 thresholds: mean ≥ 0.60 against random, mean ≥ 0.55 against
+   stochastic greedy, and no seed below 0.50.
+3. ADR 0007: the 1,000-game gate uses seeded stochastic greedy; deterministic
+   greedy remains a 10-unique-game diagnostic.
+4. The per-snapshot curve uses 200 games per snapshot per opponent.
+5. A gate fail returns 1 and still writes the artifacts and report; a runtime
+   error writes nothing.
+6. `GateConfig` lives in `config.py`; `gate.json`’s `config` is the 14 resolved
+   fields with `output_dir` as a string.
+7. `eval_seed` is separate from the three training seeds and is used for all
+   matchups.
+8. A4 uses an internal `aggregate_gate` helper, exported for tests.
+9. The gate writes final Q-tables per seed but no snapshot files.
+10. The gate writes the slice report; the milestone report is written in the
+    final TDD step.
+11. `StochasticGreedyAgent` is not added to `AGENT_NAMES`; `Depth2Agent` lives
+    in `evaluation/gate.py`.
+12. The snapshot observer is called for the initial snapshot and each refresh,
+    not the final table; the gate wraps the final table itself.
+13. The gate uses `result.openings` for every evaluation and reports overall and
+    per-colour, not per-opening.
+14. The CLI prints exactly 13 lines.
+
+### Assumptions
+
+- The milestone config uses `seeds = [7, 8, 9]`, `eval_seed = 7`,
+  `episodes = 10000`, `snapshot_interval = 1000`, `games = 1000`,
+  `snapshot_games = 200`, and `unique_games = 10`.
+- The gate report follows `docs/results/_template-slice-diagnostics.md`.
+- The full S7 run is the slice diagnostic, not a default test.
+- The small-N integration test uses three seeds, 20 episodes,
+  `snapshot_interval = 10`, `games = 10`, `snapshot_games = 10`, and
+  `unique_games = 10`.
+
+### Deferred
+
+- A generic `verify-slice` command.
+- Snapshot persistence.
+- Per-opening gate report rows.
+- Running the full gate as a default test.
+- Any change to the ADR 0003 thresholds.

@@ -2,7 +2,8 @@
 
 ## Where we are
 S0–S6 are complete, approved, and pushed. S6 (self-play with periodic frozen
-snapshots) is approved and pushed. S7 (the three-seed gate and report) is next.
+snapshots) is approved and pushed. S7 (the three-seed gate and report) has its
+spec approved; TDD is next.
 
 ## Done since last handoff
 - S6 spec approved 2026-11-06: `docs/specs/0006-self-play-snapshots.md`.
@@ -22,16 +23,16 @@ snapshots) is approved and pushed. S7 (the three-seed gate and report) is next.
 - Diagnostic evidence and the questions that prompted it:
   `docs/results/s6-self-play-diagnostics.md`.
 - S6 approved and pushed 2026-11-06.
+- S7 spec approved 2026-11-06: `docs/specs/0007-three-seed-gate.md`.
+- ADR 0007 accepted: `docs/adr/0007-stochastic-greedy-gate-baseline.md`.
 - Current gates: default suite 325 passed, 2 deselected; A8 slow test passed;
   `ruff check .` clean.
 - S5 baseline result: score 0.819 vs random (794/50/156, CI 0.796–0.842,
   table 21,773).
 
 ## Next
-1. Start S7 with `/learn`, then `/spec 0007-three-seed-gate.md`, review, and TDD
-   the gate and report. The spec must settle the stochastic greedy baseline,
-   unique-game accounting, the 10,000-episode per-seed budget, the per-snapshot
-   learning curve, and the depth-2 reported diagnostic before implementation.
+1. Start S7 TDD with the bootstrap and A1 (gate config), following
+   `docs/specs/0007-three-seed-gate.md`.
 2. Do not push S7 without approval.
 
 ## Process

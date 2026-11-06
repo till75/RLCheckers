@@ -58,8 +58,9 @@ The author chose **A — self-contained `gate` command**. The author’s reason:
 this milestone easy to finish and move to the next one. The gate command
 comprises training, evaluation, and report writing instead of separating those
 steps. The author also chose to **keep ADR 0003** because, even though the
-thresholds look easy, that is the gate the next milestone should take on. No ADR
-change is needed.
+thresholds look easy, that is the gate the next milestone should take on. ADR
+0007 records the seeded stochastic greedy baseline required by the S7 plan; the
+ADR 0003 thresholds remain unchanged.
 
 ## What would change the decision
 
