@@ -216,10 +216,11 @@ The S7 plan was updated to reflect this evidence:
   games are genuinely unique.
 - Report deterministic greedy as **10 unique games**, not 1,000 independent
   games.
-- Keep the **depth-2 minimax** as a separate robustness check.
-- Report the learning curve and plateau, not just the final score.
-- Treat 10,000 episodes as a reasonable budget; more training may not help much
-  in this setup.
+- Train **10,000 episodes per seed**.
+- Include the **per-snapshot learning curve** in the S7 report, showing the
+  early gain and the plateau.
+- Keep the **depth-2 minimax** as a reported robustness diagnostic, not part of
+  the pass/fail gate.
 
 ## Caveats
 
@@ -233,10 +234,10 @@ The S7 plan was updated to reflect this evidence:
 - The randomized-tie greedy and depth-2 agents were ad hoc diagnostic scripts;
   no production code was changed.
 
-## Open questions
+## Resolved questions
 
-- Should S7 include the per-snapshot learning curve in its report, or only the
-  final three-seed gate?
-- Should S7 use 10,000 episodes per seed, or a smaller budget given the plateau?
-- Should the depth-2 robustness check be part of the pass/fail gate, or only a
-  reported diagnostic?
+- **Per-snapshot learning curve:** S7 includes it in the report, not only the
+  final three-seed gate.
+- **Training budget:** S7 uses 10,000 episodes per seed.
+- **Depth-2 robustness check:** S7 reports it as a diagnostic; it is not part of
+  the pass/fail gate.

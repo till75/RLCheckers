@@ -321,7 +321,7 @@ scoreboard.
 
 **Outcome:** A reproducible three-seed evaluation against random and a
 stochastic greedy baseline, with W/D/L, derived score, unique-game accounting,
-plots, and a written first-milestone report.
+per-snapshot learning curves, plots, and a written first-milestone report.
 
 **Planning note (2026-11-06):** The S6 greedy diagnostic reported 1,000/0/0
 because the Q-agent and depth-1 greedy are both deterministic. The 1,000 games
@@ -334,25 +334,29 @@ questions that prompted it.
 
 **Acceptance criteria:**
 
-- Three independent training seeds are evaluated against both baselines.
+- Three independent training seeds are trained for 10,000 episodes each and
+  evaluated against both baselines.
 - The random matchup uses 1,000 games, both colours, and the fixed opening
   suite; each game is unique because the random agent is seeded per game.
 - The greedy matchup uses a seeded stochastic tie-break so the 1,000 games are
   unique. The deterministic depth-1 greedy remains a secondary diagnostic and
   is reported as 10 unique games per seed, not 1,000 independent games.
+- The report includes the per-snapshot learning curve for each seed against
+  random and stochastic greedy, showing the early gain and the plateau.
 - The report shows per-seed and aggregate W/D/L, derived score, unique-game
   counts, and effective sample size, with the gate thresholds and a clear
   pass/fail.
 - The report does not compute a 1,000-game confidence interval for a
   deterministic baseline; it reports the unique-game result and labels the
   interval as not applicable or uses a unique-game interval.
-- A depth-2 minimax robustness check is reported separately; it is not part of
-  the pass/fail gate unless spec 0007 says otherwise.
+- A depth-2 minimax robustness check is a reported diagnostic, not part of the
+  pass/fail gate.
 - Artifacts are written under `docs/results/` and the CSV/plots are reproducible
   from the saved configs and seeds.
 - Runtime is within the target; if not, the report says where time went.
-- A small-N integration test covers the gate logic, unique-game accounting, and
-  deterministic-baseline handling without running the full experiment.
+- A small-N integration test covers the gate logic, unique-game accounting,
+  per-snapshot learning-curve aggregation, and deterministic-baseline handling
+  without running the full experiment.
 
 **Files touched:** `src/rlcheckers/agents/greedy_agent.py`,
 `src/rlcheckers/evaluation/gate.py`, `src/rlcheckers/cli.py`,
@@ -360,8 +364,9 @@ questions that prompted it.
 `docs/specs/0007-three-seed-gate.md`, `docs/results/first-milestone.md`,
 `docs/architecture.md`.
 
-**Tests added:** Stochastic greedy determinism, unique-game accounting, metric
-aggregation, gate pass/fail logic, report generation, small-N integration.
+**Tests added:** Stochastic greedy determinism, unique-game accounting,
+per-snapshot learning-curve aggregation, metric aggregation, gate pass/fail
+logic, report generation, small-N integration.
 
 **Rough size:** M–L, 4–6 hours plus compute.
 
@@ -435,16 +440,19 @@ contents in their own specs. It supersedes only the plot sentence of ADR 0003
   hyperparameter defaults, save format, memory cap.
 - **Spec 0006:** snapshot cadence, opponent selection, training/evaluation
   interleaving, artifact layout.
-- **Spec 0007:** gate aggregation and report format, the stochastic greedy
-  baseline, unique-game accounting for deterministic baselines, runtime budget,
-  and failure handling; it reuses the spec 0004 interval for independent games
-  rather than defining a second one.
+- **Spec 0007:** gate aggregation and report format, the 10,000-episode
+  per-seed training budget, the stochastic greedy baseline, unique-game
+  accounting for deterministic baselines, per-snapshot learning curves, the
+  depth-2 reported diagnostic, runtime budget, and failure handling; it reuses
+  the spec 0004 interval for independent games rather than defining a second
+  one.
 
 ## Next step
 
 1. Review and approve S6; then push the completed slice.
 2. Start S7 with `/learn`, then `/spec 0007-three-seed-gate.md`, review, and TDD
-   the gate and report. The spec must settle the stochastic greedy baseline and
-   unique-game accounting before implementation.
+   the gate and report. The spec must settle the stochastic greedy baseline,
+   unique-game accounting, the 10,000-episode per-seed budget, the per-snapshot
+   learning curve, and the depth-2 reported diagnostic before implementation.
 3. Do not push S7 before its slice is implemented, tested, documented, and
    approved.

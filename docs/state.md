@@ -39,9 +39,12 @@ snapshots) is implemented, tested, documented, and awaiting slice approval. S7
   1,000 repetitions as independent samples or report a 1,000-game interval for
   them.
 - A randomized greedy tie-break scored 0.819 against the same S6 agent; a simple
-  depth-2 minimax scored 0.400. S7 should use a stochastic greedy baseline for
-  the 1,000-game gate and report the deterministic baseline as a unique-game
+  depth-2 minimax scored 0.400. S7 uses a stochastic greedy baseline for the
+  1,000-game gate and reports the deterministic baseline as a unique-game
   diagnostic.
+- S7 trains 10,000 episodes per seed, includes the per-snapshot learning curve
+  in the report, and reports the depth-2 check as a diagnostic rather than a
+  pass/fail gate.
 
 ## Open questions
 - None blocking. The three review decisions are recorded in spec 0006’s Approval section.
