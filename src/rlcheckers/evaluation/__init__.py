@@ -17,6 +17,16 @@ from rlcheckers.evaluation.artifacts import (
     METRICS_FIELDS,
     write_artifacts,
 )
+from rlcheckers.evaluation.gate import (
+    GATE_GREEDY_MEAN,
+    GATE_RANDOM_MEAN,
+    GATE_SEED_FLOOR,
+    GateMatchup,
+    GateResult,
+    SeedGateResult,
+    SnapshotCurvePoint,
+    aggregate_gate,
+)
 from rlcheckers.evaluation.metrics import (
     ScoreSummary,
     SummaryRow,
@@ -27,14 +37,22 @@ from rlcheckers.evaluation.metrics import (
 
 __all__ = [
     "GAMES_FIELDS",
+    "GATE_GREEDY_MEAN",
+    "GATE_RANDOM_MEAN",
+    "GATE_SEED_FLOOR",
     "METRICS_FIELDS",
     "STANDARD_OPENINGS",
     "ArenaError",
     "ArenaResult",
     "GameOutcome",
     "GameResult",
+    "GateMatchup",
+    "GateResult",
     "ScoreSummary",
+    "SeedGateResult",
+    "SnapshotCurvePoint",
     "SummaryRow",
+    "aggregate_gate",
     "derive_game_seed",
     "derive_side_seed",
     "format_float",
