@@ -4,21 +4,37 @@
 ``train_self_play`` updates only the learner table and uses a greedy
 ``QAgent`` over the active snapshot as the opponent. ``write_self_play_artifacts``
 writes the self-play Q-table, CSV, run metadata, and learning curve. The
-snapshot policy is implemented; the training loop and artifact writer are filled
-in by later S6 TDD slices.
+snapshot policy and training loop are implemented; the artifact writer is filled
+in by a later S6 TDD slice.
 """
 
 from __future__ import annotations
 
+import random
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 
-from rlcheckers.agents.q_agent import QTable
+from rlcheckers.agents.q_agent import QAgent, QTable, q_key
+from rlcheckers.agents.random_agent import MAX_GAME_PLIES
 from rlcheckers.config import TrainConfig
-from rlcheckers.evaluation import STANDARD_OPENINGS, ArenaResult, GameOutcome
+from rlcheckers.evaluation import (
+    STANDARD_OPENINGS,
+    ArenaResult,
+    GameOutcome,
+    derive_side_seed,
+    opening_state,
+    outcome_for,
+)
 from rlcheckers.game.board import Side
 from rlcheckers.game.moves import Move
+from rlcheckers.training.train_q import (
+    choose_epsilon_greedy,
+    derive_episode_seed,
+    epsilon_at,
+    q_update,
+    reward_for,
+)
 
 SELF_PLAY_TRAINING_FIELDS = (
     "episode",
@@ -231,7 +247,165 @@ def train_self_play(
     openings: Sequence[Sequence[Move]] = STANDARD_OPENINGS,
 ) -> SelfPlayTrainingResult:
     """Train a Q-table against its own periodically frozen snapshots."""
-    raise NotImplementedError
+    if config.opponent != "self":
+        raise ValueError(
+            f"config opponent must be 'self', got {config.opponent!r}"
+        )
+    if (
+        not isinstance(config.episodes, int)
+        or isinstance(config.episodes, bool)
+        or config.episodes <= 0
+        or config.episodes % 10 != 0
+    ):
+        raise ValueError(
+            "config episodes must be a positive multiple of 10, "
+            f"got {config.episodes!r}"
+        )
+
+    interval = config.snapshot_interval
+    if (
+        not isinstance(interval, int)
+        or isinstance(interval, bool)
+        or interval < 10
+        or interval % 10 != 0
+        or interval >= config.episodes
+    ):
+        raise ValueError(
+            "config snapshot_interval must be a multiple of 10, "
+            "at least 10, and less than episodes, "
+            f"got {interval!r}"
+        )
+    if not openings:
+        raise ValueError("openings must be non-empty")
+
+    suite = tuple(tuple(opening) for opening in openings)
+    table = QTable(max_entries=config.max_table_entries)
+    policy = SnapshotPolicy(
+        cadence=interval,
+        episodes=config.episodes,
+        max_entries=config.max_table_entries,
+    )
+    metrics: list[SelfPlayEpisodeMetric] = []
+
+    for episode in range(config.episodes):
+        if episode > 0 and episode % interval == 0:
+            policy.refresh(table, created_at_episode=episode)
+
+        snapshot = policy.opponent_for(episode)
+        opponent = QAgent(snapshot.table)
+        opening_index = (episode // 2) % len(suite)
+        learner_colour = (
+            Side.BLACK if episode % 2 == 0 else Side.WHITE
+        )
+        state = opening_state(suite[opening_index])
+        epsilon = epsilon_at(
+            episode,
+            config.episodes,
+            config.epsilon_start,
+            config.epsilon_end,
+            config.epsilon_decay_fraction,
+        )
+        episode_seed = derive_episode_seed(config.seed, episode)
+        learner_seed = derive_side_seed(episode_seed, learner_colour)
+        learner_rng = random.Random(learner_seed)
+
+        plies = 0
+        outcome: GameOutcome | None = None
+
+        if state.board.side_to_move is not learner_colour:
+            state = state.apply(opponent.choose_move(state))
+            plies += 1
+            if plies > MAX_GAME_PLIES:
+                raise RuntimeError(
+                    f"game did not terminate within {MAX_GAME_PLIES} plies"
+                )
+            if state.is_terminal:
+                outcome = outcome_for(state.outcome, learner_colour)
+
+        while outcome is None:
+            learner_move = choose_epsilon_greedy(
+                table, state, epsilon, learner_rng
+            )
+            key = q_key(state, learner_move)
+            current = table.get(key)
+            after = state.apply(learner_move)
+            plies += 1
+            if plies > MAX_GAME_PLIES:
+                raise RuntimeError(
+                    f"game did not terminate within {MAX_GAME_PLIES} plies"
+                )
+
+            if after.is_terminal:
+                outcome = outcome_for(after.outcome, learner_colour)
+                table.set(
+                    key,
+                    q_update(
+                        current,
+                        reward_for(outcome),
+                        0.0,
+                        config.alpha,
+                        config.gamma,
+                    ),
+                )
+                break
+
+            opponent_move = opponent.choose_move(after)
+            next_state = after.apply(opponent_move)
+            plies += 1
+            if plies > MAX_GAME_PLIES:
+                raise RuntimeError(
+                    f"game did not terminate within {MAX_GAME_PLIES} plies"
+                )
+
+            if next_state.is_terminal:
+                outcome = outcome_for(next_state.outcome, learner_colour)
+                table.set(
+                    key,
+                    q_update(
+                        current,
+                        reward_for(outcome),
+                        0.0,
+                        config.alpha,
+                        config.gamma,
+                    ),
+                )
+                break
+
+            next_best = table.best_value(next_state)
+            table.set(
+                key,
+                q_update(
+                    current,
+                    0.0,
+                    next_best,
+                    config.alpha,
+                    config.gamma,
+                ),
+            )
+            state = next_state
+
+        assert outcome is not None
+        metrics.append(
+            SelfPlayEpisodeMetric(
+                episode=episode,
+                opening_index=opening_index,
+                learner_colour=learner_colour,
+                outcome=outcome,
+                plies=plies,
+                epsilon=epsilon,
+                table_size=table.size(),
+                opponent_snapshot_episode=snapshot.created_at_episode,
+                opponent_table_size=snapshot.table_size,
+            )
+        )
+
+    return SelfPlayTrainingResult(
+        table=table,
+        metrics=tuple(metrics),
+        openings=suite,
+        snapshots=policy.records,
+        snapshot_interval=interval,
+    )
 
 
 def write_self_play_artifacts(
