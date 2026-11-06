@@ -22,6 +22,9 @@ htmlcov/
 .env.*
 !.env.example
 
+# Local Repomix snapshots
+.repomix/
+
 # OS clutter
 Thumbs.db
 Desktop.ini
