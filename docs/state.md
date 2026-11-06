@@ -1,9 +1,8 @@
 # State — 2026-11-06
 
 ## Where we are
-S0–S5 are complete, approved, and pushed. S6 (self-play with periodic frozen
-snapshots) is implemented, tested, documented, and awaiting slice approval. S7
-(the three-seed gate and report) is next.
+S0–S6 are complete, approved, and pushed. S6 (self-play with periodic frozen
+snapshots) is approved and pushed. S7 (the three-seed gate and report) is next.
 
 ## Done since last handoff
 - S6 spec approved 2026-11-06: `docs/specs/0006-self-play-snapshots.md`.
@@ -16,22 +15,24 @@ snapshots) is implemented, tested, documented, and awaiting slice approval. S7
 - A7: `train-q` self-play dispatch with random and greedy diagnostics.
 - A8 slow diagnostic (seed 7, 10,000 episodes, interval 1,000): table 7,181;
   10 snapshots; random 818/23/159, score 0.829500, CI 0.806659–0.852341;
-  greedy 1,000/0/0, score 1.000000, CI 1.000000–1.000000. Both point
-  estimates are strictly above 0.50; the S7 gate is not applied.
+  greedy 1,000/0/0, score 1.000000, but only 10 unique games repeated 100
+  times. Both point estimates are strictly above 0.50; the S7 gate is not
+  applied.
 - A9: README, architecture, plan, state, and module docstrings describe S6.
 - Diagnostic evidence and the questions that prompted it:
   `docs/results/s6-self-play-diagnostics.md`.
+- S6 approved and pushed 2026-11-06.
 - Current gates: default suite 325 passed, 2 deselected; A8 slow test passed;
   `ruff check .` clean.
 - S5 baseline result: score 0.819 vs random (794/50/156, CI 0.796–0.842,
   table 21,773).
 
 ## Next
-1. Review and approve the completed S6 slice; then push it.
-2. Start S7 with `/learn`, then `/spec 0007-three-seed-gate.md`, review, and TDD
-   the gate and report. The spec must settle the stochastic greedy baseline and
-   unique-game accounting before implementation.
-3. Do not push S7 without approval.
+1. Start S7 with `/learn`, then `/spec 0007-three-seed-gate.md`, review, and TDD
+   the gate and report. The spec must settle the stochastic greedy baseline,
+   unique-game accounting, the 10,000-episode per-seed budget, the per-snapshot
+   learning curve, and the depth-2 reported diagnostic before implementation.
+2. Do not push S7 without approval.
 
 ## Process
 - Every slice ends with a diagnostic report under `docs/results/` named
@@ -64,7 +65,7 @@ snapshots) is implemented, tested, documented, and awaiting slice approval. S7
 - `/spec-review`: one-page packet, then one round per message; wait for explicit yes/no.
 - Spec 0006’s Markdown overview is a table; console diagrams stay plain, no HTML.
 - S6 and S5 training curves are not directly comparable; compare final agents on fixed baselines.
-- Nothing has been pushed.
+- S6 is pushed; S7 is not.
 
 ## Not in an ADR
 - S6 config/CLI: conditional `snapshot_interval`, `N < episodes`, `train-q` dispatch.

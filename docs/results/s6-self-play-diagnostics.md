@@ -1,7 +1,7 @@
 # S6 self-play diagnostics
 
 - **Date:** 2026-11-06
-- **Status:** S6 diagnostic evidence; S6 ready for approval, S7 planning updated
+- **Status:** S6 approved and pushed; S7 planning updated
 - **S6 code:** `52580ad` (S6 implementation and docs)
 - **Related:** `docs/specs/0006-self-play-snapshots.md`,
   `docs/adr/0006-self-play-snapshot-policy.md`, `docs/plan.md` S7
@@ -228,7 +228,7 @@ game after early training. This is consistent with the plateau.
 
 ## Slice decision
 
-S6 is ready for approval:
+S6 is approved and pushed:
 
 - The A2–A9 acceptance criteria are covered by tests and docs.
 - The default suite passes, the A8 slow test passes, and `ruff check .` is clean.
@@ -238,7 +238,8 @@ S6 is ready for approval:
   repeated 100 times; the S7 plan now uses a stochastic greedy baseline and
   unique-game accounting.
 
-Decision: **pass for S6**; move to S7 with the revised gate.
+Decision: **pass for S6**; approved and pushed; move to S7 with the revised
+gate.
 
 ## Implications for S7
 

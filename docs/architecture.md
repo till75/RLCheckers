@@ -5,7 +5,7 @@ play, the depth-1 greedy baseline (S4), the seeded evaluation arena (S4),
 tabular Q-learning against a fixed random opponent (S5), and self-play against
 periodic frozen snapshots (S6): snapshot policy, self-play trainer, conditional
 training config, self-play artifacts, titled learning curve, two diagnostics,
-and `train-q` dispatch. S6 is awaiting slice approval and push. The three-seed
+and `train-q` dispatch. S6 is complete, approved, and pushed. The three-seed
 gate is planned (S7).
 
 ## Components

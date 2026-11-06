@@ -3,12 +3,12 @@
 An AI learning project: applying reinforcement learning to a checkers AI, while
 learning to co-author a program with opencode.
 
-**Status:** S6 is implemented, tested, documented, and awaiting slice approval.
-The project has the immutable 5x5 rules engine, seeded random play, the depth-1
-greedy baseline, the seeded evaluation arena, tabular Q-learning against a fixed
-random opponent, and self-play against periodic frozen snapshots. Self-play
-writes a Q-table, training CSV, run metadata, and a titled learning curve, and
-prints random and greedy diagnostics. The final three-seed gate is S7.
+**Status:** S6 is complete, approved, and pushed. The project has the immutable
+5x5 rules engine, seeded random play, the depth-1 greedy baseline, the seeded
+evaluation arena, tabular Q-learning against a fixed random opponent, and
+self-play against periodic frozen snapshots. Self-play writes a Q-table,
+training CSV, run metadata, and a titled learning curve, and prints random and
+greedy diagnostics. The final three-seed gate is S7.
 
 ## Development
 
