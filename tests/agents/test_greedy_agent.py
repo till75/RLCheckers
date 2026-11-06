@@ -156,3 +156,9 @@ def test_stochastic_greedy_rejects_terminal_state() -> None:
 
     with pytest.raises(ValueError, match="finished"):
         StochasticGreedyAgent(seed=7).choose_move(finished)
+
+
+def test_stochastic_greedy_is_exported() -> None:
+    from rlcheckers.agents import StochasticGreedyAgent as Exported
+
+    assert Exported is StochasticGreedyAgent

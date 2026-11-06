@@ -1,6 +1,10 @@
 """Agents that choose moves."""
 
-from rlcheckers.agents.greedy_agent import GreedyAgent, material_balance
+from rlcheckers.agents.greedy_agent import (
+    GreedyAgent,
+    StochasticGreedyAgent,
+    material_balance,
+)
 from rlcheckers.agents.protocol import Agent, AgentFactory
 from rlcheckers.agents.q_agent import (
     QAgent,
@@ -33,6 +37,7 @@ __all__ = [
     "Agent",
     "AgentFactory",
     "GreedyAgent",
+    "StochasticGreedyAgent",
     "QAgent",
     "QTable",
     "QTableError",
