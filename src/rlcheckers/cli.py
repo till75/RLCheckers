@@ -21,12 +21,18 @@ from collections.abc import Sequence
 from rlcheckers.agents import GreedyAgent, make_agent
 from rlcheckers.agents.q_agent import QAgent
 from rlcheckers.agents.random_agent import RandomAgent, play_random_game
-from rlcheckers.config import load_eval_config, load_train_config
+from rlcheckers.config import (
+    load_eval_config,
+    load_gate_config,
+    load_train_config,
+)
 from rlcheckers.evaluation import (
     format_float,
     play_matchup,
+    run_gate,
     summarize,
     write_artifacts,
+    write_gate_artifacts,
 )
 from rlcheckers.game.moves import format_move
 from rlcheckers.training import (
@@ -49,12 +55,16 @@ def main(argv: Sequence[str] | None = None) -> int:
     evaluate.add_argument("--config", required=True)
     train_q = subparsers.add_parser("train-q")
     train_q.add_argument("--config", required=True)
+    gate = subparsers.add_parser("gate")
+    gate.add_argument("--config", required=True)
     args = parser.parse_args(arguments)
 
     if args.command == "play-random":
         return _run_play_random(args.seed)
     if args.command == "train-q":
         return _run_train_q(args.config, arguments)
+    if args.command == "gate":
+        return _run_gate(args.config, arguments)
     return _run_evaluate(args.config, arguments)
 
 
@@ -223,3 +233,33 @@ def _run_self_play(config, argv: Sequence[str]) -> int:
     )
     print(f"artifacts: {config.output_dir}")
     return 0
+
+
+def _run_gate(config_path: str, argv: Sequence[str]) -> int:
+    """Run the gate subcommand."""
+    try:
+        config = load_gate_config(config_path)
+        result = run_gate(config)
+        write_gate_artifacts(
+            result,
+            config,
+            command_line=["rlcheckers", *argv],
+        )
+    except (OSError, RuntimeError, ValueError) as error:
+        print(f"error: {error}", file=sys.stderr)
+        return 1
+
+    print(f"seeds: {','.join(str(seed) for seed in config.seeds)}")
+    print(f"eval_seed: {config.eval_seed}")
+    print(f"episodes: {config.episodes}")
+    print(f"snapshot_interval: {config.snapshot_interval}")
+    print(f"games: {config.games}")
+    print(f"snapshot_games: {config.snapshot_games}")
+    print(f"unique_games: {config.unique_games}")
+    print(f"random_mean: {format_float(result.random_mean)}")
+    print(f"random_min: {format_float(result.random_min)}")
+    print(f"greedy_mean: {format_float(result.greedy_mean)}")
+    print(f"greedy_min: {format_float(result.greedy_min)}")
+    print(f"gate: {'pass' if result.passed else 'fail'}")
+    print(f"artifacts: {config.output_dir}")
+    return 0 if result.passed else 1

@@ -14,7 +14,23 @@ from matplotlib.backends.backend_agg import FigureCanvasAgg
 from matplotlib.figure import Figure
 
 import rlcheckers
-from rlcheckers.evaluation.metrics import ScoreSummary, format_float
+from rlcheckers.agents.greedy_agent import (
+    GreedyAgent,
+    StochasticGreedyAgent,
+    material_balance,
+)
+from rlcheckers.agents.q_agent import QAgent
+from rlcheckers.agents.random_agent import RandomAgent
+from rlcheckers.evaluation.arena import play_matchup
+from rlcheckers.evaluation.metrics import (
+    ScoreSummary,
+    format_float,
+    summarize,
+    summary_rows,
+)
+from rlcheckers.game.board import Side
+from rlcheckers.game.moves import Move
+from rlcheckers.game.state import GameState, Outcome
 
 if TYPE_CHECKING:
     from rlcheckers.agents.q_agent import QTable
@@ -106,6 +122,62 @@ class GateResult:
     greedy_mean: float
     greedy_min: float
     passed: bool
+
+
+def _terminal_score(state: GameState, root: Side) -> int:
+    if state.outcome is Outcome.DRAW:
+        return 0
+    winner = (
+        Side.BLACK
+        if state.outcome is Outcome.BLACK_WIN
+        else Side.WHITE
+    )
+    return 1000 if winner is root else -1000
+
+
+class Depth2Agent:
+    """A deterministic two-ply material diagnostic baseline."""
+
+    def choose_move(self, state: GameState) -> Move:
+        """Return the best two-ply material move for ``state``."""
+        if state.is_terminal:
+            raise ValueError(f"game is finished: {state.outcome.value}")
+
+        root = state.board.side_to_move
+        best_move: Move | None = None
+        best_score: int | None = None
+        for move in state.legal_moves():
+            after = state.apply(move)
+            if after.is_terminal:
+                score = _terminal_score(after, root)
+            else:
+                replies = []
+                for reply in after.legal_moves():
+                    after_reply = after.apply(reply)
+                    if after_reply.is_terminal:
+                        replies.append(
+                            _terminal_score(after_reply, root)
+                        )
+                    else:
+                        replies.append(
+                            material_balance(after_reply.board, root)
+                        )
+                score = min(replies)
+
+            if (
+                best_move is None
+                or score > best_score
+                or (
+                    score == best_score
+                    and (move.path, move.captures)
+                    < (best_move.path, best_move.captures)
+                )
+            ):
+                best_move = move
+                best_score = score
+
+        assert best_move is not None
+        return best_move
 
 
 def aggregate_gate(
@@ -477,6 +549,132 @@ def _write_report(
         ]
     )
     path.write_text("\n".join(lines), encoding="utf-8")
+
+
+def run_gate(config: GateConfig) -> GateResult:
+    """Train and evaluate the three-seed gate."""
+    from rlcheckers.config import TrainConfig
+    from rlcheckers.training.self_play import Snapshot, train_self_play
+
+    seed_results = []
+    for seed in config.seeds:
+        snapshots: list[Snapshot] = []
+        train_config = TrainConfig(
+            seed=seed,
+            episodes=config.episodes,
+            alpha=config.alpha,
+            gamma=config.gamma,
+            epsilon_start=config.epsilon_start,
+            epsilon_end=config.epsilon_end,
+            epsilon_decay_fraction=config.epsilon_decay_fraction,
+            opponent="self",
+            output_dir=config.output_dir / f"seed-{seed}",
+            max_table_entries=config.max_table_entries,
+            snapshot_interval=config.snapshot_interval,
+        )
+        result = train_self_play(
+            train_config,
+            snapshot_observer=snapshots.append,
+        )
+        agent = QAgent(result.table)
+
+        matchups = {}
+        for name, factory, games, ci_applicable in (
+            (
+                "random",
+                lambda seed: RandomAgent(seed=seed),
+                config.games,
+                True,
+            ),
+            (
+                "stochastic_greedy",
+                lambda seed: StochasticGreedyAgent(seed),
+                config.games,
+                True,
+            ),
+            (
+                "deterministic_greedy",
+                lambda seed: GreedyAgent(),
+                config.unique_games,
+                False,
+            ),
+            (
+                "depth2",
+                lambda seed: Depth2Agent(),
+                config.unique_games,
+                False,
+            ),
+        ):
+            matchup = play_matchup(
+                lambda seed: agent,
+                factory,
+                seed=config.eval_seed,
+                games=games,
+                agent_name="q",
+                opponent_name=name,
+                openings=result.openings,
+            )
+            rows = summary_rows(matchup)
+            matchups[name] = GateMatchup(
+                opponent=name,
+                games=len(matchup.games),
+                unique_games=games,
+                overall=rows[0].summary,
+                black=rows[1].summary,
+                white=rows[2].summary,
+                ci_applicable=ci_applicable,
+            )
+
+        curve = []
+        curve_snapshots = [
+            *snapshots,
+            Snapshot(config.episodes, result.table),
+        ]
+        for snapshot in curve_snapshots:
+            snapshot_agent = QAgent(snapshot.table)
+            random_match = play_matchup(
+                lambda seed: snapshot_agent,
+                lambda seed: RandomAgent(seed=seed),
+                seed=config.eval_seed,
+                games=config.snapshot_games,
+                agent_name="q",
+                opponent_name="random",
+                openings=result.openings,
+            )
+            greedy_match = play_matchup(
+                lambda seed: snapshot_agent,
+                lambda seed: StochasticGreedyAgent(seed),
+                seed=config.eval_seed,
+                games=config.snapshot_games,
+                agent_name="q",
+                opponent_name="stochastic_greedy",
+                openings=result.openings,
+            )
+            curve.append(
+                SnapshotCurvePoint(
+                    episode=snapshot.created_at_episode,
+                    table_size=snapshot.table_size,
+                    random=summarize(
+                        [game.outcome for game in random_match.games]
+                    ),
+                    stochastic_greedy=summarize(
+                        [game.outcome for game in greedy_match.games]
+                    ),
+                )
+            )
+
+        seed_results.append(
+            SeedGateResult(
+                seed=seed,
+                table=result.table,
+                table_size=result.table.size(),
+                snapshots=result.snapshots,
+                matchups=matchups,
+                snapshot_curve=tuple(curve),
+            )
+        )
+
+    return aggregate_gate(config, seed_results)
 
 
 def write_gate_artifacts(

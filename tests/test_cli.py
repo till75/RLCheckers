@@ -11,6 +11,7 @@ import rlcheckers.cli
 from rlcheckers.agents.random_agent import play_random_game
 from rlcheckers.cli import main
 from rlcheckers.config import load_eval_config
+from rlcheckers.evaluation import GateResult
 from rlcheckers.game.moves import format_move
 from rlcheckers.training import SelfPlayError
 
@@ -519,3 +520,212 @@ def test_module_entry_point_runs_self_play(
     assert completed.returncode == 0
     assert completed.stdout.startswith("episodes: 20\n")
     assert completed.stderr == ""
+
+
+@pytest.fixture
+def gate_config_path(tmp_path: Path) -> Path:
+    path = tmp_path / "gate.toml"
+    path.write_text(
+        'seeds = [7, 8, 9]\n'
+        'eval_seed = 7\n'
+        'episodes = 20\n'
+        'alpha = 0.1\n'
+        'gamma = 0.9\n'
+        'epsilon_start = 1.0\n'
+        'epsilon_end = 0.05\n'
+        'epsilon_decay_fraction = 0.8\n'
+        'output_dir = "out"\n'
+        'max_table_entries = 1000\n'
+        'snapshot_interval = 10\n'
+        'games = 10\n'
+        'snapshot_games = 10\n'
+        'unique_games = 10\n',
+        encoding="utf-8",
+    )
+    return path
+
+
+def _gate_result(config, *, passed: bool) -> GateResult:
+    return GateResult(
+        config=config,
+        seeds=(),
+        random_mean=0.70 if passed else 0.50,
+        random_min=0.60 if passed else 0.40,
+        greedy_mean=0.65 if passed else 0.50,
+        greedy_min=0.55 if passed else 0.40,
+        passed=passed,
+    )
+
+
+def test_cli_gate_stdout(
+    gate_config_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    calls = []
+
+    def fake_run_gate(config):
+        return _gate_result(config, passed=True)
+
+    def fake_write_gate_artifacts(result, config, *, command_line):
+        calls.append((result, config, command_line))
+        return config.output_dir
+
+    monkeypatch.setattr(rlcheckers.cli, "run_gate", fake_run_gate)
+    monkeypatch.setattr(
+        rlcheckers.cli,
+        "write_gate_artifacts",
+        fake_write_gate_artifacts,
+    )
+
+    assert main(
+        ["gate", "--config", str(gate_config_path)]
+    ) == 0
+    captured = capsys.readouterr()
+    lines = captured.out.splitlines()
+
+    assert len(lines) == 13
+    assert lines[0] == "seeds: 7,8,9"
+    assert lines[1] == "eval_seed: 7"
+    assert lines[2] == "episodes: 20"
+    assert lines[3] == "snapshot_interval: 10"
+    assert lines[4] == "games: 10"
+    assert lines[5] == "snapshot_games: 10"
+    assert lines[6] == "unique_games: 10"
+    assert lines[7] == "random_mean: 0.700000"
+    assert lines[8] == "random_min: 0.600000"
+    assert lines[9] == "greedy_mean: 0.650000"
+    assert lines[10] == "greedy_min: 0.550000"
+    assert lines[11] == "gate: pass"
+    assert lines[12] == (
+        f"artifacts: {(gate_config_path.parent / 'out').resolve()}"
+    )
+    assert captured.err == ""
+    assert len(calls) == 1
+
+
+def test_cli_gate_returns_one_on_fail(
+    gate_config_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    calls = []
+
+    def fake_run_gate(config):
+        return _gate_result(config, passed=False)
+
+    def fake_write_gate_artifacts(result, config, *, command_line):
+        calls.append((result, config, command_line))
+        return config.output_dir
+
+    monkeypatch.setattr(rlcheckers.cli, "run_gate", fake_run_gate)
+    monkeypatch.setattr(
+        rlcheckers.cli,
+        "write_gate_artifacts",
+        fake_write_gate_artifacts,
+    )
+
+    assert main(
+        ["gate", "--config", str(gate_config_path)]
+    ) == 1
+    captured = capsys.readouterr()
+
+    assert "gate: fail" in captured.out
+    assert captured.err == ""
+    assert len(calls) == 1
+
+
+def test_cli_gate_requires_config(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    with pytest.raises(SystemExit) as excinfo:
+        main(["gate"])
+
+    assert excinfo.value.code == 2
+    assert "--config" in capsys.readouterr().err
+
+
+def test_cli_gate_reports_config_error(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    bad = tmp_path / "bad-gate.toml"
+    bad.write_text(
+        'seeds = [7, 8, 9]\n'
+        'eval_seed = 7\n'
+        'episodes = 20\n'
+        'alpha = 0.1\n'
+        'gamma = 0.9\n'
+        'epsilon_start = 1.0\n'
+        'epsilon_end = 0.05\n'
+        'epsilon_decay_fraction = 0.8\n'
+        'output_dir = "out"\n'
+        'max_table_entries = 1000\n'
+        'snapshot_interval = 10\n'
+        'games = 10\n'
+        'snapshot_games = 10\n',
+        encoding="utf-8",
+    )
+
+    assert main(["gate", "--config", str(bad)]) == 1
+    captured = capsys.readouterr()
+
+    assert captured.err.startswith("error:")
+    assert "unique_games" in captured.err
+    assert captured.out == ""
+
+
+def test_cli_gate_reports_runtime_error(
+    gate_config_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    calls = []
+
+    def broken_run_gate(config):
+        raise RuntimeError("gate failed")
+
+    def fake_write_gate_artifacts(result, config, *, command_line):
+        calls.append((result, config, command_line))
+        return config.output_dir
+
+    monkeypatch.setattr(rlcheckers.cli, "run_gate", broken_run_gate)
+    monkeypatch.setattr(
+        rlcheckers.cli,
+        "write_gate_artifacts",
+        fake_write_gate_artifacts,
+    )
+
+    assert main(
+        ["gate", "--config", str(gate_config_path)]
+    ) == 1
+    captured = capsys.readouterr()
+
+    assert captured.err.startswith("error: gate failed")
+    assert captured.out == ""
+    assert calls == []
+
+
+def test_module_entry_point_runs_gate(
+    gate_config_path: Path,
+) -> None:
+    completed = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "rlcheckers",
+            "gate",
+            "--config",
+            str(gate_config_path),
+        ],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert completed.returncode in (0, 1)
+    assert completed.stdout.startswith("seeds: 7,8,9\n")
+    assert completed.stderr == ""
+    out = gate_config_path.parent / "out"
+    assert (out / "gate.json").exists()
+    assert (out / "s7-three-seed-gate-diagnostics.md").exists()
