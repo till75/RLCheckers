@@ -369,3 +369,109 @@ def test_load_train_config_rejects_invalid_toml(tmp_path: Path) -> None:
 def test_load_train_config_rejects_missing_file(tmp_path: Path) -> None:
     with pytest.raises(ConfigError, match="config"):
         load_train_config(tmp_path / "missing.toml")
+
+
+def _self_play_config(
+    interval: str = "10",
+    *,
+    episodes: int = 20,
+) -> str:
+    return (
+        TRAIN_CONFIG_TEXT.replace(
+            "episodes = 20", f"episodes = {episodes}"
+        ).replace('opponent = "random"', 'opponent = "self"')
+        + f"snapshot_interval = {interval}\n"
+    )
+
+
+def test_load_self_play_config_reads_snapshot_interval(
+    tmp_path: Path,
+) -> None:
+    path = write_train_config(
+        tmp_path,
+        _self_play_config("1000", episodes=10000),
+    )
+
+    config = load_train_config(path)
+
+    assert config.opponent == "self"
+    assert config.snapshot_interval == 1000
+    assert config.output_dir == (tmp_path / "out").resolve()
+
+
+def test_load_train_config_keeps_random_config_without_interval(
+    tmp_path: Path,
+) -> None:
+    config = load_train_config(write_train_config(tmp_path))
+
+    assert config.opponent == "random"
+    assert config.snapshot_interval is None
+
+
+def test_load_train_config_accepts_minimum_self_play(
+    tmp_path: Path,
+) -> None:
+    path = write_train_config(tmp_path, _self_play_config("10"))
+
+    assert load_train_config(path).snapshot_interval == 10
+
+
+def test_load_train_config_rejects_missing_snapshot_interval(
+    tmp_path: Path,
+) -> None:
+    path = write_train_config(
+        tmp_path,
+        TRAIN_CONFIG_TEXT.replace(
+            'opponent = "random"', 'opponent = "self"'
+        ),
+    )
+
+    with pytest.raises(ConfigError, match="snapshot_interval"):
+        load_train_config(path)
+
+
+def test_load_train_config_rejects_interval_with_random_opponent(
+    tmp_path: Path,
+) -> None:
+    path = write_train_config(
+        tmp_path,
+        TRAIN_CONFIG_TEXT + "snapshot_interval = 10\n",
+    )
+
+    with pytest.raises(ConfigError, match="snapshot_interval"):
+        load_train_config(path)
+
+
+@pytest.mark.parametrize(
+    "interval",
+    ["true", '"10"', "0", "-10", "15"],
+)
+def test_load_train_config_rejects_bad_snapshot_interval(
+    tmp_path: Path,
+    interval: str,
+) -> None:
+    path = write_train_config(
+        tmp_path,
+        _self_play_config(interval),
+    )
+
+    with pytest.raises(ConfigError, match="snapshot_interval"):
+        load_train_config(path)
+
+
+@pytest.mark.parametrize(
+    ("interval", "episodes"),
+    [("10", 10), ("20", 20), ("30", 20)],
+)
+def test_load_train_config_rejects_interval_not_less_than_episodes(
+    tmp_path: Path,
+    interval: str,
+    episodes: int,
+) -> None:
+    path = write_train_config(
+        tmp_path,
+        _self_play_config(interval, episodes=episodes),
+    )
+
+    with pytest.raises(ConfigError, match="snapshot_interval"):
+        load_train_config(path)

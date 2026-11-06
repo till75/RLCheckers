@@ -2,9 +2,11 @@
 
 ``load_eval_config`` reads the evaluation TOML schema and returns an immutable
 ``EvalConfig``. ``load_train_config`` reads the training schema and returns an
-immutable ``TrainConfig``. Both resolve a relative ``output_dir`` against the
-config file's directory and do not create it. ``ConfigError`` subclasses
-``ValueError`` so callers do not need to import ``tomllib`` exceptions.
+immutable ``TrainConfig``. A self-play training config requires a valid
+``snapshot_interval``; a random-opponent config forbids that key. Both loaders
+resolve a relative ``output_dir`` against the config file's directory and do not
+create it. ``ConfigError`` subclasses ``ValueError`` so callers do not need to
+import ``tomllib`` exceptions.
 """
 
 from __future__ import annotations
@@ -30,6 +32,7 @@ _TRAIN_CONFIG_KEYS = (
     "output_dir",
     "max_table_entries",
 )
+_TRAIN_CONFIG_OPTIONAL_KEYS = ("snapshot_interval",)
 
 
 @dataclass(frozen=True)
@@ -164,7 +167,8 @@ def load_train_config(path: str | Path) -> TrainConfig:
             f"config must be a table, got {type(document).__name__}"
         )
 
-    unexpected = sorted(set(document) - set(_TRAIN_CONFIG_KEYS))
+    allowed = set(_TRAIN_CONFIG_KEYS) | set(_TRAIN_CONFIG_OPTIONAL_KEYS)
+    unexpected = sorted(set(document) - allowed)
     if unexpected:
         raise ConfigError(
             f"unexpected config key(s): {', '.join(unexpected)}"
@@ -236,9 +240,10 @@ def load_train_config(path: str | Path) -> TrainConfig:
         )
 
     opponent = document["opponent"]
-    if opponent != "random":
+    if opponent not in ("random", "self"):
         raise ConfigError(
-            f"config opponent must be 'random', got {opponent!r}"
+            "config opponent must be 'random' or 'self', "
+            f"got {opponent!r}"
         )
 
     output_dir = document["output_dir"]
@@ -263,6 +268,34 @@ def load_train_config(path: str | Path) -> TrainConfig:
             f"got {max_table_entries!r}"
         )
 
+    snapshot_interval: int | None = None
+    if opponent == "random":
+        if "snapshot_interval" in document:
+            raise ConfigError(
+                "config snapshot_interval must be absent when "
+                "opponent is 'random'"
+            )
+    else:
+        if "snapshot_interval" not in document:
+            raise ConfigError("missing config key: snapshot_interval")
+        value = document["snapshot_interval"]
+        if (
+            not isinstance(value, int)
+            or isinstance(value, bool)
+            or value < 10
+            or value % 10 != 0
+        ):
+            raise ConfigError(
+                "config snapshot_interval must be a multiple of 10 "
+                f"and at least 10, got {value!r}"
+            )
+        if value >= episodes:
+            raise ConfigError(
+                "config snapshot_interval must be less than episodes, "
+                f"got {value!r} >= {episodes!r}"
+            )
+        snapshot_interval = value
+
     return TrainConfig(
         seed=seed,
         episodes=episodes,
@@ -274,4 +307,5 @@ def load_train_config(path: str | Path) -> TrainConfig:
         opponent=opponent,
         output_dir=resolved,
         max_table_entries=max_table_entries,
+        snapshot_interval=snapshot_interval,
     )
