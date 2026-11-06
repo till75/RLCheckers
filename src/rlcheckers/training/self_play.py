@@ -4,17 +4,21 @@
 ``train_self_play`` updates only the learner table and uses a greedy
 ``QAgent`` over the active snapshot as the opponent. ``write_self_play_artifacts``
 writes the self-play Q-table, CSV, run metadata, and learning curve. The
-snapshot policy and training loop are implemented; the artifact writer is filled
-in by a later S6 TDD slice.
+validator rejects an inconsistent result, snapshot schedule, config, or
+diagnostic set before creating the output directory.
 """
 
 from __future__ import annotations
 
+import csv
+import json
+import platform
 import random
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 
+import rlcheckers
 from rlcheckers.agents.q_agent import QAgent, QTable, q_key
 from rlcheckers.agents.random_agent import MAX_GAME_PLIES
 from rlcheckers.config import TrainConfig
@@ -23,17 +27,21 @@ from rlcheckers.evaluation import (
     ArenaResult,
     GameOutcome,
     derive_side_seed,
+    format_float,
     opening_state,
     outcome_for,
+    summarize,
 )
 from rlcheckers.game.board import Side
 from rlcheckers.game.moves import Move
 from rlcheckers.training.train_q import (
+    DIAGNOSTIC_GAMES,
     choose_epsilon_greedy,
     derive_episode_seed,
     epsilon_at,
     q_update,
     reward_for,
+    write_learning_curve,
 )
 
 SELF_PLAY_TRAINING_FIELDS = (
@@ -408,6 +416,144 @@ def train_self_play(
     )
 
 
+def _config_dict(config: TrainConfig) -> dict[str, object]:
+    return {
+        "seed": config.seed,
+        "episodes": config.episodes,
+        "alpha": config.alpha,
+        "gamma": config.gamma,
+        "epsilon_start": config.epsilon_start,
+        "epsilon_end": config.epsilon_end,
+        "epsilon_decay_fraction": config.epsilon_decay_fraction,
+        "opponent": config.opponent,
+        "output_dir": str(config.output_dir),
+        "max_table_entries": config.max_table_entries,
+        "snapshot_interval": config.snapshot_interval,
+    }
+
+
+def _validate_snapshot_schedule(
+    result: SelfPlayTrainingResult,
+    interval: int,
+    episodes: int,
+) -> None:
+    records = result.snapshots
+    if not records:
+        raise ValueError("snapshot schedule must not be empty")
+
+    expected_first = SnapshotRecord(0, 0, interval - 1, 0)
+    if records[0] != expected_first:
+        raise ValueError(
+            f"snapshot schedule first record must be {expected_first}, "
+            f"got {records[0]}"
+        )
+
+    previous = -1
+    for record in records:
+        if record.first_episode != record.created_at_episode:
+            raise ValueError(
+                "snapshot first_episode must equal created_at_episode, "
+                f"got {record}"
+            )
+        if record.created_at_episode % interval != 0:
+            raise ValueError(
+                "snapshot created_at_episode must be a multiple of "
+                f"snapshot_interval {interval}, got {record}"
+            )
+        if record.created_at_episode <= previous:
+            raise ValueError(
+                "snapshot created_at_episode values must strictly increase, "
+                f"got {record}"
+            )
+        previous = record.created_at_episode
+
+        expected_last = min(
+            record.created_at_episode + interval,
+            episodes,
+        ) - 1
+        if record.last_episode != expected_last:
+            raise ValueError(
+                "snapshot last_episode must be "
+                f"{expected_last}, got {record}"
+            )
+        if record.created_at_episode > 0:
+            expected_size = result.metrics[
+                record.created_at_episode - 1
+            ].table_size
+            if record.table_size != expected_size:
+                raise ValueError(
+                    "snapshot table_size must match the previous episode, "
+                    f"got {record.table_size} vs {expected_size}"
+                )
+
+    if records[-1].last_episode != episodes - 1:
+        raise ValueError(
+            "snapshot schedule must end at episode "
+            f"{episodes - 1}, got {records[-1].last_episode}"
+        )
+
+    for metric in result.metrics:
+        active = [
+            record
+            for record in records
+            if record.created_at_episode <= metric.episode
+        ]
+        if not active:
+            raise ValueError(
+                f"episode {metric.episode} has no active snapshot"
+            )
+        record = active[-1]
+        if (
+            metric.opponent_snapshot_episode
+            != record.created_at_episode
+            or metric.opponent_table_size != record.table_size
+        ):
+            raise ValueError(
+                "metric episode "
+                f"{metric.episode} does not match snapshot "
+                f"{record.created_at_episode}"
+            )
+
+
+def _validate_diagnostics(
+    result: SelfPlayTrainingResult,
+    diagnostics: Mapping[str, ArenaResult],
+    config: TrainConfig,
+) -> None:
+    if set(diagnostics) != {"random", "greedy"}:
+        raise ValueError(
+            "diagnostics must be exactly 'random' and 'greedy', got "
+            f"{sorted(diagnostics)}"
+        )
+
+    for name in ("random", "greedy"):
+        diagnostic = diagnostics[name]
+        if diagnostic.agent_name != "q":
+            raise ValueError(
+                f"diagnostic {name} agent must be 'q', "
+                f"got {diagnostic.agent_name!r}"
+            )
+        if diagnostic.opponent_name != name:
+            raise ValueError(
+                f"diagnostic {name} opponent must be {name!r}, "
+                f"got {diagnostic.opponent_name!r}"
+            )
+        if diagnostic.seed != config.seed:
+            raise ValueError(
+                f"diagnostic {name} seed must be {config.seed}, "
+                f"got {diagnostic.seed}"
+            )
+        if len(diagnostic.games) != DIAGNOSTIC_GAMES:
+            raise ValueError(
+                f"diagnostic {name} games must be {DIAGNOSTIC_GAMES}, "
+                f"got {len(diagnostic.games)}"
+            )
+        if diagnostic.openings != result.openings:
+            raise ValueError(
+                f"diagnostic {name} openings do not match the run"
+            )
+
+
 def write_self_play_artifacts(
     result: SelfPlayTrainingResult,
     diagnostics: Mapping[str, ArenaResult],
@@ -416,4 +562,123 @@ def write_self_play_artifacts(
     command_line: Sequence[str],
 ) -> Path:
     """Write the self-play run's four artifacts."""
-    raise NotImplementedError
+    if len(result.metrics) != config.episodes:
+        raise ValueError(
+            "result does not match config: "
+            f"metrics {len(result.metrics)} vs episodes {config.episodes}"
+        )
+
+    interval = config.snapshot_interval
+    if (
+        config.opponent != "self"
+        or not isinstance(interval, int)
+        or isinstance(interval, bool)
+        or interval < 10
+        or interval % 10 != 0
+        or interval >= config.episodes
+    ):
+        raise ValueError(
+            "config must be a valid self-play config: "
+            f"opponent={config.opponent!r}, "
+            f"snapshot_interval={interval!r}"
+        )
+    if result.snapshot_interval != interval:
+        raise ValueError(
+            "result snapshot_interval must be "
+            f"{interval}, got {result.snapshot_interval}"
+        )
+
+    _validate_snapshot_schedule(result, interval, config.episodes)
+    _validate_diagnostics(result, diagnostics, config)
+
+    output_dir = Path(config.output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    metadata = {
+        "config": _config_dict(config),
+        "package_version": rlcheckers.__version__,
+        "python_version": platform.python_version(),
+        "seed": config.seed,
+        "table_size": result.table.size(),
+    }
+    result.table.save(output_dir / "q_table.json", metadata)
+
+    training_rows = [
+        {
+            "episode": metric.episode,
+            "opening_index": metric.opening_index,
+            "learner_colour": metric.learner_colour.name.lower(),
+            "outcome": metric.outcome.value,
+            "plies": metric.plies,
+            "epsilon": format_float(metric.epsilon),
+            "table_size": metric.table_size,
+            "opponent_snapshot_episode": metric.opponent_snapshot_episode,
+            "opponent_table_size": metric.opponent_table_size,
+        }
+        for metric in result.metrics
+    ]
+    with (output_dir / "training.csv").open(
+        "w", newline="", encoding="utf-8"
+    ) as handle:
+        writer = csv.DictWriter(
+            handle,
+            fieldnames=SELF_PLAY_TRAINING_FIELDS,
+            lineterminator="\n",
+        )
+        writer.writeheader()
+        writer.writerows(training_rows)
+
+    diagnostic_document = {}
+    for name, diagnostic in diagnostics.items():
+        summary = summarize(
+            [game.outcome for game in diagnostic.games]
+        )
+        diagnostic_document[name] = {
+            "agent": diagnostic.agent_name,
+            "ci_high": summary.ci_high,
+            "ci_low": summary.ci_low,
+            "draws": summary.draws,
+            "games": len(diagnostic.games),
+            "losses": summary.losses,
+            "opponent": diagnostic.opponent_name,
+            "score": summary.score,
+            "wins": summary.wins,
+        }
+
+    document = {
+        "command_line": list(command_line),
+        "config": _config_dict(config),
+        "diagnostics": diagnostic_document,
+        "openings": [
+            {
+                "index": index,
+                "state_key": opening_state(opening).board.state_key,
+            }
+            for index, opening in enumerate(result.openings)
+        ],
+        "package_version": rlcheckers.__version__,
+        "python_version": platform.python_version(),
+        "snapshots": [
+            {
+                "created_at_episode": record.created_at_episode,
+                "first_episode": record.first_episode,
+                "last_episode": record.last_episode,
+                "table_size": record.table_size,
+            }
+            for record in result.snapshots
+        ],
+        "table_bytes": result.table.estimated_memory_bytes(),
+        "table_size": result.table.size(),
+    }
+    (output_dir / "run.json").write_text(
+        json.dumps(document, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+
+    write_learning_curve(
+        result.metrics,
+        output_dir / "learning_curve.png",
+        seed=config.seed,
+        title_prefix="Self-play training",
+    )
+    return output_dir

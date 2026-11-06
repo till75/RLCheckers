@@ -1,20 +1,33 @@
 from __future__ import annotations
 
+import csv
+import json
+import platform
 from dataclasses import replace
 
 import pytest
 
+import rlcheckers
 from rlcheckers.agents.q_agent import QAgent, QTable, q_key
 from rlcheckers.config import TrainConfig
-from rlcheckers.evaluation import GameOutcome, opening_state
+from rlcheckers.evaluation import (
+    ArenaResult,
+    GameOutcome,
+    GameResult,
+    opening_state,
+)
 from rlcheckers.game.board import Board, Side
 from rlcheckers.game.moves import Move
 from rlcheckers.game.state import GameState
 from rlcheckers.training import (
+    DIAGNOSTIC_GAMES,
+    SELF_PLAY_TRAINING_FIELDS,
     SelfPlayError,
     SnapshotPolicy,
     SnapshotRecord,
     train_self_play,
+    write_learning_curve,
+    write_self_play_artifacts,
 )
 
 
@@ -378,3 +391,260 @@ def test_train_self_play_rejects_random_opponent(tmp_path) -> None:
 
     with pytest.raises(ValueError, match="opponent"):
         train_self_play(config)
+
+
+def _diagnostic(
+    opponent: str,
+    seed: int,
+    openings,
+    *,
+    games: int = DIAGNOSTIC_GAMES,
+) -> ArenaResult:
+    results = tuple(
+        GameResult(
+            game_index=index,
+            pair_index=index // 2,
+            opening_index=(index // 2) % len(openings),
+            agent_colour=(
+                Side.BLACK if index % 2 == 0 else Side.WHITE
+            ),
+            outcome=GameOutcome.WIN,
+            plies=10,
+            game_seed=0,
+            final_state_key=0,
+        )
+        for index in range(games)
+    )
+    return ArenaResult(
+        agent_name="q",
+        opponent_name=opponent,
+        seed=seed,
+        openings=tuple(tuple(opening) for opening in openings),
+        games=results,
+    )
+
+
+def _artifact_inputs(tmp_path):
+    config = _self_play_config(tmp_path)
+    result = train_self_play(config)
+    diagnostics = {
+        "random": _diagnostic("random", config.seed, result.openings),
+        "greedy": _diagnostic("greedy", config.seed, result.openings),
+    }
+    return config, result, diagnostics
+
+
+def _write_artifacts(config, result, diagnostics):
+    return write_self_play_artifacts(
+        result,
+        diagnostics,
+        config,
+        command_line=["rlcheckers", "train-q", "--config", "self.toml"],
+    )
+
+
+def test_write_self_play_artifacts_creates_files(tmp_path) -> None:
+    config, result, diagnostics = _artifact_inputs(tmp_path)
+
+    out = _write_artifacts(config, result, diagnostics)
+
+    assert out == config.output_dir
+    assert (out / "q_table.json").exists()
+    assert (out / "training.csv").exists()
+    assert (out / "run.json").exists()
+    assert (out / "learning_curve.png").exists()
+
+
+def test_self_play_training_csv_schema(tmp_path) -> None:
+    config, result, diagnostics = _artifact_inputs(tmp_path)
+    out = _write_artifacts(config, result, diagnostics)
+
+    with (out / "training.csv").open(
+        newline="", encoding="utf-8"
+    ) as handle:
+        rows = list(csv.DictReader(handle))
+
+    assert list(rows[0]) == list(SELF_PLAY_TRAINING_FIELDS)
+    assert len(rows) == config.episodes
+    assert [int(row["episode"]) for row in rows] == list(range(20))
+    assert {row["learner_colour"] for row in rows} == {"black", "white"}
+    assert {row["outcome"] for row in rows} <= {"win", "draw", "loss"}
+
+
+def test_self_play_run_json_schema(tmp_path) -> None:
+    config, result, diagnostics = _artifact_inputs(tmp_path)
+    out = _write_artifacts(config, result, diagnostics)
+
+    run = json.loads((out / "run.json").read_text(encoding="utf-8"))
+
+    assert set(run) == {
+        "command_line",
+        "config",
+        "diagnostics",
+        "openings",
+        "package_version",
+        "python_version",
+        "snapshots",
+        "table_bytes",
+        "table_size",
+    }
+    assert run["command_line"] == [
+        "rlcheckers",
+        "train-q",
+        "--config",
+        "self.toml",
+    ]
+    assert set(run["config"]) == {
+        "alpha",
+        "epsilon_decay_fraction",
+        "epsilon_end",
+        "epsilon_start",
+        "episodes",
+        "gamma",
+        "max_table_entries",
+        "opponent",
+        "output_dir",
+        "seed",
+        "snapshot_interval",
+    }
+    assert run["config"]["opponent"] == "self"
+    assert run["config"]["snapshot_interval"] == 10
+    assert set(run["diagnostics"]) == {"random", "greedy"}
+    assert run["diagnostics"]["random"]["games"] == DIAGNOSTIC_GAMES
+    assert run["diagnostics"]["greedy"]["opponent"] == "greedy"
+    assert len(run["openings"]) == len(result.openings)
+    assert [record["created_at_episode"] for record in run["snapshots"]] == [
+        0,
+        10,
+    ]
+    assert run["snapshots"] == [
+        {
+            "created_at_episode": record.created_at_episode,
+            "first_episode": record.first_episode,
+            "last_episode": record.last_episode,
+            "table_size": record.table_size,
+        }
+        for record in result.snapshots
+    ]
+    assert run["table_size"] == result.table.size()
+    assert run["table_bytes"] == result.table.estimated_memory_bytes()
+    assert run["package_version"] == rlcheckers.__version__
+    assert run["python_version"] == platform.python_version()
+
+
+def test_self_play_q_table_metadata(tmp_path) -> None:
+    config, result, diagnostics = _artifact_inputs(tmp_path)
+    out = _write_artifacts(config, result, diagnostics)
+
+    loaded, metadata = QTable.load(out / "q_table.json")
+
+    assert loaded == result.table
+    assert metadata["config"]["opponent"] == "self"
+    assert metadata["config"]["snapshot_interval"] == 10
+    assert metadata["table_size"] == result.table.size()
+
+
+def test_self_play_artifacts_are_byte_reproducible(tmp_path) -> None:
+    config, result, diagnostics = _artifact_inputs(tmp_path)
+    out = _write_artifacts(config, result, diagnostics)
+    first = {
+        name: (out / name).read_bytes()
+        for name in ("q_table.json", "training.csv", "run.json")
+    }
+
+    _write_artifacts(config, result, diagnostics)
+
+    second = {name: (out / name).read_bytes() for name in first}
+    assert first == second
+
+
+def test_write_self_play_artifacts_preserves_unrelated_files(
+    tmp_path,
+) -> None:
+    config, result, diagnostics = _artifact_inputs(tmp_path)
+    out = _write_artifacts(config, result, diagnostics)
+    keep = out / "keep.txt"
+    keep.write_text("keep", encoding="utf-8")
+
+    _write_artifacts(config, result, diagnostics)
+
+    assert keep.read_text(encoding="utf-8") == "keep"
+
+
+def test_write_self_play_artifacts_rejects_missing_diagnostic(
+    tmp_path,
+) -> None:
+    config, result, diagnostics = _artifact_inputs(tmp_path)
+    incomplete = {"random": diagnostics["random"]}
+
+    with pytest.raises(ValueError, match="diagnostic"):
+        _write_artifacts(config, result, incomplete)
+
+    assert not config.output_dir.exists()
+
+
+def test_write_self_play_artifacts_rejects_mismatched_seed(
+    tmp_path,
+) -> None:
+    config, result, diagnostics = _artifact_inputs(tmp_path)
+    diagnostics["greedy"] = replace(
+        diagnostics["greedy"],
+        seed=config.seed + 1,
+    )
+
+    with pytest.raises(ValueError, match="seed"):
+        _write_artifacts(config, result, diagnostics)
+
+
+def test_write_self_play_artifacts_rejects_wrong_games(
+    tmp_path,
+) -> None:
+    config, result, diagnostics = _artifact_inputs(tmp_path)
+    diagnostics["random"] = replace(
+        diagnostics["random"],
+        games=diagnostics["random"].games[:-1],
+    )
+
+    with pytest.raises(ValueError, match="games"):
+        _write_artifacts(config, result, diagnostics)
+
+
+def test_write_self_play_artifacts_rejects_mismatched_config(
+    tmp_path,
+) -> None:
+    config, result, diagnostics = _artifact_inputs(tmp_path)
+
+    with pytest.raises(ValueError, match="episodes"):
+        _write_artifacts(
+            replace(config, episodes=30),
+            result,
+            diagnostics,
+        )
+
+
+def test_write_self_play_artifacts_rejects_bad_snapshot_schedule(
+    tmp_path,
+) -> None:
+    config, result, diagnostics = _artifact_inputs(tmp_path)
+    bad = replace(result, snapshots=result.snapshots[:1])
+
+    with pytest.raises(ValueError, match="snapshot"):
+        _write_artifacts(config, bad, diagnostics)
+
+    assert not config.output_dir.exists()
+
+
+def test_self_play_learning_curve_is_written(tmp_path) -> None:
+    config, result, _ = _artifact_inputs(tmp_path)
+    path = tmp_path / "learning_curve.png"
+
+    assert (
+        write_learning_curve(
+            result.metrics,
+            path,
+            seed=config.seed,
+            title_prefix="Self-play training",
+        )
+        == path
+    )
+    assert path.stat().st_size > 0

@@ -288,6 +288,7 @@ def write_learning_curve(
     path: str | Path,
     *,
     seed: int,
+    title_prefix: str = "Q-learning training",
 ) -> Path:
     """Write the training learning-curve plot."""
     metrics = tuple(metrics)
@@ -336,7 +337,7 @@ def write_learning_curve(
     axes.set_ylim(0, 1)
     axes.set_xlabel("episode")
     axes.set_ylabel("rolling rate")
-    axes.set_title(f"Q-learning training, seed {seed}")
+    axes.set_title(f"{title_prefix}, seed {seed}")
     axes.legend()
     axes.grid(True, alpha=0.3)
     figure.tight_layout()
