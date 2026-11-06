@@ -1,0 +1,14 @@
+seeds = [7, 8, 9]
+eval_seed = 7
+episodes = 10000
+alpha = 0.1
+gamma = 0.9
+epsilon_start = 1.0
+epsilon_end = 0.05
+epsilon_decay_fraction = 0.8
+output_dir = "docs/results"
+max_table_entries = 2000000
+snapshot_interval = 1000
+games = 1000
+snapshot_games = 200
+unique_games = 10

@@ -1,4 +1,4 @@
-"""Evaluation arena, metrics, and artifacts."""
+"""Evaluation arena, metrics, artifacts, and the three-seed gate."""
 
 from rlcheckers.evaluation.arena import (
     STANDARD_OPENINGS,

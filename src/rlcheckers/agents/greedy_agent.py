@@ -1,9 +1,14 @@
-"""Depth-1 greedy baseline for the evaluation arena.
+"""Depth-1 greedy baselines for the evaluation arena.
 
-The baseline scores each legal move by material balance from the moving side's
-perspective. An immediate win, draw, or loss overrides material with
+``GreedyAgent`` scores each legal move by material balance from the moving
+side's perspective. An immediate win, draw, or loss overrides material with
 ``TERMINAL_SCORE``. Ties are broken by the smallest ``(path, captures)`` tuple,
 so the agent is deterministic and owns no RNG.
+
+``StochasticGreedyAgent`` uses the same score but chooses uniformly among tied
+best moves with a private seeded RNG. It is the S7 1,000-game gate baseline
+because it makes each game unique; the deterministic agent remains a
+10-unique-game diagnostic.
 """
 
 from __future__ import annotations

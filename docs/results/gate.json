@@ -1,0 +1,1262 @@
+{
+  "command_line": [
+    "rlcheckers",
+    "gate",
+    "--config",
+    "gate.toml"
+  ],
+  "config": {
+    "alpha": 0.1,
+    "episodes": 10000,
+    "epsilon_decay_fraction": 0.8,
+    "epsilon_end": 0.05,
+    "epsilon_start": 1.0,
+    "eval_seed": 7,
+    "games": 1000,
+    "gamma": 0.9,
+    "max_table_entries": 2000000,
+    "output_dir": "C:\\dev\\RLCheckers\\docs\\results",
+    "seeds": [
+      7,
+      8,
+      9
+    ],
+    "snapshot_games": 200,
+    "snapshot_interval": 1000,
+    "unique_games": 10
+  },
+  "gate": {
+    "greedy_mean": 0.8168333333333333,
+    "greedy_min": 0.8005,
+    "passed": true,
+    "random_mean": 0.8306666666666667,
+    "random_min": 0.818,
+    "thresholds": {
+      "greedy_mean": 0.55,
+      "random_mean": 0.6,
+      "seed_floor": 0.5
+    }
+  },
+  "package_version": "0.1.0",
+  "python_version": "3.14.0",
+  "seeds": [
+    {
+      "matchups": {
+        "depth2": {
+          "black": {
+            "ci_high": null,
+            "ci_low": null,
+            "draws": 0,
+            "losses": 2,
+            "score": 0.6,
+            "wins": 3
+          },
+          "ci_applicable": false,
+          "games": 10,
+          "overall": {
+            "ci_high": null,
+            "ci_low": null,
+            "draws": 0,
+            "losses": 6,
+            "score": 0.4,
+            "wins": 4
+          },
+          "unique_games": 10,
+          "white": {
+            "ci_high": null,
+            "ci_low": null,
+            "draws": 0,
+            "losses": 4,
+            "score": 0.2,
+            "wins": 1
+          }
+        },
+        "deterministic_greedy": {
+          "black": {
+            "ci_high": null,
+            "ci_low": null,
+            "draws": 0,
+            "losses": 0,
+            "score": 1.0,
+            "wins": 5
+          },
+          "ci_applicable": false,
+          "games": 10,
+          "overall": {
+            "ci_high": null,
+            "ci_low": null,
+            "draws": 0,
+            "losses": 0,
+            "score": 1.0,
+            "wins": 10
+          },
+          "unique_games": 10,
+          "white": {
+            "ci_high": null,
+            "ci_low": null,
+            "draws": 0,
+            "losses": 0,
+            "score": 1.0,
+            "wins": 5
+          }
+        },
+        "random": {
+          "black": {
+            "ci_high": 0.8681305888034196,
+            "ci_low": 0.8038694111965803,
+            "draws": 6,
+            "losses": 79,
+            "score": 0.836,
+            "wins": 415
+          },
+          "ci_applicable": true,
+          "games": 1000,
+          "overall": {
+            "ci_high": 0.8523414076258318,
+            "ci_low": 0.8066585923741683,
+            "draws": 23,
+            "losses": 159,
+            "score": 0.8295,
+            "wins": 818
+          },
+          "unique_games": 1000,
+          "white": {
+            "ci_high": 0.8554959300023911,
+            "ci_low": 0.7905040699976088,
+            "draws": 17,
+            "losses": 80,
+            "score": 0.823,
+            "wins": 403
+          }
+        },
+        "stochastic_greedy": {
+          "black": {
+            "ci_high": 0.859896196364292,
+            "ci_low": 0.7941038036357079,
+            "draws": 5,
+            "losses": 84,
+            "score": 0.827,
+            "wins": 411
+          },
+          "ci_applicable": true,
+          "games": 1000,
+          "overall": {
+            "ci_high": 0.8424280785697958,
+            "ci_low": 0.795571921430204,
+            "draws": 22,
+            "losses": 170,
+            "score": 0.819,
+            "wins": 808
+          },
+          "unique_games": 1000,
+          "white": {
+            "ci_high": 0.8443849403427043,
+            "ci_low": 0.7776150596572958,
+            "draws": 17,
+            "losses": 86,
+            "score": 0.811,
+            "wins": 397
+          }
+        }
+      },
+      "seed": 7,
+      "snapshot_curve": [
+        {
+          "episode": 0,
+          "random": {
+            "ci_high": 0.5840894376981237,
+            "ci_low": 0.44591056230187637,
+            "draws": 2,
+            "losses": 96,
+            "score": 0.515,
+            "wins": 102
+          },
+          "stochastic_greedy": {
+            "ci_high": 0.5567734242336839,
+            "ci_low": 0.41822657576631606,
+            "draws": 1,
+            "losses": 102,
+            "score": 0.4875,
+            "wins": 97
+          },
+          "table_size": 0
+        },
+        {
+          "episode": 1000,
+          "random": {
+            "ci_high": 0.8068533929490815,
+            "ci_low": 0.6881466070509186,
+            "draws": 5,
+            "losses": 48,
+            "score": 0.7475,
+            "wins": 147
+          },
+          "stochastic_greedy": {
+            "ci_high": 0.7841271416847386,
+            "ci_low": 0.6608728583152614,
+            "draws": 3,
+            "losses": 54,
+            "score": 0.7225,
+            "wins": 143
+          },
+          "table_size": 1704
+        },
+        {
+          "episode": 2000,
+          "random": {
+            "ci_high": 0.7829410952371065,
+            "ci_low": 0.6620589047628935,
+            "draws": 9,
+            "losses": 51,
+            "score": 0.7225,
+            "wins": 140
+          },
+          "stochastic_greedy": {
+            "ci_high": 0.7697427076391256,
+            "ci_low": 0.6452572923608745,
+            "draws": 5,
+            "losses": 56,
+            "score": 0.7075,
+            "wins": 139
+          },
+          "table_size": 3036
+        },
+        {
+          "episode": 3000,
+          "random": {
+            "ci_high": 0.801845261511848,
+            "ci_low": 0.6831547384881521,
+            "draws": 7,
+            "losses": 48,
+            "score": 0.7425,
+            "wins": 145
+          },
+          "stochastic_greedy": {
+            "ci_high": 0.7862550298733584,
+            "ci_low": 0.6637449701266416,
+            "draws": 4,
+            "losses": 53,
+            "score": 0.725,
+            "wins": 143
+          },
+          "table_size": 4130
+        },
+        {
+          "episode": 4000,
+          "random": {
+            "ci_high": 0.8010264128241518,
+            "ci_low": 0.6839735871758483,
+            "draws": 11,
+            "losses": 46,
+            "score": 0.7425,
+            "wins": 143
+          },
+          "stochastic_greedy": {
+            "ci_high": 0.7697427076391256,
+            "ci_low": 0.6452572923608745,
+            "draws": 5,
+            "losses": 56,
+            "score": 0.7075,
+            "wins": 139
+          },
+          "table_size": 4932
+        },
+        {
+          "episode": 5000,
+          "random": {
+            "ci_high": 0.8238845491261058,
+            "ci_low": 0.7111154508738942,
+            "draws": 11,
+            "losses": 41,
+            "score": 0.7675,
+            "wins": 148
+          },
+          "stochastic_greedy": {
+            "ci_high": 0.8001459440688234,
+            "ci_low": 0.6798540559311765,
+            "draws": 4,
+            "losses": 50,
+            "score": 0.74,
+            "wins": 146
+          },
+          "table_size": 5853
+        },
+        {
+          "episode": 6000,
+          "random": {
+            "ci_high": 0.8914140776617996,
+            "ci_low": 0.7935859223382005,
+            "draws": 7,
+            "losses": 28,
+            "score": 0.8425,
+            "wins": 165
+          },
+          "stochastic_greedy": {
+            "ci_high": 0.8675904347941136,
+            "ci_low": 0.7624095652058863,
+            "draws": 6,
+            "losses": 34,
+            "score": 0.815,
+            "wins": 160
+          },
+          "table_size": 6510
+        },
+        {
+          "episode": 7000,
+          "random": {
+            "ci_high": 0.8933247224322929,
+            "ci_low": 0.7966752775677071,
+            "draws": 8,
+            "losses": 27,
+            "score": 0.845,
+            "wins": 165
+          },
+          "stochastic_greedy": {
+            "ci_high": 0.8827283558599867,
+            "ci_low": 0.7822716441400134,
+            "draws": 7,
+            "losses": 30,
+            "score": 0.8325,
+            "wins": 163
+          },
+          "table_size": 6882
+        },
+        {
+          "episode": 8000,
+          "random": {
+            "ci_high": 0.8720044635105616,
+            "ci_low": 0.7679955364894383,
+            "draws": 6,
+            "losses": 33,
+            "score": 0.82,
+            "wins": 161
+          },
+          "stochastic_greedy": {
+            "ci_high": 0.8562645363903841,
+            "ci_low": 0.7487354636096158,
+            "draws": 7,
+            "losses": 36,
+            "score": 0.8025,
+            "wins": 157
+          },
+          "table_size": 7023
+        },
+        {
+          "episode": 9000,
+          "random": {
+            "ci_high": 0.8875647529825479,
+            "ci_low": 0.7874352470174522,
+            "draws": 5,
+            "losses": 30,
+            "score": 0.8375,
+            "wins": 165
+          },
+          "stochastic_greedy": {
+            "ci_high": 0.8764024262807728,
+            "ci_low": 0.7735975737192271,
+            "draws": 6,
+            "losses": 32,
+            "score": 0.825,
+            "wins": 162
+          },
+          "table_size": 7106
+        },
+        {
+          "episode": 10000,
+          "random": {
+            "ci_high": 0.8591636133064162,
+            "ci_low": 0.7508363866935839,
+            "draws": 4,
+            "losses": 37,
+            "score": 0.805,
+            "wins": 159
+          },
+          "stochastic_greedy": {
+            "ci_high": 0.8640610517270486,
+            "ci_low": 0.7559389482729515,
+            "draws": 2,
+            "losses": 37,
+            "score": 0.81,
+            "wins": 161
+          },
+          "table_size": 7181
+        }
+      ],
+      "snapshots": [
+        {
+          "created_at_episode": 0,
+          "first_episode": 0,
+          "last_episode": 999,
+          "table_size": 0
+        },
+        {
+          "created_at_episode": 1000,
+          "first_episode": 1000,
+          "last_episode": 1999,
+          "table_size": 1704
+        },
+        {
+          "created_at_episode": 2000,
+          "first_episode": 2000,
+          "last_episode": 2999,
+          "table_size": 3036
+        },
+        {
+          "created_at_episode": 3000,
+          "first_episode": 3000,
+          "last_episode": 3999,
+          "table_size": 4130
+        },
+        {
+          "created_at_episode": 4000,
+          "first_episode": 4000,
+          "last_episode": 4999,
+          "table_size": 4932
+        },
+        {
+          "created_at_episode": 5000,
+          "first_episode": 5000,
+          "last_episode": 5999,
+          "table_size": 5853
+        },
+        {
+          "created_at_episode": 6000,
+          "first_episode": 6000,
+          "last_episode": 6999,
+          "table_size": 6510
+        },
+        {
+          "created_at_episode": 7000,
+          "first_episode": 7000,
+          "last_episode": 7999,
+          "table_size": 6882
+        },
+        {
+          "created_at_episode": 8000,
+          "first_episode": 8000,
+          "last_episode": 8999,
+          "table_size": 7023
+        },
+        {
+          "created_at_episode": 9000,
+          "first_episode": 9000,
+          "last_episode": 9999,
+          "table_size": 7106
+        }
+      ],
+      "table_size": 7181
+    },
+    {
+      "matchups": {
+        "depth2": {
+          "black": {
+            "ci_high": null,
+            "ci_low": null,
+            "draws": 0,
+            "losses": 2,
+            "score": 0.6,
+            "wins": 3
+          },
+          "ci_applicable": false,
+          "games": 10,
+          "overall": {
+            "ci_high": null,
+            "ci_low": null,
+            "draws": 0,
+            "losses": 6,
+            "score": 0.4,
+            "wins": 4
+          },
+          "unique_games": 10,
+          "white": {
+            "ci_high": null,
+            "ci_low": null,
+            "draws": 0,
+            "losses": 4,
+            "score": 0.2,
+            "wins": 1
+          }
+        },
+        "deterministic_greedy": {
+          "black": {
+            "ci_high": null,
+            "ci_low": null,
+            "draws": 0,
+            "losses": 0,
+            "score": 1.0,
+            "wins": 5
+          },
+          "ci_applicable": false,
+          "games": 10,
+          "overall": {
+            "ci_high": null,
+            "ci_low": null,
+            "draws": 0,
+            "losses": 0,
+            "score": 1.0,
+            "wins": 10
+          },
+          "unique_games": 10,
+          "white": {
+            "ci_high": null,
+            "ci_low": null,
+            "draws": 0,
+            "losses": 0,
+            "score": 1.0,
+            "wins": 5
+          }
+        },
+        "random": {
+          "black": {
+            "ci_high": 0.8864274558147511,
+            "ci_low": 0.8255725441852488,
+            "draws": 6,
+            "losses": 69,
+            "score": 0.856,
+            "wins": 425
+          },
+          "ci_applicable": true,
+          "games": 1000,
+          "overall": {
+            "ci_high": 0.8664301442212557,
+            "ci_low": 0.8225698557787443,
+            "draws": 25,
+            "losses": 143,
+            "score": 0.8445,
+            "wins": 832
+          },
+          "unique_games": 1000,
+          "white": {
+            "ci_high": 0.8645877541278206,
+            "ci_low": 0.8014122458721793,
+            "draws": 19,
+            "losses": 74,
+            "score": 0.833,
+            "wins": 407
+          }
+        },
+        "stochastic_greedy": {
+          "black": {
+            "ci_high": 0.8727830945659119,
+            "ci_low": 0.8092169054340881,
+            "draws": 5,
+            "losses": 77,
+            "score": 0.841,
+            "wins": 418
+          },
+          "ci_applicable": true,
+          "games": 1000,
+          "overall": {
+            "ci_high": 0.8536520095601188,
+            "ci_low": 0.8083479904398811,
+            "draws": 28,
+            "losses": 155,
+            "score": 0.831,
+            "wins": 817
+          },
+          "unique_games": 1000,
+          "white": {
+            "ci_high": 0.8532925061382697,
+            "ci_low": 0.7887074938617302,
+            "draws": 23,
+            "losses": 78,
+            "score": 0.821,
+            "wins": 399
+          }
+        }
+      },
+      "seed": 8,
+      "snapshot_curve": [
+        {
+          "episode": 0,
+          "random": {
+            "ci_high": 0.5840894376981237,
+            "ci_low": 0.44591056230187637,
+            "draws": 2,
+            "losses": 96,
+            "score": 0.515,
+            "wins": 102
+          },
+          "stochastic_greedy": {
+            "ci_high": 0.5567734242336839,
+            "ci_low": 0.41822657576631606,
+            "draws": 1,
+            "losses": 102,
+            "score": 0.4875,
+            "wins": 97
+          },
+          "table_size": 0
+        },
+        {
+          "episode": 1000,
+          "random": {
+            "ci_high": 0.8093544093004083,
+            "ci_low": 0.6906455906995917,
+            "draws": 4,
+            "losses": 48,
+            "score": 0.75,
+            "wins": 148
+          },
+          "stochastic_greedy": {
+            "ci_high": 0.7866476943422,
+            "ci_low": 0.6633523056577999,
+            "draws": 2,
+            "losses": 54,
+            "score": 0.725,
+            "wins": 144
+          },
+          "table_size": 1732
+        },
+        {
+          "episode": 2000,
+          "random": {
+            "ci_high": 0.789694923662368,
+            "ci_low": 0.6703050763376319,
+            "draws": 10,
+            "losses": 49,
+            "score": 0.73,
+            "wins": 141
+          },
+          "stochastic_greedy": {
+            "ci_high": 0.7650597911701019,
+            "ci_low": 0.6399402088298981,
+            "draws": 5,
+            "losses": 57,
+            "score": 0.7025,
+            "wins": 138
+          },
+          "table_size": 3105
+        },
+        {
+          "episode": 3000,
+          "random": {
+            "ci_high": 0.7943178096817245,
+            "ci_low": 0.6756821903182755,
+            "draws": 10,
+            "losses": 48,
+            "score": 0.735,
+            "wins": 142
+          },
+          "stochastic_greedy": {
+            "ci_high": 0.7744162066553991,
+            "ci_low": 0.6505837933446009,
+            "draws": 5,
+            "losses": 55,
+            "score": 0.7125,
+            "wins": 140
+          },
+          "table_size": 4238
+        },
+        {
+          "episode": 4000,
+          "random": {
+            "ci_high": 0.8513542224886554,
+            "ci_low": 0.7436457775113445,
+            "draws": 9,
+            "losses": 36,
+            "score": 0.7975,
+            "wins": 155
+          },
+          "stochastic_greedy": {
+            "ci_high": 0.8230846274556997,
+            "ci_low": 0.7069153725443004,
+            "draws": 4,
+            "losses": 45,
+            "score": 0.765,
+            "wins": 151
+          },
+          "table_size": 5167
+        },
+        {
+          "episode": 5000,
+          "random": {
+            "ci_high": 0.8798243953658665,
+            "ci_low": 0.7801756046341334,
+            "draws": 10,
+            "losses": 29,
+            "score": 0.83,
+            "wins": 161
+          },
+          "stochastic_greedy": {
+            "ci_high": 0.8636128508933384,
+            "ci_low": 0.7563871491066617,
+            "draws": 4,
+            "losses": 36,
+            "score": 0.81,
+            "wins": 160
+          },
+          "table_size": 5854
+        },
+        {
+          "episode": 6000,
+          "random": {
+            "ci_high": 0.8778818497371117,
+            "ci_low": 0.7771181502628883,
+            "draws": 9,
+            "losses": 30,
+            "score": 0.8275,
+            "wins": 161
+          },
+          "stochastic_greedy": {
+            "ci_high": 0.8660576884128528,
+            "ci_low": 0.7589423115871472,
+            "draws": 3,
+            "losses": 36,
+            "score": 0.8125,
+            "wins": 161
+          },
+          "table_size": 6454
+        },
+        {
+          "episode": 7000,
+          "random": {
+            "ci_high": 0.908547836298975,
+            "ci_low": 0.8164521637010251,
+            "draws": 7,
+            "losses": 24,
+            "score": 0.8625,
+            "wins": 169
+          },
+          "stochastic_greedy": {
+            "ci_high": 0.9053164827342342,
+            "ci_low": 0.8096835172657659,
+            "draws": 3,
+            "losses": 27,
+            "score": 0.8575,
+            "wins": 170
+          },
+          "table_size": 6746
+        },
+        {
+          "episode": 8000,
+          "random": {
+            "ci_high": 0.8928227902284555,
+            "ci_low": 0.7971772097715445,
+            "draws": 10,
+            "losses": 26,
+            "score": 0.845,
+            "wins": 164
+          },
+          "stochastic_greedy": {
+            "ci_high": 0.8744383022593132,
+            "ci_low": 0.7705616977406868,
+            "draws": 5,
+            "losses": 33,
+            "score": 0.8225,
+            "wins": 162
+          },
+          "table_size": 6972
+        },
+        {
+          "episode": 9000,
+          "random": {
+            "ci_high": 0.8832064814922189,
+            "ci_low": 0.7817935185077811,
+            "draws": 5,
+            "losses": 31,
+            "score": 0.8325,
+            "wins": 164
+          },
+          "stochastic_greedy": {
+            "ci_high": 0.8575945003792831,
+            "ci_low": 0.7474054996207169,
+            "draws": 1,
+            "losses": 39,
+            "score": 0.8025,
+            "wins": 160
+          },
+          "table_size": 7177
+        },
+        {
+          "episode": 10000,
+          "random": {
+            "ci_high": 0.90429633484822,
+            "ci_low": 0.81070366515178,
+            "draws": 7,
+            "losses": 25,
+            "score": 0.8575,
+            "wins": 168
+          },
+          "stochastic_greedy": {
+            "ci_high": 0.8792987391902813,
+            "ci_low": 0.7757012608097187,
+            "draws": 3,
+            "losses": 33,
+            "score": 0.8275,
+            "wins": 164
+          },
+          "table_size": 7409
+        }
+      ],
+      "snapshots": [
+        {
+          "created_at_episode": 0,
+          "first_episode": 0,
+          "last_episode": 999,
+          "table_size": 0
+        },
+        {
+          "created_at_episode": 1000,
+          "first_episode": 1000,
+          "last_episode": 1999,
+          "table_size": 1732
+        },
+        {
+          "created_at_episode": 2000,
+          "first_episode": 2000,
+          "last_episode": 2999,
+          "table_size": 3105
+        },
+        {
+          "created_at_episode": 3000,
+          "first_episode": 3000,
+          "last_episode": 3999,
+          "table_size": 4238
+        },
+        {
+          "created_at_episode": 4000,
+          "first_episode": 4000,
+          "last_episode": 4999,
+          "table_size": 5167
+        },
+        {
+          "created_at_episode": 5000,
+          "first_episode": 5000,
+          "last_episode": 5999,
+          "table_size": 5854
+        },
+        {
+          "created_at_episode": 6000,
+          "first_episode": 6000,
+          "last_episode": 6999,
+          "table_size": 6454
+        },
+        {
+          "created_at_episode": 7000,
+          "first_episode": 7000,
+          "last_episode": 7999,
+          "table_size": 6746
+        },
+        {
+          "created_at_episode": 8000,
+          "first_episode": 8000,
+          "last_episode": 8999,
+          "table_size": 6972
+        },
+        {
+          "created_at_episode": 9000,
+          "first_episode": 9000,
+          "last_episode": 9999,
+          "table_size": 7177
+        }
+      ],
+      "table_size": 7409
+    },
+    {
+      "matchups": {
+        "depth2": {
+          "black": {
+            "ci_high": null,
+            "ci_low": null,
+            "draws": 0,
+            "losses": 2,
+            "score": 0.6,
+            "wins": 3
+          },
+          "ci_applicable": false,
+          "games": 10,
+          "overall": {
+            "ci_high": null,
+            "ci_low": null,
+            "draws": 0,
+            "losses": 6,
+            "score": 0.4,
+            "wins": 4
+          },
+          "unique_games": 10,
+          "white": {
+            "ci_high": null,
+            "ci_low": null,
+            "draws": 0,
+            "losses": 4,
+            "score": 0.2,
+            "wins": 1
+          }
+        },
+        "deterministic_greedy": {
+          "black": {
+            "ci_high": null,
+            "ci_low": null,
+            "draws": 0,
+            "losses": 0,
+            "score": 1.0,
+            "wins": 5
+          },
+          "ci_applicable": false,
+          "games": 10,
+          "overall": {
+            "ci_high": null,
+            "ci_low": null,
+            "draws": 0,
+            "losses": 0,
+            "score": 1.0,
+            "wins": 10
+          },
+          "unique_games": 10,
+          "white": {
+            "ci_high": null,
+            "ci_low": null,
+            "draws": 0,
+            "losses": 0,
+            "score": 1.0,
+            "wins": 5
+          }
+        },
+        "random": {
+          "black": {
+            "ci_high": 0.8654295299184115,
+            "ci_low": 0.8005704700815884,
+            "draws": 5,
+            "losses": 81,
+            "score": 0.833,
+            "wins": 414
+          },
+          "ci_applicable": true,
+          "games": 1000,
+          "overall": {
+            "ci_high": 0.8411919330751702,
+            "ci_low": 0.7948080669248297,
+            "draws": 36,
+            "losses": 164,
+            "score": 0.818,
+            "wins": 800
+          },
+          "unique_games": 1000,
+          "white": {
+            "ci_high": 0.8361433275560906,
+            "ci_low": 0.7698566724439095,
+            "draws": 31,
+            "losses": 83,
+            "score": 0.803,
+            "wins": 386
+          }
+        },
+        "stochastic_greedy": {
+          "black": {
+            "ci_high": 0.8478003051896636,
+            "ci_low": 0.7801996948103362,
+            "draws": 6,
+            "losses": 90,
+            "score": 0.814,
+            "wins": 404
+          },
+          "ci_applicable": true,
+          "games": 1000,
+          "overall": {
+            "ci_high": 0.8245924821534725,
+            "ci_low": 0.7764075178465275,
+            "draws": 35,
+            "losses": 182,
+            "score": 0.8005,
+            "wins": 783
+          },
+          "unique_games": 1000,
+          "white": {
+            "ci_high": 0.8213343932881937,
+            "ci_low": 0.7526656067118064,
+            "draws": 29,
+            "losses": 92,
+            "score": 0.787,
+            "wins": 379
+          }
+        }
+      },
+      "seed": 9,
+      "snapshot_curve": [
+        {
+          "episode": 0,
+          "random": {
+            "ci_high": 0.5840894376981237,
+            "ci_low": 0.44591056230187637,
+            "draws": 2,
+            "losses": 96,
+            "score": 0.515,
+            "wins": 102
+          },
+          "stochastic_greedy": {
+            "ci_high": 0.5567734242336839,
+            "ci_low": 0.41822657576631606,
+            "draws": 1,
+            "losses": 102,
+            "score": 0.4875,
+            "wins": 97
+          },
+          "table_size": 0
+        },
+        {
+          "episode": 1000,
+          "random": {
+            "ci_high": 0.7976369166855042,
+            "ci_low": 0.6773630833144959,
+            "draws": 5,
+            "losses": 50,
+            "score": 0.7375,
+            "wins": 145
+          },
+          "stochastic_greedy": {
+            "ci_high": 0.7679797666791919,
+            "ci_low": 0.642020233320808,
+            "draws": 2,
+            "losses": 58,
+            "score": 0.705,
+            "wins": 140
+          },
+          "table_size": 1778
+        },
+        {
+          "episode": 2000,
+          "random": {
+            "ci_high": 0.7718859962575746,
+            "ci_low": 0.6481140037424253,
+            "draws": 6,
+            "losses": 55,
+            "score": 0.71,
+            "wins": 139
+          },
+          "stochastic_greedy": {
+            "ci_high": 0.7535024926366702,
+            "ci_low": 0.6264975073633297,
+            "draws": 4,
+            "losses": 60,
+            "score": 0.69,
+            "wins": 136
+          },
+          "table_size": 3159
+        },
+        {
+          "episode": 3000,
+          "random": {
+            "ci_high": 0.7854620510646094,
+            "ci_low": 0.6645379489353905,
+            "draws": 8,
+            "losses": 51,
+            "score": 0.725,
+            "wins": 141
+          },
+          "stochastic_greedy": {
+            "ci_high": 0.7697427076391256,
+            "ci_low": 0.6452572923608745,
+            "draws": 5,
+            "losses": 56,
+            "score": 0.7075,
+            "wins": 139
+          },
+          "table_size": 4262
+        },
+        {
+          "episode": 4000,
+          "random": {
+            "ci_high": 0.7972343219222917,
+            "ci_low": 0.6777656780777084,
+            "draws": 7,
+            "losses": 49,
+            "score": 0.7375,
+            "wins": 144
+          },
+          "stochastic_greedy": {
+            "ci_high": 0.7629069288688458,
+            "ci_low": 0.6370930711311541,
+            "draws": 4,
+            "losses": 58,
+            "score": 0.7,
+            "wins": 138
+          },
+          "table_size": 5186
+        },
+        {
+          "episode": 5000,
+          "random": {
+            "ci_high": 0.8358524503326548,
+            "ci_low": 0.7241475496673453,
+            "draws": 8,
+            "losses": 40,
+            "score": 0.78,
+            "wins": 152
+          },
+          "stochastic_greedy": {
+            "ci_high": 0.7976369166855042,
+            "ci_low": 0.6773630833144959,
+            "draws": 5,
+            "losses": 50,
+            "score": 0.7375,
+            "wins": 145
+          },
+          "table_size": 6088
+        },
+        {
+          "episode": 6000,
+          "random": {
+            "ci_high": 0.8812566968536216,
+            "ci_low": 0.7787433031463783,
+            "draws": 4,
+            "losses": 32,
+            "score": 0.83,
+            "wins": 164
+          },
+          "stochastic_greedy": {
+            "ci_high": 0.8502224581617197,
+            "ci_low": 0.7397775418382804,
+            "draws": 4,
+            "losses": 39,
+            "score": 0.795,
+            "wins": 157
+          },
+          "table_size": 6711
+        },
+        {
+          "episode": 7000,
+          "random": {
+            "ci_high": 0.9048091586075045,
+            "ci_low": 0.8101908413924955,
+            "draws": 5,
+            "losses": 26,
+            "score": 0.8575,
+            "wins": 169
+          },
+          "stochastic_greedy": {
+            "ci_high": 0.8773328624613337,
+            "ci_low": 0.7726671375386662,
+            "draws": 2,
+            "losses": 34,
+            "score": 0.825,
+            "wins": 164
+          },
+          "table_size": 6917
+        },
+        {
+          "episode": 8000,
+          "random": {
+            "ci_high": 0.9133061550740997,
+            "ci_low": 0.8216938449259004,
+            "draws": 5,
+            "losses": 24,
+            "score": 0.8675,
+            "wins": 171
+          },
+          "stochastic_greedy": {
+            "ci_high": 0.901027770995837,
+            "ci_low": 0.8039722290041631,
+            "draws": 3,
+            "losses": 28,
+            "score": 0.8525,
+            "wins": 169
+          },
+          "table_size": 7187
+        },
+        {
+          "episode": 9000,
+          "random": {
+            "ci_high": 0.8611657085672948,
+            "ci_low": 0.7538342914327052,
+            "draws": 5,
+            "losses": 36,
+            "score": 0.8075,
+            "wins": 159
+          },
+          "stochastic_greedy": {
+            "ci_high": 0.8461626483694139,
+            "ci_low": 0.7338373516305862,
+            "draws": 2,
+            "losses": 41,
+            "score": 0.79,
+            "wins": 157
+          },
+          "table_size": 7322
+        },
+        {
+          "episode": 10000,
+          "random": {
+            "ci_high": 0.8700296054023023,
+            "ci_low": 0.7649703945976977,
+            "draws": 5,
+            "losses": 34,
+            "score": 0.8175,
+            "wins": 161
+          },
+          "stochastic_greedy": {
+            "ci_high": 0.8531175818563768,
+            "ci_low": 0.7418824181436232,
+            "draws": 1,
+            "losses": 40,
+            "score": 0.7975,
+            "wins": 159
+          },
+          "table_size": 7388
+        }
+      ],
+      "snapshots": [
+        {
+          "created_at_episode": 0,
+          "first_episode": 0,
+          "last_episode": 999,
+          "table_size": 0
+        },
+        {
+          "created_at_episode": 1000,
+          "first_episode": 1000,
+          "last_episode": 1999,
+          "table_size": 1778
+        },
+        {
+          "created_at_episode": 2000,
+          "first_episode": 2000,
+          "last_episode": 2999,
+          "table_size": 3159
+        },
+        {
+          "created_at_episode": 3000,
+          "first_episode": 3000,
+          "last_episode": 3999,
+          "table_size": 4262
+        },
+        {
+          "created_at_episode": 4000,
+          "first_episode": 4000,
+          "last_episode": 4999,
+          "table_size": 5186
+        },
+        {
+          "created_at_episode": 5000,
+          "first_episode": 5000,
+          "last_episode": 5999,
+          "table_size": 6088
+        },
+        {
+          "created_at_episode": 6000,
+          "first_episode": 6000,
+          "last_episode": 6999,
+          "table_size": 6711
+        },
+        {
+          "created_at_episode": 7000,
+          "first_episode": 7000,
+          "last_episode": 7999,
+          "table_size": 6917
+        },
+        {
+          "created_at_episode": 8000,
+          "first_episode": 8000,
+          "last_episode": 8999,
+          "table_size": 7187
+        },
+        {
+          "created_at_episode": 9000,
+          "first_episode": 9000,
+          "last_episode": 9999,
+          "table_size": 7322
+        }
+      ],
+      "table_size": 7388
+    }
+  ]
+}

@@ -1,9 +1,9 @@
 # State — 2026-11-06
 
 ## Where we are
-S0–S6 are complete, approved, and pushed. S6 (self-play with periodic frozen
-snapshots) is approved and pushed. S7 (the three-seed gate and report) has its
-spec approved; TDD is next.
+S0-S6 are complete, approved, and pushed. S7 (the three-seed gate and report)
+is complete and the full gate passed; the slice/milestone reports are written.
+S7 is not pushed and awaits approval.
 
 ## Done since last handoff
 - S6 spec approved 2026-11-06: `docs/specs/0006-self-play-snapshots.md`.
@@ -25,15 +25,28 @@ spec approved; TDD is next.
 - S6 approved and pushed 2026-11-06.
 - S7 spec approved 2026-11-06: `docs/specs/0007-three-seed-gate.md`.
 - ADR 0007 accepted: `docs/adr/0007-stochastic-greedy-gate-baseline.md`.
-- Current gates: default suite 325 passed, 2 deselected; A8 slow test passed;
-  `ruff check .` clean.
+- S7 A1: `GateConfig` and `load_gate_config`.
+- S7 A2: `StochasticGreedyAgent` with seeded tie-breaking.
+- S7 A3: `snapshot_observer` on `train_self_play`.
+- S7 A4: `aggregate_gate` and gate result types.
+- S7 A5: gate Q-tables, `gate.json`, `gate.csv`, `snapshot_curve.csv`, plot,
+  and report writer.
+- S7 A6: full Markdown gate report.
+- S7 A7: `gate` CLI, `run_gate`, `Depth2Agent`, 13-line summary, exit codes.
+- S7 A8: reproducibility tests for repeated runs and `eval_seed` isolation
+  (`bdcbc9a`).
+- S7 full gate (seeds 7, 8, 9; 10,000 episodes each): random mean 0.830667,
+  random min 0.818000; stochastic greedy mean 0.816833, greedy min 0.800500;
+  gate pass.
+- S7 reports: `docs/results/s7-three-seed-gate-diagnostics.md` and
+  `docs/results/first-milestone.md`.
+- Current gates: default suite 382 passed, 2 deselected; `ruff check .` clean.
 - S5 baseline result: score 0.819 vs random (794/50/156, CI 0.796–0.842,
   table 21,773).
 
 ## Next
-1. Start S7 TDD with the bootstrap and A1 (gate config), following
-   `docs/specs/0007-three-seed-gate.md`.
-2. Do not push S7 without approval.
+1. Await approval of the completed S7 slice.
+2. After approval, push S7. Do not push before approval.
 
 ## Process
 - Every slice ends with a diagnostic report under `docs/results/` named
@@ -44,7 +57,7 @@ spec approved; TDD is next.
 - The report template is `docs/results/_template-slice-diagnostics.md`. A
   `verify-slice` command is a future slice once the report shape stabilizes.
 
-## S7 planning note
+## S7 implementation note
 - The S6 greedy diagnostic is 10 unique opening/colour games repeated 100 times
   because the Q-agent and depth-1 greedy are deterministic. Do not treat the
   1,000 repetitions as independent samples or report a 1,000-game interval for
@@ -56,6 +69,10 @@ spec approved; TDD is next.
 - S7 trains 10,000 episodes per seed, includes the per-snapshot learning curve
   in the report, and reports the depth-2 check as a diagnostic rather than a
   pass/fail gate.
+- The full gate config is `gate.toml`; the command writes its artifacts and
+  slice report to `docs/results/`.
+- The full gate passed: random mean 0.830667 (min 0.818000), stochastic greedy
+  mean 0.816833 (min 0.800500).
 
 ## Open questions
 - None blocking. The three review decisions are recorded in spec 0006’s Approval section.
@@ -66,9 +83,15 @@ spec approved; TDD is next.
 - `/spec-review`: one-page packet, then one round per message; wait for explicit yes/no.
 - Spec 0006’s Markdown overview is a table; console diagrams stay plain, no HTML.
 - S6 and S5 training curves are not directly comparable; compare final agents on fixed baselines.
+- The full S7 gate is a slow diagnostic, not a default test; run it with
+  `gate --config gate.toml`.
 - S6 is pushed; S7 is not.
 
 ## Not in an ADR
 - S6 config/CLI: conditional `snapshot_interval`, `N < episodes`, `train-q` dispatch.
 - S6 artifacts: mode-specific schema, no snapshot files.
 - S6 diagnostic: `> 0.50` vs both baselines; S7 owns the gate.
+- S7 config/CLI: fourteen-key gate config, `gate` dispatch, 13-line summary,
+  exit codes, and artifacts under `docs/results/`.
+- S7 diagnostics: deterministic greedy and depth-2 are 10-unique-game
+  diagnostics; only random and stochastic greedy affect `passed`.

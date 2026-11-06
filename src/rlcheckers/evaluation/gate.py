@@ -1,4 +1,11 @@
-"""Three-seed gate aggregation and diagnostics."""
+"""Three-seed gate aggregation, evaluation, and diagnostics.
+
+``run_gate`` trains one self-play Q-table per seed, evaluates random and seeded
+stochastic greedy over 1,000 unique games, and reports deterministic greedy and
+depth-2 minimax as 10-unique-game diagnostics. ``aggregate_gate`` applies the
+ADR 0003 mean-plus-floor thresholds. ``write_gate_artifacts`` writes the
+Q-tables, JSON/CSV evidence, learning-curve plot, and slice report.
+"""
 
 from __future__ import annotations
 

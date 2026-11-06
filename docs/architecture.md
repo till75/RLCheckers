@@ -1,26 +1,26 @@
 # Architecture
 
-**Status:** S6 implements the immutable rules engine (S1-S3), seeded random
+**Status:** S7 implements the immutable rules engine (S1-S3), seeded random
 play, the depth-1 greedy baseline (S4), the seeded evaluation arena (S4),
-tabular Q-learning against a fixed random opponent (S5), and self-play against
-periodic frozen snapshots (S6): snapshot policy, self-play trainer, conditional
-training config, self-play artifacts, titled learning curve, two diagnostics,
-and `train-q` dispatch. S6 is complete, approved, and pushed. The three-seed
-gate is planned (S7).
+tabular Q-learning against a fixed random opponent (S5), self-play against
+periodic frozen snapshots (S6), and the three-seed gate (S7): gate config,
+seeded stochastic greedy baseline, gate aggregation, Q-table/CSV/JSON/plot
+artifacts, the slice report, and `gate` dispatch. S7 is complete and the full
+gate passed; the slice and milestone reports are written.
 
 ## Components
 
 - **Game rules:** immutable board (S1), legal move generation (S2), state
   transitions and terminal/draw detection (S3).
-- **Agents:** random baseline (S3), depth-1 greedy baseline (S4), and tabular
-  Q-agent (S5).
+- **Agents:** random baseline (S3), depth-1 greedy baseline (S4), seeded
+  stochastic greedy baseline (S7), and tabular Q-agent (S5).
 - **Training:** fixed random-opponent trainer (S5) and self-play with periodic
   frozen snapshots (S6).
 - **Evaluation:** arena for pairing agents over openings and colours, metrics,
   config, and artifacts (S4), plus the random and greedy self-play diagnostics
-  (S6) and the three-seed gate (S7).
-- **Composition:** CLI (`play-random`, `evaluate`, `train-q`), TOML configs,
-  seed handling, mode dispatch, and artifact writing.
+  (S6), the three-seed gate (S7), and the depth-2 diagnostic (S7).
+- **Composition:** CLI (`play-random`, `evaluate`, `train-q`, `gate`), TOML
+  configs, seed handling, mode dispatch, and artifact writing.
 
 The rules do not depend on agents. Agents depend on the rules. Training depends
 on both. Evaluation depends on the rules and agents. The CLI composes them. S4
@@ -57,12 +57,12 @@ flowchart TB
   end
 
   subgraph Outputs["<span style='background-color:#ffffff'><span style='color:#000000'>Artifacts</span></span>"]
-    FILES["<span style='color:#000000'>CSV + JSON + Q-table<br/>training, evaluation, run</span>"]
+    FILES["<span style='color:#000000'>CSV + JSON + Q-table<br/>training, evaluation, gate</span>"]
     PLOTS["<span style='color:#000000'>Plots<br/>learning curve S5/S6, report S7</span>"]
     CONSUMER["<span style='color:#000000'>Report / next slice<br/>reads artifacts</span>"]
   end
 
-  CLI["<span style='color:#000000'>CLI<br/>play-random · evaluate · train-q</span>"]
+  CLI["<span style='color:#000000'>CLI<br/>play-random · evaluate · train-q + gate</span>"]
 
   CFG -->|"<span style='background-color:#ffffff'><span style='color:#000000'>configures</span></span>"| CLI
   CLI -->|"<span style='background-color:#ffffff'><span style='color:#000000'>starts matchup</span></span>"| ARENA
@@ -105,16 +105,16 @@ flowchart TB
   class ARENA eval
   class METRICS metrics
   class FILES,PLOTS,CONSUMER output
-  class GATE future
+  class GATE eval
 ```
 
-**Figure A — Component map.** Solid arrows are implemented through S6; dashed
-arrows point at S7. Category colour is carried by the stroke; every fill is
-white or light grey. The arena talks to the rules engine and the agents; the
-`train-q` command dispatches to the fixed-opponent or self-play trainer and
-composes the matching diagnostics. Blue is configuration, indigo is composition,
-green is rules/agents/training, orange is evaluation, purple is metrics, and grey
-is artifacts/reporting.
+**Figure A - Component map.** Solid arrows are implemented through S7.
+Category colour is carried by the stroke; every fill is white or light grey. The
+arena talks to the rules engine and the agents; the `train-q` command dispatches
+to the fixed-opponent or self-play trainer and composes the matching diagnostics,
+while `gate` trains three seeds and writes the gate report. Blue is
+configuration, indigo is composition, green is rules/agents/training, orange is
+evaluation, purple is metrics, and grey is artifacts/reporting.
 
 ## Board module (S1)
 
@@ -267,6 +267,36 @@ The S6 slow diagnostic (seed 7, 10,000 episodes, interval 1,000) recorded
 **1.000000** (1,000 W / 0 D / 0 L, 95% CI **1.000000–1.000000**). Both point
 estimates are above 0.50, but S6 does not apply the S7 mean-plus-floor gate.
 
+## Stochastic greedy baseline (S7)
+
+`src/rlcheckers/agents/greedy_agent.py` also owns `StochasticGreedyAgent`. It
+uses the same one-ply material score and terminal override as `GreedyAgent`, but
+when several moves tie for the best score it chooses uniformly among them with a
+private seeded RNG. The same seed reproduces the same move sequence; different
+seeds can choose different tied moves. It is the 1,000-game gate baseline
+because it makes each game unique. It is not added to `AGENT_NAMES`; the gate
+constructs it directly.
+
+## Three-seed gate (S7)
+
+`src/rlcheckers/evaluation/gate.py` owns `GateMatchup`, `SnapshotCurvePoint`,
+`SeedGateResult`, `GateResult`, `Depth2Agent`, `aggregate_gate`, `run_gate`, and
+`write_gate_artifacts`.
+
+`run_gate` trains one self-play Q-table per configured seed for 10,000 episodes,
+then evaluates each final agent with `play_matchup` over the standard openings
+and both colours. Random and stochastic greedy use 1,000 games and are the only
+gate inputs. Deterministic greedy and depth-2 minimax use 10 unique games and
+are diagnostics. The gate passes only when the mean random score is at least
+0.60, the mean stochastic-greedy score is at least 0.55, and no seed is below
+0.50 on either baseline. `Depth2Agent` is a two-ply material minimax with
+terminal scores and a deterministic tie-break; it lives in the gate module
+because it is a diagnostic, not a general-purpose baseline.
+
+The per-snapshot curve evaluates the initial empty table and every frozen
+snapshot against random and stochastic greedy over 200 games each. The curve is
+reported per seed and plotted from `snapshot_curve.csv`.
+
 ## Evaluation arena (S4)
 
 `src/rlcheckers/evaluation/arena.py` owns `STANDARD_OPENINGS`, `opening_state`,
@@ -295,10 +325,10 @@ game-level sampling noise, not unseen openings. Rows are ordered overall,
 black, white, then each opening. `format_float` writes six decimals, and fewer
 than two games in a group is rejected rather than given an invented interval.
 
-## Config (S4, S5, S6)
+## Config (S4, S5, S6, S7)
 
-`src/rlcheckers/config.py` owns `EvalConfig`, `TrainConfig`, `ConfigError`,
-`load_eval_config`, and `load_train_config`. The evaluation TOML file has exactly
+`src/rlcheckers/config.py` owns `EvalConfig`, `TrainConfig`, `GateConfig`,
+`ConfigError`, `load_eval_config`, `load_train_config`, and `load_gate_config`. The evaluation TOML file has exactly
 five top-level keys: `seed`, `games`, `agent`, `opponent`, and `output_dir`; the
 loader validates types, the ten-game cycle, and the agent names.
 
@@ -314,7 +344,16 @@ at least 10, and strictly less than `episodes`. A random config that includes
 `snapshot_interval` is rejected. Both loaders resolve a relative `output_dir`
 against the config file's parent and do not create it.
 
-## Artifacts (S4, S5, S6)
+A gate TOML file has exactly fourteen top-level keys: `seeds`, `eval_seed`,
+`episodes`, `alpha`, `gamma`, `epsilon_start`, `epsilon_end`,
+`epsilon_decay_fraction`, `output_dir`, `max_table_entries`,
+`snapshot_interval`, `games`, `snapshot_games`, and `unique_games`. `seeds` is
+exactly three distinct integers. The training and epsilon rules match self-play;
+`games`, `snapshot_games`, and `unique_games` are positive multiples of ten. The
+gate resolves `output_dir` against the config file's parent and does not create
+it.
+
+## Artifacts (S4, S5, S6, S7)
 
 `src/rlcheckers/evaluation/artifacts.py` owns `write_artifacts`,
 `METRICS_FIELDS`, and `GAMES_FIELDS`. It validates the result against the config
@@ -342,7 +381,15 @@ training". JSON and CSV are byte-reproducible, and the PNG is reproducible in
 content from the metrics and config. The S5 learning-curve contract remains
 under ADR 0004.
 
-## CLI (S3, S4, S5, S6)
+`src/rlcheckers/evaluation/gate.py` owns `write_gate_artifacts`. It validates
+all seeds and matchups before creating the output directory, then writes one
+`q_table_seed_<seed>.json` per seed, `gate.json`, `gate.csv`,
+`snapshot_curve.csv`, `snapshot_curve.png`, and
+`s7-three-seed-gate-diagnostics.md`. JSON, CSV, and Markdown are
+byte-reproducible; the PNG is reproducible in content from the CSV. A runtime
+error writes no output directory and no partial files.
+
+## CLI (S3, S4, S5, S6, S7)
 
 `src/rlcheckers/cli.py` exposes `main(argv)`, and `src/rlcheckers/__main__.py`
 runs it for `python -m rlcheckers`. `play-random --seed INT` prints the seed,
@@ -354,9 +401,11 @@ three artifacts, and prints the ten-line summary.
 runs the S5 trainer and one 1,000-game diagnostic, then prints the thirteen-line
 summary. With `opponent = "self"` it runs the snapshot trainer, plays 1,000-game
 diagnostics against both random and greedy over the same openings, writes the
-self-play artifacts, and prints the twenty-one-line summary. Runtime problems
-print `error: <message>` to stderr and return 1; `argparse` usage errors keep
-exit code 2.
+self-play artifacts, and prints the twenty-one-line summary. `gate --config
+PATH` loads the gate config, trains and evaluates the three seeds, writes the
+gate artifacts and slice report, and prints the thirteen-line summary. Runtime
+problems print `error: <message>` to stderr and return 1; `argparse` usage
+errors keep exit code 2. A gate fail still writes artifacts and returns 1.
 
 ## Data flow
 
@@ -369,7 +418,10 @@ exit code 2.
 4. In S6, `train-q` trains against the latest frozen snapshot, writes the
    self-play artifacts, and evaluates the frozen Q-agent against random and
    greedy on the same opening suite.
-5. S7 aggregates three training seeds and writes the milestone report.
+5. In S7, `gate` trains three seeds, evaluates random and stochastic greedy over
+   1,000 unique games plus deterministic greedy and depth-2 over 10 unique
+   games, writes the gate artifacts and slice report, and applies the
+   mean-plus-floor gate.
 
 ## Decisions
 
@@ -386,7 +438,8 @@ exit code 2.
 - [Spec 0003 — Game application and random play](specs/0003-game-application-and-random-play.md)
 - [Spec 0004 — Baselines and evaluation arena](specs/0004-evaluation-arena.md)
 - [Spec 0005 — Tabular Q-learning against a fixed random opponent](specs/0005-tabular-q-learning.md)
-- [Spec 0006 — Self-play snapshots](specs/0006-self-play-snapshots.md)
+- [Spec 0006 - Self-play snapshots](specs/0006-self-play-snapshots.md)
+- [Spec 0007 - Three-seed gate](specs/0007-three-seed-gate.md)
 
 ## Current milestone boundaries
 

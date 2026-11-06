@@ -3,7 +3,9 @@
 ``SnapshotPolicy`` owns the cadence and the latest frozen opponent. The cadence
 is a positive multiple of 10 and less than the episode count; refreshes clone
 the learner table at each boundary. ``train_self_play`` updates only the learner
-and uses a greedy ``QAgent`` over the snapshot covering each episode.
+and uses a greedy ``QAgent`` over the snapshot covering each episode. An optional
+``snapshot_observer`` receives the initial snapshot and every refresh, which the
+S7 gate uses to build per-snapshot learning curves.
 ``write_self_play_artifacts`` writes the self-play Q-table, CSV, run metadata,
 and titled learning curve. The validator rejects an inconsistent result,
 snapshot schedule, config, or diagnostic set before creating the output

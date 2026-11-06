@@ -1,15 +1,18 @@
 """Command-line entry points.
 
 ``main`` exposes ``play-random`` with a required integer ``--seed``,
-``evaluate`` with a required ``--config`` path, and ``train-q`` with a required
-training ``--config`` path. ``play-random`` prints the seed, moves, outcome, and
-ply count. ``evaluate`` loads the config, plays the matchup, writes the
-artifacts, and prints the ten-line summary. ``train-q`` dispatches on the
-config: the random opponent runs the S5 trainer and one diagnostic with a
-thirteen-line summary; the self-play opponent runs the snapshot trainer, random
-and greedy diagnostics, and a twenty-one-line summary. Both write four
-artifacts. Argument errors exit through ``argparse`` with code ``2`` and usage on
-stderr; runtime problems print ``error: <message>`` and return ``1``.
+``evaluate`` with a required ``--config`` path, ``train-q`` with a required
+training ``--config`` path, and ``gate`` with a required gate ``--config`` path.
+``play-random`` prints the seed, moves, outcome, and ply count. ``evaluate``
+loads the config, plays the matchup, writes the artifacts, and prints the
+ten-line summary. ``train-q`` dispatches on the config: the random opponent runs
+the S5 trainer and one diagnostic with a thirteen-line summary; the self-play
+opponent runs the snapshot trainer, random and greedy diagnostics, and a
+twenty-one-line summary. ``gate`` trains three seeds, applies the mean-plus-floor
+gate, writes the gate artifacts and slice report, and prints the thirteen-line
+summary. Argument errors exit through ``argparse`` with code ``2`` and usage on
+stderr; runtime problems print ``error: <message>`` and return ``1``. A gate
+fail still writes artifacts and returns ``1``.
 """
 
 from __future__ import annotations

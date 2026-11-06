@@ -3,10 +3,11 @@
 ``load_eval_config`` reads the evaluation TOML schema and returns an immutable
 ``EvalConfig``. ``load_train_config`` reads the training schema and returns an
 immutable ``TrainConfig``. A self-play training config requires a valid
-``snapshot_interval``; a random-opponent config forbids that key. Both loaders
-resolve a relative ``output_dir`` against the config file's directory and do not
-create it. ``ConfigError`` subclasses ``ValueError`` so callers do not need to
-import ``tomllib`` exceptions.
+``snapshot_interval``; a random-opponent config forbids that key.
+``load_gate_config`` reads the three-seed gate schema and returns an immutable
+``GateConfig``. All loaders resolve a relative ``output_dir`` against the config
+file's directory and do not create it. ``ConfigError`` subclasses ``ValueError``
+so callers do not need to import ``tomllib`` exceptions.
 """
 
 from __future__ import annotations

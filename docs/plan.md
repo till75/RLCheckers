@@ -1,7 +1,7 @@
 # Plan — RLCheckers, first milestone
 
 **Date:** 2026-10-27
-**Status:** S0–S6 complete, approved, and pushed; S7 spec approved (2026-11-06); TDD next
+**Status:** S0-S6 complete, approved, and pushed; S7 complete; full gate passed; awaiting approval
 **Source:** `docs/00-brief.md`
 
 ## How this plan works
@@ -343,7 +343,9 @@ scoreboard.
 
 ## S7 — Three-seed gate and report
 
-**Status:** spec approved (2026-11-06); TDD next.
+**Status:** complete; full gate passed; awaiting approval. Reports:
+`docs/results/s7-three-seed-gate-diagnostics.md` and
+`docs/results/first-milestone.md`.
 
 **Outcome:** A reproducible three-seed evaluation against random and a
 stochastic greedy baseline, with W/D/L, derived score, unique-game accounting,
