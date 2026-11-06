@@ -1,10 +1,10 @@
 # S6 self-play diagnostics
 
-**Date:** 2026-11-06  
-**Status:** diagnostic evidence for S6/S7 planning; no production code changed  
-**S6 code:** `52580ad` (S6 implementation and docs)  
-**Related:** `docs/specs/0006-self-play-snapshots.md`,
-`docs/adr/0006-self-play-snapshot-policy.md`, `docs/plan.md` S7
+- **Date:** 2026-11-06
+- **Status:** S6 diagnostic evidence; S6 ready for approval, S7 planning updated
+- **S6 code:** `52580ad` (S6 implementation and docs)
+- **Related:** `docs/specs/0006-self-play-snapshots.md`,
+  `docs/adr/0006-self-play-snapshot-policy.md`, `docs/plan.md` S7
 
 ## Why this note exists
 
@@ -207,6 +207,38 @@ game after early training. This is consistent with the plateau.
    strength.
 7. **The 1,000-game greedy interval is not meaningful.** It is 10 unique games
    repeated 100 times. Report unique-game W/D/L for deterministic baselines.
+
+## Pass/fail criteria
+
+| Criterion | Evidence | Result |
+|---|---|---|
+| A2–A9 acceptance criteria | Tests in `tests/agents/test_q_agent.py`, `tests/training/test_self_play.py`, `tests/test_config.py`, and `tests/test_cli.py` | pass |
+| Default test suite | 325 passed, 2 deselected | pass |
+| Lint | `ruff check .` clean | pass |
+| A8 slow improvement diagnostic | 1 passed; random 0.829500, greedy 1.000000 | pass |
+| Diagnostic report | This file | pass |
+
+## Verification commands
+
+| Command | Result |
+|---|---|
+| `.\.venv\Scripts\python.exe -m pytest -q` | 325 passed, 2 deselected |
+| `.\.venv\Scripts\python.exe -m pytest -q -m slow tests/training/test_self_play.py::test_train_self_play_improves_against_random_and_greedy` | 1 passed |
+| `.\.venv\Scripts\python.exe -m ruff check .` | clean |
+
+## Slice decision
+
+S6 is ready for approval:
+
+- The A2–A9 acceptance criteria are covered by tests and docs.
+- The default suite passes, the A8 slow test passes, and `ruff check .` is clean.
+- The diagnostic evidence above records the learning curve and the
+  deterministic-baseline caveat.
+- Known limitation: the deterministic greedy diagnostic is 10 unique games
+  repeated 100 times; the S7 plan now uses a stochastic greedy baseline and
+  unique-game accounting.
+
+Decision: **pass for S6**; move to S7 with the revised gate.
 
 ## Implications for S7
 

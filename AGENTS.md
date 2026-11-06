@@ -78,8 +78,11 @@ HTML, or is clipped, is a defect.
 ## Working agreement
 
 - **One vertical slice per turn.** A slice includes its tests, implementation,
-  docs, and commits. Finish it, report, and stop; do not start the next slice
-  unless asked.
+  docs, diagnostic report, and commits. Finish it, report, and stop; do not
+  start the next slice unless asked.
+- **Slice for evaluation.** A slice must have an observable diagnostic report
+  and pass/fail evidence. If the slice cannot be evaluated that way, split or
+  redefine it before `/spec`.
 - **Learn before specifying.** Every slice starts with `/learn` when it
   introduces a new approach or the author has not chosen one. `/learn` ends with
   a one-page design note and an explicit choice. Skip it only when the approach
@@ -114,6 +117,35 @@ HTML, or is clipped, is a defect.
   and ready. Approval applies to that slice only; it is not blanket permission
   for later pushes.
 
+## Slice diagnostic reports
+
+Every slice must produce a diagnostic report under `docs/results/` named
+`<slice-id>-diagnostics.md`. The report is the artefact that records why the
+slice was accepted and why we moved on. It is part of the final TDD cycle, not a
+separate afterthought.
+
+A slice is only well-formed if it can be evaluated. Before `/spec`, define the
+observable goal, the pass/fail criteria, and the evidence that will go in the
+report. If that cannot be done, split or redefine the slice.
+
+The report follows `docs/results/_template-slice-diagnostics.md` and records:
+
+- the slice goal and spec;
+- the pass/fail criteria and the evidence for each;
+- the commands run and their results;
+- the diagnostic data, including caveats and effective sample sizes;
+- the decision: pass, fail, or partial, and why we move on;
+- links to commits, artifacts, and follow-up work.
+
+The final TDD step runs the full suite, `ruff check .`, and any slow or
+diagnostic commands, then writes or updates the report and commits it with the
+slice's final docs. A slice is not ready for approval without it.
+
+When the report shape has stabilized across slices, add a `verify-slice`
+command that reads a slice manifest, runs the verification commands, and writes
+the report. Until then, the final TDD step writes the report manually. Do not
+build `verify-slice` speculatively.
+
 ## Definition of done
 
 A slice is ready for approval when:
@@ -124,10 +156,12 @@ A slice is ready for approval when:
 3. The new tests pass, and the full test suite passes.
 4. `ruff check .` reports no errors.
 5. Behaviour is documented where a reader would look for it.
-6. Every commit in the slice is green and self-contained, and the final tree is
+6. A slice diagnostic report exists under `docs/results/` and records the goal,
+   pass/fail criteria, evidence, limitations, and decision.
+7. Every commit in the slice is green and self-contained, and the final tree is
    clean.
-7. The project is left in a working state.
-8. Nothing has been pushed before approval.
+8. The project is left in a working state.
+9. Nothing has been pushed before approval.
 
 After approval, push the completed slice. Do not push again until the next
 slice is approved.

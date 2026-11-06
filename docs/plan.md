@@ -6,15 +6,19 @@
 
 ## How this plan works
 
-- A slice is one testable outcome, with its tests, code, docs, and one or more
-  green Conventional Commits.
+- A slice is one testable outcome, with its tests, code, docs, diagnostic
+  report, and one or more green Conventional Commits.
 - Every slice starts with `/learn` when it introduces a new approach or the
   author has not chosen one. `/learn` ends with a one-page design note and an
   explicit choice. Then `/spec` writes the contract, `/spec-review` reviews and
   approves it, and `/tdd` implements one behaviour at a time. The failing test is
   shown before implementation.
 - Every slice follows the definition of done in `AGENTS.md`: test first, full
-  suite green, `ruff` clean, docs updated, and no push before approval.
+  suite green, `ruff` clean, docs updated, diagnostic report written, and no push
+  before approval.
+- A slice must be evaluable. Before `/spec`, define the observable goal, the
+  pass/fail criteria, and the evidence that will go in the diagnostic report. If
+  that cannot be done, split or redefine the slice.
 - Commit each successful TDD cycle. A slice may span several self-contained,
   green commits; never commit a red or partially green tree.
 - If a slice does not fit one session, split it at a testable boundary and
@@ -27,6 +31,25 @@
   formats, examples, and acceptance tests. A concrete detail belongs in the
   spec unless it would change the evaluation contract, in which case it moves
   up into the ADR.
+
+## Slice diagnostic reports
+
+Every slice ends with a diagnostic report under `docs/results/` named
+`<slice-id>-diagnostics.md`. The report follows
+`docs/results/_template-slice-diagnostics.md` and records the intended goal,
+pass/fail criteria, evidence, limitations, and the decision to move on. It is
+part of the final TDD step and is committed with the slice's final docs.
+
+The report is not a substitute for tests. It ties the test and diagnostic
+results to the slice's intended goal, so a later reader can see why the slice
+was accepted. For deterministic agents, it must state how many unique games
+were actually played and must not present repeated games as independent
+samples.
+
+When the report shape has stabilized across slices, add a `verify-slice`
+command that reads a slice manifest, runs the verification commands, and writes
+the report. Until then, the final TDD step writes the report manually. Do not
+build `verify-slice` speculatively.
 
 ## Why this order
 
@@ -353,6 +376,9 @@ questions that prompted it.
   pass/fail gate.
 - Artifacts are written under `docs/results/` and the CSV/plots are reproducible
   from the saved configs and seeds.
+- The slice diagnostic report is
+  `docs/results/s7-three-seed-gate-diagnostics.md`; the milestone report is
+  `docs/results/first-milestone.md`.
 - Runtime is within the target; if not, the report says where time went.
 - A small-N integration test covers the gate logic, unique-game accounting,
   per-snapshot learning-curve aggregation, and deterministic-baseline handling
@@ -361,8 +387,9 @@ questions that prompted it.
 **Files touched:** `src/rlcheckers/agents/greedy_agent.py`,
 `src/rlcheckers/evaluation/gate.py`, `src/rlcheckers/cli.py`,
 `tests/agents/test_greedy_agent.py`, `tests/evaluation/test_gate.py`,
-`docs/specs/0007-three-seed-gate.md`, `docs/results/first-milestone.md`,
-`docs/architecture.md`.
+`docs/specs/0007-three-seed-gate.md`,
+`docs/results/s7-three-seed-gate-diagnostics.md`,
+`docs/results/first-milestone.md`, `docs/architecture.md`.
 
 **Tests added:** Stochastic greedy determinism, unique-game accounting,
 per-snapshot learning-curve aggregation, metric aggregation, gate pass/fail
@@ -427,6 +454,9 @@ contents in their own specs. It supersedes only the plot sentence of ADR 0003
 
 ## What each spec must settle
 
+- **Every spec:** the observable goal, pass/fail criteria, evidence commands,
+  and the diagnostic report path. A slice that cannot define these is not ready
+  for `/spec`.
 - **Spec 0001:** coordinates, orientation, initial layout, render format, key
   format.
 - **Spec 0002:** move encoding, capture-path representation, promotion timing,

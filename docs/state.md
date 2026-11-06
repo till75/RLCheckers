@@ -33,6 +33,15 @@ snapshots) is implemented, tested, documented, and awaiting slice approval. S7
    unique-game accounting before implementation.
 3. Do not push S7 without approval.
 
+## Process
+- Every slice ends with a diagnostic report under `docs/results/` named
+  `<slice-id>-diagnostics.md`; the report is part of the final TDD step and is
+  required for approval.
+- A slice must be evaluable. If we cannot define the report and pass/fail
+  evidence, split or redefine the slice before `/spec`.
+- The report template is `docs/results/_template-slice-diagnostics.md`. A
+  `verify-slice` command is a future slice once the report shape stabilizes.
+
 ## S7 planning note
 - The S6 greedy diagnostic is 10 unique opening/colour games repeated 100 times
   because the Q-agent and depth-1 greedy are deterministic. Do not treat the
