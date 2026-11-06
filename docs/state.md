@@ -27,8 +27,19 @@ snapshots) is implemented, tested, documented, and awaiting slice approval. S7
 ## Next
 1. Review and approve the completed S6 slice; then push it.
 2. Start S7 with `/learn`, then `/spec 0007-three-seed-gate.md`, review, and TDD
-   the gate and report.
+   the gate and report. The spec must settle the stochastic greedy baseline and
+   unique-game accounting before implementation.
 3. Do not push S7 without approval.
+
+## S7 planning note
+- The S6 greedy diagnostic is 10 unique opening/colour games repeated 100 times
+  because the Q-agent and depth-1 greedy are deterministic. Do not treat the
+  1,000 repetitions as independent samples or report a 1,000-game interval for
+  them.
+- A randomized greedy tie-break scored 0.819 against the same S6 agent; a simple
+  depth-2 minimax scored 0.400. S7 should use a stochastic greedy baseline for
+  the 1,000-game gate and report the deterministic baseline as a unique-game
+  diagnostic.
 
 ## Open questions
 - None blocking. The three review decisions are recorded in spec 0006’s Approval section.
