@@ -30,6 +30,7 @@ from rlcheckers.game.moves import format_move
 from rlcheckers.training import (
     DIAGNOSTIC_GAMES,
     train_q,
+    train_self_play,
     write_training_artifacts,
 )
 
@@ -107,6 +108,11 @@ def _run_train_q(config_path: str, argv: Sequence[str]) -> int:
     """Run the train-q subcommand."""
     try:
         config = load_train_config(config_path)
+        if config.opponent == "self":
+            train_self_play(config)
+            raise NotImplementedError(
+                "self-play artifacts and summary are not implemented"
+            )
         result = train_q(config)
         agent = QAgent(result.table)
         diagnostic = play_matchup(

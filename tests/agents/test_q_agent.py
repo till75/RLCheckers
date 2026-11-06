@@ -99,6 +99,48 @@ def test_q_table_memory_estimate() -> None:
     assert QTable().estimated_memory_bytes() > 0
 
 
+def test_q_table_clone_is_independent() -> None:
+    table = QTable(max_entries=10)
+    table.set(1, 0.25)
+    table.set(2, -0.5)
+
+    clone = table.clone()
+
+    assert clone == table
+    assert clone.max_entries == table.max_entries
+
+    table.set(1, 0.75)
+    table.set(3, 1.0)
+    clone.set(2, 0.5)
+
+    assert clone.get(1) == 0.25
+    assert clone.get(2) == 0.5
+    assert clone.get(3) == 0.0
+    assert table.get(1) == 0.75
+    assert table.get(2) == -0.5
+    assert table.get(3) == 1.0
+
+
+def test_q_table_clone_preserves_cap() -> None:
+    empty = QTable(max_entries=2).clone()
+
+    assert empty.size() == 0
+    assert empty.max_entries == 2
+
+    table = QTable(max_entries=2)
+    table.set(1, 1.0)
+    table.set(2, 2.0)
+    clone = table.clone()
+
+    clone.set(1, 3.0)
+
+    with pytest.raises(TableCapacityError, match="cap"):
+        clone.set(3, 0.0)
+
+    assert clone.max_entries == 2
+    assert table.get(1) == 1.0
+
+
 def test_q_agent_picks_highest_value() -> None:
     state = _initial_state()
     table = QTable()

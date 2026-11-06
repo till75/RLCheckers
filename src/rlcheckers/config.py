@@ -57,6 +57,7 @@ class TrainConfig:
     opponent: str
     output_dir: Path
     max_table_entries: int
+    snapshot_interval: int | None = None
 
 
 class ConfigError(ValueError):

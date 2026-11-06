@@ -109,6 +109,10 @@ class QTable:
             )
         self._entries[key] = value
 
+    def clone(self) -> QTable:
+        """Return an independent copy with the same entries and cap."""
+        return QTable(self._entries, max_entries=self._max_entries)
+
     def best_value(self, state: GameState) -> float:
         if state.is_terminal:
             raise QTableError(f"game is finished: {state.outcome.value}")

@@ -1,5 +1,16 @@
 """Training loops and updates."""
 
+from rlcheckers.training.self_play import (
+    SELF_PLAY_TRAINING_FIELDS,
+    SelfPlayEpisodeMetric,
+    SelfPlayError,
+    SelfPlayTrainingResult,
+    Snapshot,
+    SnapshotPolicy,
+    SnapshotRecord,
+    train_self_play,
+    write_self_play_artifacts,
+)
 from rlcheckers.training.train_q import (
     DIAGNOSTIC_GAMES,
     TRAINING_FIELDS,
@@ -17,8 +28,15 @@ from rlcheckers.training.train_q import (
 
 __all__ = [
     "DIAGNOSTIC_GAMES",
+    "SELF_PLAY_TRAINING_FIELDS",
     "TRAINING_FIELDS",
     "EpisodeMetric",
+    "SelfPlayEpisodeMetric",
+    "SelfPlayError",
+    "SelfPlayTrainingResult",
+    "Snapshot",
+    "SnapshotPolicy",
+    "SnapshotRecord",
     "TrainingResult",
     "choose_epsilon_greedy",
     "derive_episode_seed",
@@ -26,6 +44,8 @@ __all__ = [
     "q_update",
     "reward_for",
     "train_q",
+    "train_self_play",
     "write_learning_curve",
+    "write_self_play_artifacts",
     "write_training_artifacts",
 ]
