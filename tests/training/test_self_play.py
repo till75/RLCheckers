@@ -8,13 +8,17 @@ from dataclasses import replace
 import pytest
 
 import rlcheckers
+from rlcheckers.agents import GreedyAgent
 from rlcheckers.agents.q_agent import QAgent, QTable, q_key
+from rlcheckers.agents.random_agent import RandomAgent
 from rlcheckers.config import TrainConfig
 from rlcheckers.evaluation import (
     ArenaResult,
     GameOutcome,
     GameResult,
     opening_state,
+    play_matchup,
+    summarize,
 )
 from rlcheckers.game.board import Board, Side
 from rlcheckers.game.moves import Move
@@ -648,3 +652,82 @@ def test_self_play_learning_curve_is_written(tmp_path) -> None:
         == path
     )
     assert path.stat().st_size > 0
+
+
+@pytest.mark.slow
+def test_train_self_play_improves_against_random_and_greedy(
+    tmp_path,
+) -> None:
+    config = _self_play_config(
+        tmp_path,
+        episodes=10_000,
+        snapshot_interval=1_000,
+        max_table_entries=2_000_000,
+    )
+    result = train_self_play(config)
+    agent = QAgent(result.table)
+    diagnostics = {
+        "random": play_matchup(
+            lambda seed: agent,
+            lambda seed: RandomAgent(seed=seed),
+            seed=config.seed,
+            games=DIAGNOSTIC_GAMES,
+            agent_name="q",
+            opponent_name="random",
+            openings=result.openings,
+        ),
+        "greedy": play_matchup(
+            lambda seed: agent,
+            lambda seed: GreedyAgent(),
+            seed=config.seed,
+            games=DIAGNOSTIC_GAMES,
+            agent_name="q",
+            opponent_name="greedy",
+            openings=result.openings,
+        ),
+    }
+
+    summaries = {}
+    for name, diagnostic in diagnostics.items():
+        summary = summarize(
+            [game.outcome for game in diagnostic.games]
+        )
+        summaries[name] = summary
+
+        assert summary.games == DIAGNOSTIC_GAMES
+        assert (
+            summary.wins + summary.draws + summary.losses
+            == DIAGNOSTIC_GAMES
+        )
+        assert (
+            0.0
+            <= summary.ci_low
+            <= summary.score
+            <= summary.ci_high
+            <= 1.0
+        )
+        assert summary.score > 0.50, (
+            f"{name} W/D/L "
+            f"{summary.wins}/{summary.draws}/{summary.losses}, "
+            f"score {summary.score:.6f}"
+        )
+
+    assert result.table.size() > 0
+    assert len(result.snapshots) == 10
+    print(
+        "self-play improvement: "
+        f"table_size={result.table.size()} "
+        f"snapshots={len(result.snapshots)} "
+        f"random={summaries['random'].wins}/"
+        f"{summaries['random'].draws}/"
+        f"{summaries['random'].losses} "
+        f"score={summaries['random'].score:.6f} "
+        f"ci95={summaries['random'].ci_low:.6f}.."
+        f"{summaries['random'].ci_high:.6f} "
+        f"greedy={summaries['greedy'].wins}/"
+        f"{summaries['greedy'].draws}/"
+        f"{summaries['greedy'].losses} "
+        f"score={summaries['greedy'].score:.6f} "
+        f"ci95={summaries['greedy'].ci_low:.6f}.."
+        f"{summaries['greedy'].ci_high:.6f}"
+    )
