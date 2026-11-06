@@ -27,6 +27,7 @@ from rlcheckers.training import (
     DIAGNOSTIC_GAMES,
     SELF_PLAY_TRAINING_FIELDS,
     SelfPlayError,
+    Snapshot,
     SnapshotPolicy,
     SnapshotRecord,
     train_self_play,
@@ -731,3 +732,40 @@ def test_train_self_play_improves_against_random_and_greedy(
         f"ci95={summaries['greedy'].ci_low:.6f}.."
         f"{summaries['greedy'].ci_high:.6f}"
     )
+
+
+def test_train_self_play_calls_snapshot_observer(tmp_path) -> None:
+    observed: list[Snapshot] = []
+    config = _self_play_config(tmp_path)
+
+    result = train_self_play(
+        config,
+        snapshot_observer=observed.append,
+    )
+
+    assert [snapshot.created_at_episode for snapshot in observed] == [0, 10]
+    assert observed[0].table_size == 0
+    assert observed[1].table_size == result.metrics[9].table_size
+
+
+def test_train_self_play_without_observer_unchanged(tmp_path) -> None:
+    config = _self_play_config(tmp_path)
+
+    without_observer = train_self_play(config)
+    with_observer = train_self_play(
+        config,
+        snapshot_observer=lambda snapshot: None,
+    )
+
+    assert with_observer == without_observer
+
+
+def test_train_self_play_propagates_observer_error(tmp_path) -> None:
+    def fail(snapshot: Snapshot) -> None:
+        raise RuntimeError("observer failed")
+
+    with pytest.raises(RuntimeError, match="observer failed"):
+        train_self_play(
+            _self_play_config(tmp_path),
+            snapshot_observer=fail,
+        )

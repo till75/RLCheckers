@@ -16,7 +16,7 @@ import csv
 import json
 import platform
 import random
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -255,6 +255,7 @@ def train_self_play(
     config: TrainConfig,
     *,
     openings: Sequence[Sequence[Move]] = STANDARD_OPENINGS,
+    snapshot_observer: Callable[[Snapshot], None] | None = None,
 ) -> SelfPlayTrainingResult:
     """Train a Q-table against its own periodically frozen snapshots."""
     if config.opponent != "self":
@@ -297,9 +298,14 @@ def train_self_play(
     )
     metrics: list[SelfPlayEpisodeMetric] = []
 
+    if snapshot_observer is not None:
+        snapshot_observer(policy.opponent_for(0))
+
     for episode in range(config.episodes):
         if episode > 0 and episode % interval == 0:
             policy.refresh(table, created_at_episode=episode)
+            if snapshot_observer is not None:
+                snapshot_observer(policy.opponent_for(episode))
 
         snapshot = policy.opponent_for(episode)
         opponent = QAgent(snapshot.table)
