@@ -4,8 +4,8 @@
 ``train_self_play`` updates only the learner table and uses a greedy
 ``QAgent`` over the active snapshot as the opponent. ``write_self_play_artifacts``
 writes the self-play Q-table, CSV, run metadata, and learning curve. The
-implementation is filled in by the S6 TDD slices; this module currently defines
-the public surface only.
+snapshot policy is implemented; the training loop and artifact writer are filled
+in by later S6 TDD slices.
 """
 
 from __future__ import annotations
@@ -70,9 +70,34 @@ class SnapshotPolicy:
         episodes: int,
         max_entries: int,
     ) -> None:
+        if (
+            not isinstance(cadence, int)
+            or isinstance(cadence, bool)
+            or cadence < 10
+            or cadence % 10 != 0
+        ):
+            raise SelfPlayError(
+                "cadence must be a positive multiple of 10, "
+                f"got {cadence!r}"
+            )
+        if (
+            not isinstance(episodes, int)
+            or isinstance(episodes, bool)
+            or episodes <= 0
+        ):
+            raise SelfPlayError(
+                f"episodes must be a positive int, got {episodes!r}"
+            )
+        if cadence >= episodes:
+            raise SelfPlayError(
+                f"cadence {cadence} must be less than episodes {episodes}"
+            )
+
         self._cadence = cadence
         self._episodes = episodes
-        self._active = Snapshot(0, QTable(max_entries=max_entries))
+        self._snapshots = [
+            Snapshot(0, QTable(max_entries=max_entries)),
+        ]
         self._records = [
             SnapshotRecord(
                 created_at_episode=0,
@@ -94,7 +119,24 @@ class SnapshotPolicy:
 
     def opponent_for(self, episode: int) -> Snapshot:
         """Return the frozen opponent that covers ``episode``."""
-        return self._active
+        if (
+            not isinstance(episode, int)
+            or isinstance(episode, bool)
+            or not 0 <= episode < self._episodes
+        ):
+            raise SelfPlayError(
+                f"episode {episode!r} is out of range "
+                f"0..{self._episodes - 1}"
+            )
+
+        for snapshot, record in zip(self._snapshots, self._records):
+            if record.first_episode <= episode <= record.last_episode:
+                return snapshot
+
+        raise SelfPlayError(
+            f"episode {episode} is not covered by a snapshot; "
+            "refresh is overdue"
+        )
 
     def refresh(
         self,
@@ -108,6 +150,34 @@ class SnapshotPolicy:
                 "snapshot must be a QTable, "
                 f"got {type(table).__name__}"
             )
+        if (
+            not isinstance(created_at_episode, int)
+            or isinstance(created_at_episode, bool)
+        ):
+            raise SelfPlayError(
+                "snapshot created_at_episode must be an int, "
+                f"got {created_at_episode!r}"
+            )
+
+        last_created = self._records[-1].created_at_episode
+        if created_at_episode == last_created:
+            raise SelfPlayError(
+                f"snapshot at episode {created_at_episode} already exists"
+            )
+        if created_at_episode >= self._episodes:
+            raise SelfPlayError(
+                "snapshot refresh at episode "
+                f"{created_at_episode} is not scheduled; "
+                f"episodes end at {self._episodes - 1}"
+            )
+        expected = last_created + self._cadence
+        if created_at_episode != expected:
+            raise SelfPlayError(
+                "snapshot refresh at episode "
+                f"{created_at_episode} is unscheduled; "
+                f"expected episode {expected}"
+            )
+
         try:
             clone = table.clone()
         except Exception as error:
@@ -124,7 +194,7 @@ class SnapshotPolicy:
             - 1,
             table_size=clone.size(),
         )
-        self._active = Snapshot(created_at_episode, clone)
+        self._snapshots.append(Snapshot(created_at_episode, clone))
         self._records.append(record)
         return record
 
