@@ -1,6 +1,6 @@
 # ADR 0006 — Self-play snapshot policy
 
-- **Status:** proposed
+- **Status:** accepted
 - **Date:** 2026-11-05
 - **Deciders:** author, opencode
 - **Related:** ADR 0002, ADR 0003, ADR 0005, `docs/00-brief.md`,
@@ -43,7 +43,8 @@ the moment of copying and becomes relatively weaker as the learner improves.
 ### 2. Cadence and training schedule
 
 - N is a training-config value and must be a positive multiple of 10, minimum 10,
-  so snapshots align with the five-opening and two-colour cycle.
+  and strictly less than the episode budget, so snapshots align with the
+  five-opening and two-colour cycle and at least one refreshed snapshot is used.
 - Keep the S5 episode schedule: both learner colours and the five S4 openings,
   cycling deterministically. The opponent's moves are part of the environment.
 - Use one master seed. Derive per-episode learner seeds deterministically. The
@@ -133,5 +134,7 @@ the moment of copying and becomes relatively weaker as the learner improves.
 
 ## Approval
 
-Proposed on 2026-11-05 after the S6 design note chose the latest-snapshot
-approach. This ADR becomes the S6 gate when accepted in `/spec-review S6`.
+Accepted on 2026-11-06 in `/spec-review S6`. The review approved the
+latest-snapshot policy, added the refinement that `N` must be strictly less than
+the episode budget, and left the exact config schema, artifact fields, CLI, and
+diagnostic threshold to spec 0006.

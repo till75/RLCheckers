@@ -1,7 +1,7 @@
 # Plan — RLCheckers, first milestone
 
 **Date:** 2026-10-27
-**Status:** S0–S5 complete and pushed; S6 learn complete; spec next
+**Status:** S0–S5 complete and pushed; S6 spec approved (2026-11-06); TDD next
 **Source:** `docs/00-brief.md`
 
 ## How this plan works
@@ -279,8 +279,8 @@ S6.
 
 ## S6 — Self-play with periodic snapshots
 
-**Status:** learn complete; spec next (2026-11-05). Design note 0006 chooses the
-latest-snapshot policy; ADR 0006 is proposed.
+**Status:** spec approved (2026-11-06); TDD next. Design note 0006 chooses the
+latest-snapshot policy; ADR 0006 is accepted.
 
 **Outcome:** The Q-agent trains through self-play against periodic snapshots and
 improves against random and depth-1 greedy without a fixed training opponent.
@@ -297,14 +297,17 @@ improves against random and depth-1 greedy without a fixed training opponent.
 
 **Files touched:** `src/rlcheckers/training/self_play.py`,
 `src/rlcheckers/agents/q_agent.py`, `src/rlcheckers/config.py`,
-`tests/training/test_self_play.py`, `docs/architecture.md`.
+`src/rlcheckers/cli.py`, `tests/training/test_self_play.py`,
+`tests/agents/test_q_agent.py`, `tests/test_config.py`, `tests/test_cli.py`,
+`docs/architecture.md`, `README.md`, `docs/plan.md`, `docs/state.md`.
 
 **Tests added:** Snapshot cadence, opponent selection, seeded reproducibility,
 no-collapse smoke test, artifact writing.
 
 **Rough size:** M, 3–4 hours.
 
-**Gate:** ADR 0006; spec `0006-self-play-snapshots.md`.
+**Gate:** ADR 0006 accepted; spec `0006-self-play-snapshots.md` approved
+(2026-11-06).
 
 **Risk:** High. Self-play is non-stationary; keep the fixed baselines as the
 scoreboard.
@@ -406,6 +409,8 @@ contents in their own specs. It supersedes only the plot sentence of ADR 0003
 
 ## Next step
 
-1. Run `/spec` for `0004-evaluation-arena.md` (S4).
-2. Run `/tdd` for the first behaviour in S4.
-3. Keep training code out until the evaluation harness in S4 is green.
+1. Run `/tdd A2` for the first S6 behaviour: `QTable.clone()` and the frozen
+   snapshot boundary.
+2. Follow the approved TDD order in `docs/specs/0006-self-play-snapshots.md`.
+3. Do not push S6 before the slice is implemented, tested, documented, and
+   approved.

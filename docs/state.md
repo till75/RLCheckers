@@ -1,66 +1,32 @@
-# State — 2026-11-05
+# State — 2026-11-06
 
 ## Where we are
-S4 is complete, approved, and pushed at `b616189`. The workflow change
-(`/learn` → `/spec` → `/spec-review` → `/tdd`) is pushed at `7a2643f`.
-S5's `/learn` and spec review are done: design note 0005 is chosen, spec 0005 is
-approved, and ADR 0005 is accepted. S5 is implemented and documented: Q-table,
-QAgent, training loop, config, artifacts, plot, `train-q` CLI, and the slow
-improvement diagnostic. 256 default tests pass in about 80s; the A9 slow test is
-excluded by default. A9 observed W/D/L 794/50/156, score 0.819, CI 0.796-0.842,
-table 21,773. S5 is complete, approved, and pushed. S6's `/learn` is complete:
-design note 0006 chooses latest-snapshot self-play and ADR 0006 is proposed. The
-next gate is `/spec S6`.
+S0–S5 are complete, approved, and pushed. S6 (self-play with periodic snapshots)
+has its spec approved and ADR 0006 accepted; implementation has not started.
 
 ## Done since last handoff
-- `ff23f98` — S4 bootstrap: protocol, greedy, arena, metrics, artifacts, config, `evaluate` subparser.
-- `869e0b4`, `ea3d0d8`, `bbaecd6` — greedy baseline, opening suite, seeded matchup arena.
-- `b62fff3`, `d3c8faa`, `a1aa1f9`, `6a24680` — metrics/CI, config, artifacts, `evaluate` CLI.
-- `e92f257`, `b616189` — S4 docs and approval record.
-- `7a2643f` — workflow change: `/learn`, `/spec-review`, design-note template, and `/spec` handoff; pushed.
-- `0da3f19` — design note 0005 and proposed ADR 0005; local.
-- `04eb6da` — Mermaid rules split by output; local.
-- Approved spec 0005 and accepted ADR 0005; local.
-- A1 `q_key` and QTable storage/defaults/cap/memory implemented; 198 tests.
-- A2 `q_update` arithmetic and alpha/gamma validation implemented; 203 tests.
-- A3 `epsilon_at` schedule and validation implemented; 209 tests.
-- A4 best-value/best-move and the greedy QAgent adapter implemented; 214 tests.
-- A5 JSON save/load, schema, byte reproducibility, saved cap, and equality; 219 tests.
-- A6 fixed-opponent training loop, schedule, rewards, reproducibility, and cap; 225 tests.
-- A7 training TOML loader and validation implemented; 243 tests.
-- A8 artifacts/plot (`q_table.json`, `training.csv`, `run.json`, PNG) implemented; 250 tests.
-- A8 `train-q` CLI, diagnostic, and 13-line stdout implemented; 256 tests.
-- A9 slow improvement diagnostic passed: W/D/L 794/50/156, score 0.819, CI 0.796-0.842, table 21,773.
-- A10 architecture, README, plan, and handoff docs updated; final checks pass (256 default tests, ruff, A9 0.819).
-- S5 approved and pushed.
-- S6 learn complete: design note 0006 chooses latest-snapshot self-play; ADR 0006 proposed; local.
+- S6 spec approved 2026-11-06: `docs/specs/0006-self-play-snapshots.md` (untracked).
+- ADR 0006 accepted: `docs/adr/0006-self-play-snapshot-policy.md`.
+- `docs/plan.md` and this handoff updated; S6 implementation next.
+- S5 result: 256 default tests, A9 score 0.819 vs random (794/50/156, CI 0.796–0.842, table 21,773).
 
 ## Next
-1. Write spec 0006 from design note 0006 and ADR 0006.
-2. Run `/spec-review S6`; accept ADR 0006 there.
-3. Then `/tdd A1`; do not push S6 without approval.
+1. Start `/tdd A2`: `QTable.clone()` and the frozen snapshot boundary.
+2. Follow the approved TDD order in spec 0006: A2, A1, A5, A3/A4, A6, A7, A8, A9.
+3. Do not push S6 without approval.
 
 ## Open questions
-- None blocking. ADR 0006 is proposed; `/spec-review S6` will accept or revise it.
+- None blocking. The three review decisions are recorded in spec 0006’s Approval section.
 
 ## Gotchas
-- Windows/PowerShell; use `.\.venv\Scripts\python.exe` (Python 3.14). `ruff check` is the gate; `ruff format` rewrites Markdown fences.
-- `config.py` imports `evaluation.arena`; `artifacts.py` imports `EvalConfig` only under `TYPE_CHECKING`.
-- `games` must be a positive multiple of 10; `summarize` rejects fewer than two games per group.
-- `games.csv` stores the base `game_seed` only; side seeds are derived.
-- `run.json` has no timestamp, but `python_version` varies by environment.
-- Mermaid: console = plain labels, no HTML, narrow; Markdown = S4 black-text spans, white/light-grey fills only. See `AGENTS.md` "Two outputs, two rules".
-- `evaluate` maps `OSError`, `RuntimeError`, and `ValueError` to `error:` plus exit 1.
-- Draw baseline: 7/1,000 random-vs-random draws; 17.5 plies average. The game is not inherently drawish.
-- Default suite excludes slow tests via `addopts = "-m 'not slow'"`; run A9 with `pytest -m slow tests/training/test_train_q.py::test_train_q_improves_against_random -q`. Artifact/CLI tests make the default suite about 82s.
-- A9 diagnostic result: W/D/L 794/50/156, score 0.819, CI 0.796-0.842, table 21,773 entries.
-- S5 design note chooses the trainer-owned loop, a JSON Q-table, and board-only state. ADR 0005 is accepted; implementation starts with `/tdd A1`.
-- S6 design note 0006 chooses latest-snapshot self-play: empty initial table, refresh every N episodes, learner-only updates. ADR 0006 is proposed; N is a positive multiple of 10. Fixed baselines remain the scoreboard.
-- S6 training results are not directly comparable to S5 because the opponent distribution changes; compare final agents on the same fixed baselines.
+- Windows/PowerShell; use `.\.venv\Scripts\python.exe`; `ruff check .` is the gate.
+- Default pytest excludes slow tests; A8/A9 slow runs need `-m slow`.
+- `/spec-review`: one-page packet, then one round per message; wait for explicit yes/no.
+- Spec 0006’s Markdown overview is a table; console diagrams stay plain, no HTML.
+- S6 and S5 training curves are not directly comparable; compare final agents on fixed baselines.
+- The approved spec and ADR edits are local/uncommitted; nothing pushed.
 
 ## Not in an ADR
-- `apply_move` validates by membership in `generate_moves`; `format_move` is display-only.
-- Greedy: men 1, kings 3, `TERMINAL_SCORE = 1000`; ties by smallest `(path, captures)`.
-- S4 writes three artifacts, one seed per run, derived side seeds, CI clamped to `[0, 1]`; the five-opening suite is fixed in code.
-- `/spec` no longer asks for approval; `/spec-review` records it.
-- S5 design note 0005 is chosen and records the trainer-owned loop; ADR 0005 is accepted. It fixes board-only state, alpha 0.1, gamma 0.9, epsilon 1.0→0.05, JSON persistence, episodes as a multiple of 10, and alpha/gamma ranges.
+- S6 config/CLI: conditional `snapshot_interval`, `N < episodes`, `train-q` dispatch.
+- S6 artifacts: mode-specific schema, no snapshot files.
+- S6 diagnostic: `> 0.50` vs both baselines; S7 owns the gate.
