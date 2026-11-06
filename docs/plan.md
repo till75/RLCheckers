@@ -352,9 +352,10 @@ because the Q-agent and depth-1 greedy are both deterministic. The 1,000 games
 are 10 unique opening/colour games repeated 100 times, so the 1,000-game
 confidence interval is not an independent-sample interval. With a randomized
 greedy tie-break the same agent scored 0.819; against a simple depth-2 minimax
-it scored 0.400. S7 must not repeat that mistake. See
-`docs/results/s6-self-play-diagnostics.md` for the full evidence and the
-questions that prompted it.
+it scored 0.400. S7 must not repeat that mistake. ADR 0007 records the
+stochastic greedy baseline and keeps the deterministic baseline as a secondary
+diagnostic. See `docs/results/s6-self-play-diagnostics.md` for the full evidence
+and the questions that prompted it.
 
 **Acceptance criteria:**
 
@@ -414,6 +415,7 @@ gate must not treat those repetitions as independent samples or report a
 | 0004 | Plot ownership: S4 writes CSV/JSON only; S5/S7 own plot contents | S4 |
 | 0005 | Q-learning state/action representation and initial hyperparameters | S5 |
 | 0006 | Self-play snapshot cadence and opponent selection | S6 |
+| 0007 | Stochastic greedy baseline for the S7 gate | S7 |
 
 ADR 0003 settles evaluation policy: the score definition, colour pairing,
 fixed-opening policy, gate statistics, determinism guarantees, and the agent

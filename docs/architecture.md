@@ -379,6 +379,7 @@ exit code 2.
 - [ADR 0004 — Plot ownership](adr/0004-plot-ownership.md)
 - [ADR 0005 — Tabular Q-learning representation and hyperparameters](adr/0005-tabular-q-learning.md)
 - [ADR 0006 — Self-play snapshot policy](adr/0006-self-play-snapshot-policy.md)
+- [ADR 0007 — Stochastic greedy gate baseline](adr/0007-stochastic-greedy-gate-baseline.md)
 
 ## Specifications
 
