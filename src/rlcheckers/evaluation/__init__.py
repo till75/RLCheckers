@@ -18,14 +18,17 @@ from rlcheckers.evaluation.artifacts import (
     write_artifacts,
 )
 from rlcheckers.evaluation.gate import (
+    GATE_CSV_FIELDS,
     GATE_GREEDY_MEAN,
     GATE_RANDOM_MEAN,
     GATE_SEED_FLOOR,
+    SNAPSHOT_CURVE_FIELDS,
     GateMatchup,
     GateResult,
     SeedGateResult,
     SnapshotCurvePoint,
     aggregate_gate,
+    write_gate_artifacts,
 )
 from rlcheckers.evaluation.metrics import (
     ScoreSummary,
@@ -37,10 +40,12 @@ from rlcheckers.evaluation.metrics import (
 
 __all__ = [
     "GAMES_FIELDS",
+    "GATE_CSV_FIELDS",
     "GATE_GREEDY_MEAN",
     "GATE_RANDOM_MEAN",
     "GATE_SEED_FLOOR",
     "METRICS_FIELDS",
+    "SNAPSHOT_CURVE_FIELDS",
     "STANDARD_OPENINGS",
     "ArenaError",
     "ArenaResult",
@@ -62,4 +67,5 @@ __all__ = [
     "summarize",
     "summary_rows",
     "write_artifacts",
+    "write_gate_artifacts",
 ]

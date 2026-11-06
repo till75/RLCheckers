@@ -104,6 +104,7 @@ class SnapshotCurvePoint:
 @dataclass(frozen=True)
 class SeedGateResult:
     seed: int
+    table: QTable
     table_size: int
     snapshots: tuple[SnapshotRecord, ...]
     matchups: Mapping[str, GateMatchup]
@@ -122,6 +123,8 @@ class GateResult:
 
 `ScoreSummary` is the existing S4 type. Scores are in `[0, 1]`; W/D/L counts
 are integers; `games` and `unique_games` are positive multiples of 10.
+`SeedGateResult.table` is the final Q-table for that seed; `table_size` must
+equal `table.size()`.
 
 ### Gate config
 
