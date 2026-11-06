@@ -19,6 +19,8 @@ snapshots) is implemented, tested, documented, and awaiting slice approval. S7
   greedy 1,000/0/0, score 1.000000, CI 1.000000–1.000000. Both point
   estimates are strictly above 0.50; the S7 gate is not applied.
 - A9: README, architecture, plan, state, and module docstrings describe S6.
+- Diagnostic evidence and the questions that prompted it:
+  `docs/results/s6-self-play-diagnostics.md`.
 - Current gates: default suite 325 passed, 2 deselected; A8 slow test passed;
   `ruff check .` clean.
 - S5 baseline result: score 0.819 vs random (794/50/156, CI 0.796–0.842,

@@ -328,7 +328,9 @@ because the Q-agent and depth-1 greedy are both deterministic. The 1,000 games
 are 10 unique opening/colour games repeated 100 times, so the 1,000-game
 confidence interval is not an independent-sample interval. With a randomized
 greedy tie-break the same agent scored 0.819; against a simple depth-2 minimax
-it scored 0.400. S7 must not repeat that mistake.
+it scored 0.400. S7 must not repeat that mistake. See
+`docs/results/s6-self-play-diagnostics.md` for the full evidence and the
+questions that prompted it.
 
 **Acceptance criteria:**
 
