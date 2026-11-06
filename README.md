@@ -3,15 +3,14 @@
 An AI learning project: applying reinforcement learning to a checkers AI, while
 learning to co-author a program with opencode.
 
-**Status:** the first milestone is complete. The approved three-seed gate
+**Status:** the first milestone is complete and approved. The three-seed gate
 passed. The project has the immutable 5x5 rules engine, seeded random play, the
 depth-1 greedy baseline, the seeded evaluation arena, tabular Q-learning against
 a fixed random opponent, self-play against periodic frozen snapshots, and the
 three-seed gate. The gate trains three seeds, evaluates random and stochastic
 greedy over 1,000 unique games, reports deterministic greedy and depth-2 as
 unique-game diagnostics, and writes the slice report and learning-curve plot
-under `docs/results/`. S7 is complete and awaiting approval; it has not been
-pushed.
+under `docs/results/`. S7 is approved and pushed.
 
 ## First milestone result
 
@@ -66,7 +65,7 @@ The work followed the project's learning-first workflow:
 | S4 | Baselines, evaluation arena, metrics, artifacts | complete |
 | S5 | Tabular Q-learning against a fixed random opponent | complete |
 | S6 | Self-play with periodic frozen snapshots | complete |
-| S7 | Three-seed gate, stochastic greedy baseline, reports | complete; awaiting approval |
+| S7 | Three-seed gate, stochastic greedy baseline, reports | complete, approved, and pushed |
 
 ## Development
 

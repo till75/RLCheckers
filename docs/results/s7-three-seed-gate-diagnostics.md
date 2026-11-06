@@ -2,7 +2,7 @@
 
 - **Slice:** S7 ΓÇö Three-seed gate and report
 - **Date:** 2026-11-06
-- **Status:** pass
+- **Status:** pass; approved and pushed 2026-11-06
 - **Spec:** `docs/specs/0007-three-seed-gate.md`
 
 ## Intended goal

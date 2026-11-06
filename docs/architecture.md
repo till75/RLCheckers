@@ -5,8 +5,8 @@ play, the depth-1 greedy baseline (S4), the seeded evaluation arena (S4),
 tabular Q-learning against a fixed random opponent (S5), self-play against
 periodic frozen snapshots (S6), and the three-seed gate (S7): gate config,
 seeded stochastic greedy baseline, gate aggregation, Q-table/CSV/JSON/plot
-artifacts, the slice report, and `gate` dispatch. S7 is complete and the full
-gate passed; the slice and milestone reports are written.
+artifacts, the slice report, and `gate` dispatch. S7 is complete, approved, and
+pushed; the full gate passed and the slice and milestone reports are written.
 
 ## Components
 

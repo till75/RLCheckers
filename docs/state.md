@@ -1,9 +1,8 @@
 # State — 2026-11-06
 
 ## Where we are
-S0-S6 are complete, approved, and pushed. S7 (the three-seed gate and report)
-is complete and the full gate passed; the slice/milestone reports are written.
-S7 is not pushed and awaits approval.
+S0-S7 are complete, approved, and pushed. The first milestone is complete: the
+three-seed gate passed, and the slice and milestone reports are written.
 
 ## Done since last handoff
 - S6 spec approved 2026-11-06: `docs/specs/0006-self-play-snapshots.md`.
@@ -40,13 +39,15 @@ S7 is not pushed and awaits approval.
   gate pass.
 - S7 reports: `docs/results/s7-three-seed-gate-diagnostics.md` and
   `docs/results/first-milestone.md`.
+- S7 approved and pushed 2026-11-06; first milestone complete.
 - Current gates: default suite 382 passed, 2 deselected; `ruff check .` clean.
 - S5 baseline result: score 0.819 vs random (794/50/156, CI 0.796–0.842,
   table 21,773).
 
 ## Next
-1. Await approval of the completed S7 slice.
-2. After approval, push S7. Do not push before approval.
+1. Plan the next milestone. The first milestone is complete and pushed.
+2. Keep the same workflow: learn, specify, review, TDD, diagnostic report, and
+   push only after approval.
 
 ## Process
 - Every slice ends with a diagnostic report under `docs/results/` named
@@ -85,7 +86,7 @@ S7 is not pushed and awaits approval.
 - S6 and S5 training curves are not directly comparable; compare final agents on fixed baselines.
 - The full S7 gate is a slow diagnostic, not a default test; run it with
   `gate --config gate.toml`.
-- S6 is pushed; S7 is not.
+- S6 and S7 are pushed; the first milestone is complete.
 
 ## Not in an ADR
 - S6 config/CLI: conditional `snapshot_interval`, `N < episodes`, `train-q` dispatch.

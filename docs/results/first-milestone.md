@@ -1,7 +1,7 @@
 # First milestone report
 
 - **Date:** 2026-11-06
-- **Status:** pass; S7 complete and awaiting approval
+- **Status:** pass; S7 approved and pushed
 - **Brief:** `docs/00-brief.md`
 - **Slice report:** `docs/results/s7-three-seed-gate-diagnostics.md`
 - **Gate config:** `gate.toml`
@@ -91,11 +91,10 @@ slice report, and the `gate` CLI.
 The first milestone is **pass**. The approved gate passed with margin on both
 means and both seed floors, the artifacts are reproducible, the full suite and
 lint are clean, and the slice report records the evidence and caveats. S7 is
-ready for approval; it has not been pushed.
+approved and pushed.
 
 ## Follow-up
 
-- Approve and push S7.
 - The next milestone should use stronger baselines and a broader robustness
   check before claiming general playing strength.
 - Revisit the gate thresholds only with evidence from stronger baselines.
