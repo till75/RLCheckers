@@ -7,8 +7,10 @@ import pytest
 from rlcheckers.config import (
     ConfigError,
     EvalConfig,
+    GateConfig,
     TrainConfig,
     load_eval_config,
+    load_gate_config,
     load_train_config,
 )
 
@@ -475,3 +477,183 @@ def test_load_train_config_rejects_interval_not_less_than_episodes(
 
     with pytest.raises(ConfigError, match="snapshot_interval"):
         load_train_config(path)
+
+
+GATE_CONFIG_TEXT = (
+    'seeds = [7, 8, 9]\n'
+    'eval_seed = 7\n'
+    'episodes = 10000\n'
+    'alpha = 0.1\n'
+    'gamma = 0.9\n'
+    'epsilon_start = 1.0\n'
+    'epsilon_end = 0.05\n'
+    'epsilon_decay_fraction = 0.8\n'
+    'output_dir = "out"\n'
+    'max_table_entries = 2000000\n'
+    'snapshot_interval = 1000\n'
+    'games = 1000\n'
+    'snapshot_games = 200\n'
+    'unique_games = 10\n'
+)
+
+
+def write_gate_config(
+    tmp_path: Path, text: str = GATE_CONFIG_TEXT
+) -> Path:
+    return write_config(tmp_path, text, name="gate.toml")
+
+
+def test_load_gate_config_reads_fields(tmp_path: Path) -> None:
+    path = write_gate_config(tmp_path)
+
+    config = load_gate_config(path)
+
+    assert config == GateConfig(
+        seeds=(7, 8, 9),
+        eval_seed=7,
+        episodes=10000,
+        alpha=0.1,
+        gamma=0.9,
+        epsilon_start=1.0,
+        epsilon_end=0.05,
+        epsilon_decay_fraction=0.8,
+        output_dir=(tmp_path / "out").resolve(),
+        max_table_entries=2000000,
+        snapshot_interval=1000,
+        games=1000,
+        snapshot_games=200,
+        unique_games=10,
+    )
+
+
+def test_load_gate_config_accepts_minimum(tmp_path: Path) -> None:
+    text = (
+        GATE_CONFIG_TEXT.replace("episodes = 10000", "episodes = 20")
+        .replace("snapshot_interval = 1000", "snapshot_interval = 10")
+        .replace("games = 1000", "games = 10")
+        .replace("snapshot_games = 200", "snapshot_games = 10")
+    )
+    path = write_gate_config(tmp_path, text)
+
+    config = load_gate_config(path)
+
+    assert config.episodes == 20
+    assert config.snapshot_interval == 10
+    assert config.games == 10
+    assert config.snapshot_games == 10
+    assert config.unique_games == 10
+
+
+def test_load_gate_config_rejects_missing_key(tmp_path: Path) -> None:
+    path = write_gate_config(
+        tmp_path,
+        GATE_CONFIG_TEXT.replace("games = 1000\n", ""),
+    )
+
+    with pytest.raises(ConfigError, match="games"):
+        load_gate_config(path)
+
+
+def test_load_gate_config_rejects_unknown_key(tmp_path: Path) -> None:
+    path = write_gate_config(tmp_path, GATE_CONFIG_TEXT + "extra = 1\n")
+
+    with pytest.raises(ConfigError, match="extra"):
+        load_gate_config(path)
+
+
+@pytest.mark.parametrize(
+    "seeds",
+    [
+        "[7, 8]",
+        "[7, 8, 9, 10]",
+        "[7, 7, 9]",
+        "[7, 8, true]",
+        '"7,8,9"',
+    ],
+)
+def test_load_gate_config_rejects_bad_seeds(
+    tmp_path: Path,
+    seeds: str,
+) -> None:
+    path = write_gate_config(
+        tmp_path,
+        GATE_CONFIG_TEXT.replace("seeds = [7, 8, 9]", f"seeds = {seeds}"),
+    )
+
+    with pytest.raises(ConfigError, match="seeds"):
+        load_gate_config(path)
+
+
+@pytest.mark.parametrize("games", ["0", "15", "true", '"1000"'])
+def test_load_gate_config_rejects_bad_games(
+    tmp_path: Path,
+    games: str,
+) -> None:
+    path = write_gate_config(
+        tmp_path,
+        GATE_CONFIG_TEXT.replace("games = 1000", f"games = {games}"),
+    )
+
+    with pytest.raises(ConfigError, match="games"):
+        load_gate_config(path)
+
+
+@pytest.mark.parametrize(
+    "interval",
+    ["0", "15", "true", '"1000"'],
+)
+def test_load_gate_config_rejects_bad_snapshot_interval(
+    tmp_path: Path,
+    interval: str,
+) -> None:
+    path = write_gate_config(
+        tmp_path,
+        GATE_CONFIG_TEXT.replace(
+            "snapshot_interval = 1000",
+            f"snapshot_interval = {interval}",
+        ),
+    )
+
+    with pytest.raises(ConfigError, match="snapshot_interval"):
+        load_gate_config(path)
+
+
+def test_load_gate_config_rejects_interval_not_less_than_episodes(
+    tmp_path: Path,
+) -> None:
+    text = GATE_CONFIG_TEXT.replace(
+        "episodes = 10000", "episodes = 20"
+    ).replace("snapshot_interval = 1000", "snapshot_interval = 20")
+    path = write_gate_config(tmp_path, text)
+
+    with pytest.raises(ConfigError, match="snapshot_interval"):
+        load_gate_config(path)
+
+
+@pytest.mark.parametrize(
+    ("old", "new", "key"),
+    [
+        ("alpha = 0.1", "alpha = 0.0", "alpha"),
+        ("gamma = 0.9", "gamma = 1.0", "gamma"),
+        ("epsilon_start = 1.0", "epsilon_start = 0.0", "epsilon_start"),
+        ("epsilon_end = 0.05", "epsilon_end = 1.1", "epsilon_end"),
+        (
+            "epsilon_decay_fraction = 0.8",
+            "epsilon_decay_fraction = 0.0",
+            "epsilon_decay_fraction",
+        ),
+    ],
+)
+def test_load_gate_config_rejects_bad_hyperparameters(
+    tmp_path: Path,
+    old: str,
+    new: str,
+    key: str,
+) -> None:
+    path = write_gate_config(
+        tmp_path,
+        GATE_CONFIG_TEXT.replace(old, new),
+    )
+
+    with pytest.raises(ConfigError, match=key):
+        load_gate_config(path)
