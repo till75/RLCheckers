@@ -265,18 +265,217 @@ def _write_snapshot_curve_plot(
     figure.savefig(path, dpi=150)
 
 
-def _write_report(result: GateResult, path: Path) -> None:
+def _wdl(summary: ScoreSummary) -> str:
+    return f"{summary.wins}/{summary.draws}/{summary.losses}"
+
+
+def _score(summary: ScoreSummary) -> str:
+    return format_float(summary.score)
+
+
+def _ci(summary: ScoreSummary, applicable: bool) -> str:
+    if not applicable:
+        return "n/a"
+    return (
+        f"{format_float(summary.ci_low)}"
+        f"..{format_float(summary.ci_high)}"
+    )
+
+
+def _write_report(
+    result: GateResult,
+    path: Path,
+    command_line: Sequence[str],
+) -> None:
+    config = result.config
     lines = [
         "# S7 three-seed gate diagnostics",
         "",
-        f"Gate: {'pass' if result.passed else 'fail'}",
+        "- **Slice:** S7 ΓÇö Three-seed gate and report",
+        "- **Date:** 2026-11-06",
+        f"- **Status:** {'pass' if result.passed else 'fail'}",
+        "- **Spec:** `docs/specs/0007-three-seed-gate.md`",
         "",
-        f"Random mean: {format_float(result.random_mean)}",
-        f"Random min: {format_float(result.random_min)}",
-        f"Stochastic greedy mean: {format_float(result.greedy_mean)}",
-        f"Stochastic greedy min: {format_float(result.greedy_min)}",
+        "## Intended goal",
         "",
+        "Train three independent self-play seeds, evaluate each final agent "
+        "against random and seeded stochastic greedy, and report the ADR 0003 "
+        "gate with per-snapshot and depth-2 diagnostics.",
+        "",
+        "## Configuration",
+        "",
+        "```toml",
+        f"seeds = {list(config.seeds)}",
+        f"eval_seed = {config.eval_seed}",
+        f"episodes = {config.episodes}",
+        f"alpha = {config.alpha}",
+        f"gamma = {config.gamma}",
+        f"epsilon_start = {config.epsilon_start}",
+        f"epsilon_end = {config.epsilon_end}",
+        f"epsilon_decay_fraction = {config.epsilon_decay_fraction}",
+        f'output_dir = "{config.output_dir}"',
+        f"max_table_entries = {config.max_table_entries}",
+        f"snapshot_interval = {config.snapshot_interval}",
+        f"games = {config.games}",
+        f"snapshot_games = {config.snapshot_games}",
+        f"unique_games = {config.unique_games}",
+        "```",
+        "",
+        f"Command: `{' '.join(command_line)}`",
+        "",
+        "## Gate decision",
+        "",
+        f"Passed: {'yes' if result.passed else 'no'}",
+        "",
+        "## Per-seed results",
+        "",
+        "| Seed | Table size | Random W/D/L | Random score | Random CI | "
+        "Stochastic greedy W/D/L | Stochastic greedy score | "
+        "Stochastic greedy CI | Deterministic greedy W/D/L | "
+        "Depth-2 W/D/L |",
+        "|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|",
     ]
+    for seed in result.seeds:
+        random = seed.matchups["random"]
+        greedy = seed.matchups["stochastic_greedy"]
+        deterministic = seed.matchups["deterministic_greedy"]
+        depth2 = seed.matchups["depth2"]
+        lines.append(
+            f"| {seed.seed} | {seed.table_size} | "
+            f"{_wdl(random.overall)} | {_score(random.overall)} | "
+            f"{_ci(random.overall, random.ci_applicable)} | "
+            f"{_wdl(greedy.overall)} | {_score(greedy.overall)} | "
+            f"{_ci(greedy.overall, greedy.ci_applicable)} | "
+            f"{_wdl(deterministic.overall)} | "
+            f"{_wdl(depth2.overall)} |"
+        )
+
+    lines.extend(
+        [
+            "",
+            "## Aggregate",
+            "",
+            "| Metric | Value | Threshold |",
+            "|---|---:|---:|",
+            f"| Random mean | {format_float(result.random_mean)} | "
+            f"{format_float(GATE_RANDOM_MEAN)} |",
+            f"| Random min | {format_float(result.random_min)} | "
+            f"{format_float(GATE_SEED_FLOOR)} |",
+            f"| Stochastic greedy mean | "
+            f"{format_float(result.greedy_mean)} | "
+            f"{format_float(GATE_GREEDY_MEAN)} |",
+            f"| Stochastic greedy min | "
+            f"{format_float(result.greedy_min)} | "
+            f"{format_float(GATE_SEED_FLOOR)} |",
+            "",
+            "## Per-colour",
+            "",
+            "| Seed | Opponent | Black W/D/L | Black score | "
+            "White W/D/L | White score |",
+            "|---:|---|---:|---:|---:|---:|",
+        ]
+    )
+    for seed in result.seeds:
+        for opponent in (
+            "random",
+            "stochastic_greedy",
+            "deterministic_greedy",
+            "depth2",
+        ):
+            matchup = seed.matchups[opponent]
+            lines.append(
+                f"| {seed.seed} | {opponent} | "
+                f"{_wdl(matchup.black)} | {_score(matchup.black)} | "
+                f"{_wdl(matchup.white)} | {_score(matchup.white)} |"
+            )
+
+    lines.extend(
+        [
+            "",
+            "## Snapshot curve",
+            "",
+            "| Seed | Episode | Table size | Random score | "
+            "Stochastic greedy score |",
+            "|---:|---:|---:|---:|---:|",
+        ]
+    )
+    for seed in result.seeds:
+        for point in seed.snapshot_curve:
+            lines.append(
+                f"| {seed.seed} | {point.episode} | {point.table_size} | "
+                f"{_score(point.random)} | "
+                f"{_score(point.stochastic_greedy)} |"
+            )
+    lines.extend(
+        [
+            "",
+            "![Self-play snapshot learning curve](snapshot_curve.png)",
+            "",
+            "## Unique-game accounting",
+            "",
+            "| Opponent | Games | Unique games | CI applicable |",
+            "|---|---:|---:|---|",
+        ]
+    )
+    for opponent in (
+        "random",
+        "stochastic_greedy",
+        "deterministic_greedy",
+        "depth2",
+    ):
+        matchup = result.seeds[0].matchups[opponent]
+        lines.append(
+            f"| {opponent} | {matchup.games} | {matchup.unique_games} | "
+            f"{'yes' if matchup.ci_applicable else 'no'} |"
+        )
+
+    lines.extend(
+        [
+            "",
+            "## Depth-2 diagnostic",
+            "",
+            "| Seed | W/D/L | Score | Unique games |",
+            "|---:|---:|---:|---:|",
+        ]
+    )
+    for seed in result.seeds:
+        depth2 = seed.matchups["depth2"]
+        lines.append(
+            f"| {seed.seed} | {_wdl(depth2.overall)} | "
+            f"{_score(depth2.overall)} | {depth2.unique_games} |"
+        )
+
+    lines.extend(
+        [
+            "",
+            "## Caveats",
+            "",
+            "- Random and stochastic greedy are weak baselines; the gate is a "
+            "diagnostic, not a general-strength claim.",
+            "- Deterministic greedy is 10 unique games per seed, not 1,000 "
+            "independent games.",
+            "- Depth-2 is a reported diagnostic, not part of the pass/fail "
+            "gate.",
+            "- The per-snapshot curve uses `snapshot_games` per snapshot per "
+            "opponent.",
+            "- The ADR 0003 thresholds are fixed for this milestone.",
+            "",
+            "## Artifacts",
+            "",
+        ]
+    )
+    for seed in result.seeds:
+        lines.append(f"- `q_table_seed_{seed.seed}.json`")
+    lines.extend(
+        [
+            "- `gate.json`",
+            "- `gate.csv`",
+            "- `snapshot_curve.csv`",
+            "- `snapshot_curve.png`",
+            "- `s7-three-seed-gate-diagnostics.md`",
+            "",
+        ]
+    )
     path.write_text("\n".join(lines), encoding="utf-8")
 
 
@@ -430,5 +629,6 @@ def write_gate_artifacts(
     _write_report(
         result,
         output_dir / "s7-three-seed-gate-diagnostics.md",
+        command_line,
     )
     return output_dir

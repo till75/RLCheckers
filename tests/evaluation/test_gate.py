@@ -479,6 +479,65 @@ def test_gate_small_n_integration(tmp_path: Path) -> None:
     assert (out / "s7-three-seed-gate-diagnostics.md").exists()
 
 
+def test_gate_report_contains_required_sections(
+    tmp_path: Path,
+) -> None:
+    result = _gate_result(tmp_path)
+    out = write_gate_artifacts(
+        result,
+        result.config,
+        command_line=["rlcheckers", "gate", "--config", "gate.toml"],
+    )
+
+    report = (out / "s7-three-seed-gate-diagnostics.md").read_text(
+        encoding="utf-8"
+    )
+
+    for heading in (
+        "# S7 three-seed gate diagnostics",
+        "## Intended goal",
+        "## Configuration",
+        "## Gate decision",
+        "## Per-seed results",
+        "## Aggregate",
+        "## Per-colour",
+        "## Snapshot curve",
+        "## Unique-game accounting",
+        "## Depth-2 diagnostic",
+        "## Caveats",
+        "## Artifacts",
+    ):
+        assert heading in report
+
+    assert "Command: `rlcheckers gate --config gate.toml`" in report
+    assert "seeds = [7, 8, 9]" in report
+    assert "Passed: yes" in report
+    assert "Random mean" in report
+    assert "Stochastic greedy mean" in report
+    assert "Deterministic greedy W/D/L" in report
+    assert "Depth-2 W/D/L" in report
+    assert "snapshot_curve.png" in report
+    assert "10 unique games" in report
+    assert "not part of the pass/fail gate" in report
+    assert "q_table_seed_7.json" in report
+
+
+def test_gate_fail_report_is_written(tmp_path: Path) -> None:
+    result = replace(_gate_result(tmp_path), passed=False)
+    out = write_gate_artifacts(
+        result,
+        result.config,
+        command_line=["rlcheckers", "gate", "--config", "gate.toml"],
+    )
+
+    report = (out / "s7-three-seed-gate-diagnostics.md").read_text(
+        encoding="utf-8"
+    )
+
+    assert "## Gate decision" in report
+    assert "Passed: no" in report
+
+
 def test_gate_aggregates_three_seeds(tmp_path: Path) -> None:
     config = _gate_config(tmp_path)
     seeds = (
