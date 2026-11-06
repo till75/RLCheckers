@@ -1,11 +1,13 @@
 """Self-play training against periodic frozen Q-table snapshots.
 
-``SnapshotPolicy`` owns the schedule and the one active frozen opponent.
-``train_self_play`` updates only the learner table and uses a greedy
-``QAgent`` over the active snapshot as the opponent. ``write_self_play_artifacts``
-writes the self-play Q-table, CSV, run metadata, and learning curve. The
-validator rejects an inconsistent result, snapshot schedule, config, or
-diagnostic set before creating the output directory.
+``SnapshotPolicy`` owns the cadence and the latest frozen opponent. The cadence
+is a positive multiple of 10 and less than the episode count; refreshes clone
+the learner table at each boundary. ``train_self_play`` updates only the learner
+and uses a greedy ``QAgent`` over the snapshot covering each episode.
+``write_self_play_artifacts`` writes the self-play Q-table, CSV, run metadata,
+and titled learning curve. The validator rejects an inconsistent result,
+snapshot schedule, config, or diagnostic set before creating the output
+directory.
 """
 
 from __future__ import annotations

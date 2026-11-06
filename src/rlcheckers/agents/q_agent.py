@@ -2,9 +2,10 @@
 
 ``q_key`` combines the canonical 40-bit board key with the 33-bit action key.
 ``QTable`` stores sparse state-action values, enforces the entry cap, estimates
-memory, and persists JSON. ``QAgent`` is the greedy playing adapter used by the
-evaluation arena; it owns no RNG and does not train. The training loop lives in
-``rlcheckers.training.train_q``.
+memory, persists JSON, and clones an independent frozen copy for self-play.
+``QAgent`` is the greedy playing adapter used by the evaluation arena; it owns
+no RNG and does not train. The fixed-opponent and self-play training loops live
+in ``rlcheckers.training.train_q`` and ``rlcheckers.training.self_play``.
 """
 
 from __future__ import annotations

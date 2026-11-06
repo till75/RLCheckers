@@ -1,7 +1,7 @@
 # Plan — RLCheckers, first milestone
 
 **Date:** 2026-10-27
-**Status:** S0–S5 complete and pushed; S6 spec approved (2026-11-06); TDD next
+**Status:** S0–S5 complete and pushed; S6 implemented, tested, documented, and awaiting approval (2026-11-06); S7 next
 **Source:** `docs/00-brief.md`
 
 ## How this plan works
@@ -279,8 +279,12 @@ S6.
 
 ## S6 — Self-play with periodic snapshots
 
-**Status:** spec approved (2026-11-06); TDD next. Design note 0006 chooses the
-latest-snapshot policy; ADR 0006 is accepted.
+**Status:** implemented, tested, documented, and awaiting slice approval
+(2026-11-06). Design note 0006 chooses the latest-snapshot policy; ADR 0006 is
+accepted. The slow A8 diagnostic scored **0.829500** against random
+(818 W / 23 D / 159 L, 95% CI **0.806659–0.852341**) and **1.000000** against
+greedy (1,000 W / 0 D / 0 L, 95% CI **1.000000–1.000000**), with 7,181 table
+entries and 10 snapshots.
 
 **Outcome:** The Q-agent trains through self-play against periodic snapshots and
 improves against random and depth-1 greedy without a fixed training opponent.
@@ -302,7 +306,8 @@ improves against random and depth-1 greedy without a fixed training opponent.
 `docs/architecture.md`, `README.md`, `docs/plan.md`, `docs/state.md`.
 
 **Tests added:** Snapshot cadence, opponent selection, seeded reproducibility,
-no-collapse smoke test, artifact writing.
+no-collapse smoke test, artifact writing, conditional config, CLI dispatch, and
+the slow improvement diagnostic.
 
 **Rough size:** M, 3–4 hours.
 
@@ -409,8 +414,8 @@ contents in their own specs. It supersedes only the plot sentence of ADR 0003
 
 ## Next step
 
-1. Run `/tdd A2` for the first S6 behaviour: `QTable.clone()` and the frozen
-   snapshot boundary.
-2. Follow the approved TDD order in `docs/specs/0006-self-play-snapshots.md`.
-3. Do not push S6 before the slice is implemented, tested, documented, and
+1. Review and approve S6; then push the completed slice.
+2. Start S7 with `/learn`, then `/spec 0007-three-seed-gate.md`, review, and TDD
+   the gate and report.
+3. Do not push S7 before its slice is implemented, tested, documented, and
    approved.

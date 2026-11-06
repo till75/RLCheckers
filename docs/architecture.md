@@ -1,11 +1,12 @@
 # Architecture
 
-**Status:** S5 implements the immutable rules engine (S1–S3), seeded random
-play, the depth-1 greedy baseline (S4), the seeded evaluation arena (S4), and
-tabular Q-learning against a fixed random opponent (S5): Q-table, Q-agent,
-training loop, training config, four artifacts, learning curve, and `train-q`
-CLI. S5 is awaiting slice approval and push. Self-play and the three-seed gate
-are planned (S6–S7).
+**Status:** S6 implements the immutable rules engine (S1-S3), seeded random
+play, the depth-1 greedy baseline (S4), the seeded evaluation arena (S4),
+tabular Q-learning against a fixed random opponent (S5), and self-play against
+periodic frozen snapshots (S6): snapshot policy, self-play trainer, conditional
+training config, self-play artifacts, titled learning curve, two diagnostics,
+and `train-q` dispatch. S6 is awaiting slice approval and push. The three-seed
+gate is planned (S7).
 
 ## Components
 
@@ -13,17 +14,19 @@ are planned (S6–S7).
   transitions and terminal/draw detection (S3).
 - **Agents:** random baseline (S3), depth-1 greedy baseline (S4), and tabular
   Q-agent (S5).
-- **Training:** fixed random-opponent trainer (S5), then self-play with periodic
-  snapshots (S6).
+- **Training:** fixed random-opponent trainer (S5) and self-play with periodic
+  frozen snapshots (S6).
 - **Evaluation:** arena for pairing agents over openings and colours, metrics,
-  config, and artifacts (S4), plus the three-seed gate (S7).
+  config, and artifacts (S4), plus the random and greedy self-play diagnostics
+  (S6) and the three-seed gate (S7).
 - **Composition:** CLI (`play-random`, `evaluate`, `train-q`), TOML configs,
-  seed handling, and artifact writing.
+  seed handling, mode dispatch, and artifact writing.
 
 The rules do not depend on agents. Agents depend on the rules. Training depends
 on both. Evaluation depends on the rules and agents. The CLI composes them. S4
 writes CSV/JSON only; S5 adds the Q-table, training CSV, run metadata, and
-learning curve; S7 owns the gate report and its plots under ADR 0004.
+learning curve; S6 adds the snapshot schedule and self-play artifacts; S7 owns
+the gate report and its plots under ADR 0004.
 
 ```mermaid
 %%{init: {"theme": "base", "themeVariables": {"darkMode": false, "primaryTextColor": "#000000", "secondaryTextColor": "#000000", "tertiaryTextColor": "#000000", "textColor": "#000000", "lineColor": "#334155", "edgeLabelBackground": "#ffffff", "clusterBkg": "#f8fafc", "clusterBorder": "#94a3b8"}}}%%
@@ -43,19 +46,19 @@ flowchart TB
     Q["<span style='color:#000000'>Q-agent<br/>S5</span>"]
   end
 
-  subgraph Training["<span style='background-color:#ffffff'><span style='color:#000000'>Training · S5/S6</span></span>"]
-    TRAIN["<span style='color:#000000'>Trainer<br/>fixed opponent S5 · self-play S6</span>"]
+  subgraph Training["<span style='background-color:#ffffff'><span style='color:#000000'>Training (S5/S6)</span></span>"]
+    TRAIN["<span style='color:#000000'>Trainer<br/>fixed opponent S5 or self-play S6</span>"]
   end
 
-  subgraph Evaluation["<span style='background-color:#ffffff'><span style='color:#000000'>Evaluation · S4/S7</span></span>"]
+  subgraph Evaluation["<span style='background-color:#ffffff'><span style='color:#000000'>Evaluation (S4/S7)</span></span>"]
     ARENA["<span style='color:#000000'>Arena<br/>pairings · seeds · game loop</span>"]
     METRICS["<span style='color:#000000'>Metrics<br/>W/D/L · score · 95% CI</span>"]
     GATE["<span style='color:#000000'>Three-seed gate<br/>S7</span>"]
   end
 
   subgraph Outputs["<span style='background-color:#ffffff'><span style='color:#000000'>Artifacts</span></span>"]
-    FILES["<span style='color:#000000'>CSV + JSON + Q-table<br/>training · evaluation · run</span>"]
-    PLOTS["<span style='color:#000000'>Plots<br/>learning curve S5 · report S7</span>"]
+    FILES["<span style='color:#000000'>CSV + JSON + Q-table<br/>training, evaluation, run</span>"]
+    PLOTS["<span style='color:#000000'>Plots<br/>learning curve S5/S6, report S7</span>"]
     CONSUMER["<span style='color:#000000'>Report / next slice<br/>reads artifacts</span>"]
   end
 
@@ -105,12 +108,13 @@ flowchart TB
   class GATE future
 ```
 
-**Figure A — Component map.** Solid arrows are implemented through S5; dashed
-arrows point at S6/S7. Category colour is carried by the stroke; every fill is
+**Figure A — Component map.** Solid arrows are implemented through S6; dashed
+arrows point at S7. Category colour is carried by the stroke; every fill is
 white or light grey. The arena talks to the rules engine and the agents; the
-`train-q` command composes the trainer and the diagnostic. Blue is
-configuration, indigo is composition, green is rules/agents/training, orange is
-evaluation, purple is metrics, and grey is artifacts/reporting.
+`train-q` command dispatches to the fixed-opponent or self-play trainer and
+composes the matching diagnostics. Blue is configuration, indigo is composition,
+green is rules/agents/training, orange is evaluation, purple is metrics, and grey
+is artifacts/reporting.
 
 ## Board module (S1)
 
@@ -230,7 +234,38 @@ domain while reusing `derive_side_seed`.
 The S5 diagnostic trains 10,000 seeded episodes and plays 1,000 games against
 random. The recorded result is **794 W / 50 D / 156 L**, score **0.819**, 95% CI
 **0.796–0.842**, and 21,773 table entries. That is a diagnostic, not the S7 gate.
-Self-play with periodic snapshots is S6.
+
+## Self-play training (S6)
+
+`src/rlcheckers/training/self_play.py` owns `SnapshotPolicy`, `Snapshot`,
+`SnapshotRecord`, `SelfPlayEpisodeMetric`, `SelfPlayTrainingResult`,
+`train_self_play`, `write_self_play_artifacts`, and
+`SELF_PLAY_TRAINING_FIELDS`.
+
+The cadence N is a positive multiple of 10 and strictly less than the episode
+count. The policy starts with an empty snapshot at episode 0 and refreshes a
+deep copy of the learner table at N, 2N, ... boundaries. The latest snapshot
+covers its creation episode through `min(created + N, episodes) - 1`. The
+opponent is a greedy Q-agent over that frozen table; only the learner explores
+and updates. Episode scheduling, openings, colours, epsilon decay, rewards, and
+the 2,000-ply guard match S5. The learner RNG is derived from the episode seed
+and learner colour, so the initial empty opponent is deterministic and a run is
+reproducible. Missing, duplicate, unscheduled, out-of-range, or non-table
+refreshes raise `SelfPlayError`; the trainer does not catch snapshot failures.
+
+Metrics record the episode, opening, learner colour, outcome, plies, epsilon,
+learner table size, and the active opponent's snapshot episode and table size.
+The self-play writer checks the metric count, config interval, snapshot
+schedule, and both 1,000-game diagnostics before creating the output directory.
+It writes the same four artifact names as S5, but the training CSV has the
+snapshot columns, `run.json` has `diagnostics` and `snapshots`, and the plot is
+titled "Self-play training, seed N".
+
+The S6 slow diagnostic (seed 7, 10,000 episodes, interval 1,000) recorded
+7,181 table entries and 10 snapshots. Against random it scored **0.829500**
+(818 W / 23 D / 159 L, 95% CI **0.806659–0.852341**); against greedy it scored
+**1.000000** (1,000 W / 0 D / 0 L, 95% CI **1.000000–1.000000**). Both point
+estimates are above 0.50, but S6 does not apply the S7 mean-plus-floor gate.
 
 ## Evaluation arena (S4)
 
@@ -260,23 +295,26 @@ game-level sampling noise, not unseen openings. Rows are ordered overall,
 black, white, then each opening. `format_float` writes six decimals, and fewer
 than two games in a group is rejected rather than given an invented interval.
 
-## Config (S4, S5)
+## Config (S4, S5, S6)
 
 `src/rlcheckers/config.py` owns `EvalConfig`, `TrainConfig`, `ConfigError`,
 `load_eval_config`, and `load_train_config`. The evaluation TOML file has exactly
 five top-level keys: `seed`, `games`, `agent`, `opponent`, and `output_dir`; the
 loader validates types, the ten-game cycle, and the agent names.
 
-The training TOML file has exactly ten top-level keys: `seed`, `episodes`,
-`alpha`, `gamma`, `epsilon_start`, `epsilon_end`, `epsilon_decay_fraction`,
-`opponent`, `output_dir`, and `max_table_entries`. Episodes are a positive
-multiple of 10; alpha is in `(0, 1]`, gamma in `[0, 1)`, the epsilon endpoints
-are in `[0, 1]` with start at least end, the decay fraction is in `(0, 1]`
-(zero is rejected), opponent is `"random"`, and the cap is positive. Both loaders
-resolve a relative `output_dir` against the config file's parent and do not
-create it.
+A random-opponent training TOML file has exactly ten top-level keys: `seed`,
+`episodes`, `alpha`, `gamma`, `epsilon_start`, `epsilon_end`,
+`epsilon_decay_fraction`, `opponent`, `output_dir`, and `max_table_entries`.
+Episodes are a positive multiple of 10; alpha is in `(0, 1]`, gamma in `[0, 1)`,
+the epsilon endpoints are in `[0, 1]` with start at least end, the decay fraction
+is in `(0, 1]` (zero is rejected), opponent is `"random"`, and the cap is
+positive. A self-play config sets `opponent = "self"` and adds the required
+`snapshot_interval` as the eleventh key; it must be a positive multiple of 10,
+at least 10, and strictly less than `episodes`. A random config that includes
+`snapshot_interval` is rejected. Both loaders resolve a relative `output_dir`
+against the config file's parent and do not create it.
 
-## Artifacts (S4, S5)
+## Artifacts (S4, S5, S6)
 
 `src/rlcheckers/evaluation/artifacts.py` owns `write_artifacts`,
 `METRICS_FIELDS`, and `GAMES_FIELDS`. It validates the result against the config
@@ -292,20 +330,33 @@ writer validates the result, diagnostic seed, names, game count, and openings
 before creating anything, then writes `q_table.json`, `training.csv`, `run.json`,
 and `learning_curve.png`. The CSV records episode, opening, learner colour,
 outcome, plies, epsilon, and table size. JSON and CSV are byte-reproducible;
-the PNG is reproducible in content from the metrics and config. S5 owns the
-learning-curve contract under ADR 0004.
+the PNG is reproducible in content from the metrics and config.
 
-## CLI (S3, S4, S5)
+`src/rlcheckers/training/self_play.py` owns `write_self_play_artifacts` and
+`SELF_PLAY_TRAINING_FIELDS`. It validates the metric count, interval, snapshot
+schedule, and both diagnostics before creating the output directory. It writes
+the same four artifact names: the training CSV adds the opponent snapshot
+episode and table size; `run.json` adds `diagnostics` and `snapshots`; and the
+learning curve reuses the S5 contract with the title prefix "Self-play
+training". JSON and CSV are byte-reproducible, and the PNG is reproducible in
+content from the metrics and config. The S5 learning-curve contract remains
+under ADR 0004.
+
+## CLI (S3, S4, S5, S6)
 
 `src/rlcheckers/cli.py` exposes `main(argv)`, and `src/rlcheckers/__main__.py`
 runs it for `python -m rlcheckers`. `play-random --seed INT` prints the seed,
 numbered moves, final outcome, and ply count. `evaluate --config PATH` loads the
 evaluation config, composes the agent factories, plays the matchup, writes the
-three artifacts, and prints the ten-line summary. `train-q --config PATH` loads
-the training config, trains the Q-table, runs the 1,000-game diagnostic through
-the S4 arena, writes the four training artifacts, and prints the thirteen-line
-summary. Runtime problems print `error: <message>` to stderr and return 1;
-`argparse` usage errors keep exit code 2.
+three artifacts, and prints the ten-line summary.
+
+`train-q --config PATH` dispatches on the config. With `opponent = "random"` it
+runs the S5 trainer and one 1,000-game diagnostic, then prints the thirteen-line
+summary. With `opponent = "self"` it runs the snapshot trainer, plays 1,000-game
+diagnostics against both random and greedy over the same openings, writes the
+self-play artifacts, and prints the twenty-one-line summary. Runtime problems
+print `error: <message>` to stderr and return 1; `argparse` usage errors keep
+exit code 2.
 
 ## Data flow
 
@@ -315,7 +366,9 @@ summary. Runtime problems print `error: <message>` to stderr and return 1;
 3. In S5, `train-q` trains the Q-table against a fixed random opponent, writes
    the Q-table/training metrics/plot, then evaluates the frozen Q-agent on the
    same arena for the diagnostic.
-4. S6 replaces the fixed training opponent with periodic self-play snapshots.
+4. In S6, `train-q` trains against the latest frozen snapshot, writes the
+   self-play artifacts, and evaluates the frozen Q-agent against random and
+   greedy on the same opening suite.
 5. S7 aggregates three training seeds and writes the milestone report.
 
 ## Decisions
@@ -325,12 +378,14 @@ summary. Runtime problems print `error: <message>` to stderr and return 1;
 - [ADR 0003 — Evaluation protocol and gate](adr/0003-evaluation-protocol.md)
 - [ADR 0004 — Plot ownership](adr/0004-plot-ownership.md)
 - [ADR 0005 — Tabular Q-learning representation and hyperparameters](adr/0005-tabular-q-learning.md)
+- [ADR 0006 — Self-play snapshot policy](adr/0006-self-play-snapshot-policy.md)
 
 ## Specifications
 
 - [Spec 0003 — Game application and random play](specs/0003-game-application-and-random-play.md)
 - [Spec 0004 — Baselines and evaluation arena](specs/0004-evaluation-arena.md)
 - [Spec 0005 — Tabular Q-learning against a fixed random opponent](specs/0005-tabular-q-learning.md)
+- [Spec 0006 — Self-play snapshots](specs/0006-self-play-snapshots.md)
 
 ## Current milestone boundaries
 

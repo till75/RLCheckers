@@ -1,8 +1,9 @@
 # State — 2026-11-06
 
 ## Where we are
-S0–S5 are complete, approved, and pushed. S6 (self-play with periodic snapshots)
-is implemented through A8; A9 documentation is the remaining slice step.
+S0–S5 are complete, approved, and pushed. S6 (self-play with periodic frozen
+snapshots) is implemented, tested, documented, and awaiting slice approval. S7
+(the three-seed gate and report) is next.
 
 ## Done since last handoff
 - S6 spec approved 2026-11-06: `docs/specs/0006-self-play-snapshots.md`.
@@ -17,21 +18,24 @@ is implemented through A8; A9 documentation is the remaining slice step.
   10 snapshots; random 818/23/159, score 0.829500, CI 0.806659–0.852341;
   greedy 1,000/0/0, score 1.000000, CI 1.000000–1.000000. Both point
   estimates are strictly above 0.50; the S7 gate is not applied.
-- S5 result: 256 default tests, A9 score 0.819 vs random (794/50/156, CI
-  0.796–0.842, table 21,773).
+- A9: README, architecture, plan, state, and module docstrings describe S6.
+- Current gates: default suite 325 passed, 2 deselected; A8 slow test passed;
+  `ruff check .` clean.
+- S5 baseline result: score 0.819 vs random (794/50/156, CI 0.796–0.842,
+  table 21,773).
 
 ## Next
-1. Finish A9: update `docs/architecture.md`, `README.md`, `docs/plan.md`,
-   module docstrings, and this handoff.
-2. Run the default suite and `ruff check .`; run `-m slow` for A8 when reporting.
-3. Do not push S6 without approval.
+1. Review and approve the completed S6 slice; then push it.
+2. Start S7 with `/learn`, then `/spec 0007-three-seed-gate.md`, review, and TDD
+   the gate and report.
+3. Do not push S7 without approval.
 
 ## Open questions
 - None blocking. The three review decisions are recorded in spec 0006’s Approval section.
 
 ## Gotchas
 - Windows/PowerShell; use `.\.venv\Scripts\python.exe`; `ruff check .` is the gate.
-- Default pytest excludes slow tests; A8/A9 slow runs need `-m slow`.
+- Default pytest excludes slow tests; slow runs need `-m slow`.
 - `/spec-review`: one-page packet, then one round per message; wait for explicit yes/no.
 - Spec 0006’s Markdown overview is a table; console diagrams stay plain, no HTML.
 - S6 and S5 training curves are not directly comparable; compare final agents on fixed baselines.
