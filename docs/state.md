@@ -1,98 +1,30 @@
-# State — 2026-11-06
+# State — 2026-11-09
 
 ## Where we are
-S0-S7 are complete, approved, and pushed. The first milestone is complete: the
-three-seed gate passed, and the slice and milestone reports are written.
+S0–S7 are complete, approved, and pushed. The first milestone is complete and the three-seed gate passed. No active slice.
 
 ## Done since last handoff
-- S6 spec approved 2026-11-06: `docs/specs/0006-self-play-snapshots.md`.
-- ADR 0006 accepted: `docs/adr/0006-self-play-snapshot-policy.md`.
-- A2: `QTable.clone()` and the frozen snapshot boundary.
-- A1: snapshot records, cadence validation, and loud refresh failures.
-- A5: conditional `snapshot_interval` config loading and validation.
-- A3/A4: the seeded self-play loop, schedule, metrics, and reproducibility.
-- A6: self-play artifacts, schema, integrity checks, and titled curve.
-- A7: `train-q` self-play dispatch with random and greedy diagnostics.
-- A8 slow diagnostic (seed 7, 10,000 episodes, interval 1,000): table 7,181;
-  10 snapshots; random 818/23/159, score 0.829500, CI 0.806659–0.852341;
-  greedy 1,000/0/0, score 1.000000, but only 10 unique games repeated 100
-  times. Both point estimates are strictly above 0.50; the S7 gate is not
-  applied.
-- A9: README, architecture, plan, state, and module docstrings describe S6.
-- Diagnostic evidence and the questions that prompted it:
-  `docs/results/s6-self-play-diagnostics.md`.
-- S6 approved and pushed 2026-11-06.
-- S7 spec approved 2026-11-06: `docs/specs/0007-three-seed-gate.md`.
-- ADR 0007 accepted: `docs/adr/0007-stochastic-greedy-gate-baseline.md`.
-- S7 A1: `GateConfig` and `load_gate_config`.
-- S7 A2: `StochasticGreedyAgent` with seeded tie-breaking.
-- S7 A3: `snapshot_observer` on `train_self_play`.
-- S7 A4: `aggregate_gate` and gate result types.
-- S7 A5: gate Q-tables, `gate.json`, `gate.csv`, `snapshot_curve.csv`, plot,
-  and report writer.
-- S7 A6: full Markdown gate report.
-- S7 A7: `gate` CLI, `run_gate`, `Depth2Agent`, 13-line summary, exit codes.
-- S7 A8: reproducibility tests for repeated runs and `eval_seed` isolation
-  (`bdcbc9a`).
-- S7 full gate (seeds 7, 8, 9; 10,000 episodes each): random mean 0.830667,
-  random min 0.818000; stochastic greedy mean 0.816833, greedy min 0.800500;
-  gate pass.
-- S7 reports: `docs/results/s7-three-seed-gate-diagnostics.md` and
-  `docs/results/first-milestone.md`.
-- S7 approved and pushed 2026-11-06; first milestone complete.
-- Current gates: default suite 382 passed, 2 deselected; `ruff check .` clean.
-- S5 baseline result: score 0.819 vs random (794/50/156, CI 0.796–0.842,
-  table 21,773).
+- Full S7 gate passed: random mean 0.830667 (min 0.818000), stochastic greedy mean 0.816833 (min 0.800500). Evidence: `docs/results/s7-three-seed-gate-diagnostics.md`, `docs/results/gate.json`.
+- Milestone summary and README updated: `docs/results/first-milestone.md`, `README.md`; commit `48baf05`.
+- S7 approved and pushed: commit `5fd3e2c`.
+- Local Repomix snapshot at `.repomix/rlcheckers-repomix.md`; `.repomix/` ignored in commit `9995c35` (local only).
+- Full suite: 382 passed, 2 deselected; `ruff check .` clean.
 
 ## Next
-1. Plan the next milestone. The first milestone is complete and pushed.
-2. Keep the same workflow: learn, specify, review, TDD, diagnostic report, and
-   push only after approval.
-
-## Process
-- Every slice ends with a diagnostic report under `docs/results/` named
-  `<slice-id>-diagnostics.md`; the report is part of the final TDD step and is
-  required for approval.
-- A slice must be evaluable. If we cannot define the report and pass/fail
-  evidence, split or redefine the slice before `/spec`.
-- The report template is `docs/results/_template-slice-diagnostics.md`. A
-  `verify-slice` command is a future slice once the report shape stabilizes.
-
-## S7 implementation note
-- The S6 greedy diagnostic is 10 unique opening/colour games repeated 100 times
-  because the Q-agent and depth-1 greedy are deterministic. Do not treat the
-  1,000 repetitions as independent samples or report a 1,000-game interval for
-  them.
-- A randomized greedy tie-break scored 0.819 against the same S6 agent; a simple
-  depth-2 minimax scored 0.400. S7 uses a stochastic greedy baseline for the
-  1,000-game gate and reports the deterministic baseline as a unique-game
-  diagnostic.
-- S7 trains 10,000 episodes per seed, includes the per-snapshot learning curve
-  in the report, and reports the depth-2 check as a diagnostic rather than a
-  pass/fail gate.
-- The full gate config is `gate.toml`; the command writes its artifacts and
-  slice report to `docs/results/`.
-- The full gate passed: random mean 0.830667 (min 0.818000), stochastic greedy
-  mean 0.816833 (min 0.800500).
+1. Run `/learn` for the next milestone: stronger baselines, broader robustness, and whether to stay on 5x5.
+2. Write the next `/spec`; do not start TDD before `/spec-review` approval.
 
 ## Open questions
-- None blocking. The three review decisions are recorded in spec 0006’s Approval section.
+- Next milestone scope is not chosen. Blocking for `/spec`, not for `/learn`.
 
 ## Gotchas
-- Windows/PowerShell; use `.\.venv\Scripts\python.exe`; `ruff check .` is the gate.
-- Default pytest excludes slow tests; slow runs need `-m slow`.
-- `/spec-review`: one-page packet, then one round per message; wait for explicit yes/no.
-- Spec 0006’s Markdown overview is a table; console diagrams stay plain, no HTML.
-- S6 and S5 training curves are not directly comparable; compare final agents on fixed baselines.
-- The full S7 gate is a slow diagnostic, not a default test; run it with
-  `gate --config gate.toml`.
-- S6 and S7 are pushed; the first milestone is complete.
+- Windows/PowerShell; use `.\.venv\Scripts\python.exe`; default pytest excludes slow tests (`-m slow` includes them).
+- Full gate takes ~6 minutes and writes to `docs/results/`; run `gate --config gate.toml` from the repo root because `output_dir` resolves relative to the config file.
+- The generated S7 report is reproducible, but its `## Verification commands` section was appended manually.
+- Deterministic greedy is 10 unique games, not 1,000 independent samples; depth-2 is a diagnostic, not a gate criterion.
+- Repomix output is local only; the `.repomix/` ignore commit is not pushed.
 
 ## Not in an ADR
-- S6 config/CLI: conditional `snapshot_interval`, `N < episodes`, `train-q` dispatch.
-- S6 artifacts: mode-specific schema, no snapshot files.
-- S6 diagnostic: `> 0.50` vs both baselines; S7 owns the gate.
-- S7 config/CLI: fourteen-key gate config, `gate` dispatch, 13-line summary,
-  exit codes, and artifacts under `docs/results/`.
-- S7 diagnostics: deterministic greedy and depth-2 are 10-unique-game
-  diagnostics; only random and stochastic greedy affect `passed`.
+- S7 config/CLI: 14-key gate config, `gate` dispatch, 13-line summary, exit codes.
+- S7 artifacts live under `docs/results/`; Q-tables and gate JSON/CSV/plot/report are committed.
+- Repomix snapshots are local diagnostic artifacts, not repository content.
