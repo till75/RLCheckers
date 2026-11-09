@@ -1,5 +1,7 @@
 # RLCheckers
 
+[![CI](https://github.com/till75/RLCheckers/actions/workflows/ci.yml/badge.svg)](https://github.com/till75/RLCheckers/actions/workflows/ci.yml)
+
 An AI learning project: applying reinforcement learning to a checkers AI, while
 learning to co-author a program with opencode.
 
@@ -223,3 +225,7 @@ the milestone summary is
 [docs/results/first-milestone.md](docs/results/first-milestone.md).
 
 See [AGENTS.md](AGENTS.md) for the working agreement and definition of done.
+
+## License
+
+MIT. See [LICENSE](LICENSE).

@@ -22,7 +22,7 @@ S0–S7 are complete, approved, and pushed. The first milestone is complete and 
 - Full gate takes ~6 minutes and writes to `docs/results/`; run `gate --config gate.toml` from the repo root because `output_dir` resolves relative to the config file.
 - The generated S7 report is reproducible, but its `## Verification commands` section was appended manually.
 - Deterministic greedy is 10 unique games, not 1,000 independent samples; depth-2 is a diagnostic, not a gate criterion.
-- Repomix output is local only; the `.repomix/` ignore commit is not pushed.
+- Repomix output is local only; `.repomix/` is ignored in commit `9995c35`, which is part of the pushed history.
 
 ## Not in an ADR
 - S7 config/CLI: 14-key gate config, `gate` dispatch, 13-line summary, exit codes.
